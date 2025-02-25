@@ -1,6 +1,6 @@
 import { ClerkProvider, SignIn, SignedIn, SignedOut } from "@clerk/clerk-react";
 import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
-import MainLayout from "../../bolt_ui/src/components/MainLayout";
+import MainLayout from "../src/components/MainLayout";
 import bgImage from "./assets/robot2.jpg";
 
 const CLERK_PUBLISHABLE_KEY =

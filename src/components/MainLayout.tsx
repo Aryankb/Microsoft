@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react';
 import { Send } from 'lucide-react';
 import Sidebar from './Sidebar';
 import TopBar from './TopBar';
+import { useAuth } from '@clerk/clerk-react';
+import WorkflowGraph from './WorkflowGraph.tsx';
 
 const EXAMPLE_PROMPTS = [
   "Create a workflow for social media post scheduling",
@@ -25,9 +27,13 @@ export default function MainLayout() {
   const [message, setMessage] = useState('');
   const [chats, setChats] = useState<ChatMessage[]>([]);
   const [flag, setFlag] = useState(2);
-  const [qanda, setQanda] = useState<QandA>([]);
+  const [qanda, setQanda] = useState<{ [key: string]: string }>({});
   const [questions, setQuestions] = useState<string[]>([]);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
+  const { getToken } = useAuth();
+  const [refinedQuery, setRefinedQuery] = useState<string | null>(null);
+  const [workflowJson, setWorkflowJson] = useState(null);
+  const [showWorkflow, setShowWorkflow] = useState(false);
 
   const handleSend = async () => {
     if (!message.trim()) return;
@@ -35,7 +41,7 @@ export default function MainLayout() {
     if (flag === 2) setFlag(0);
 
     if (questions.length > 0 && currentQuestionIndex < questions.length) {
-      const updatedQandA = [...qanda, { question: questions[currentQuestionIndex], answer: message.trim() }];
+      const updatedQandA = { ...qanda, [questions[currentQuestionIndex]]: message.trim() };
       setQanda(updatedQandA);
       setMessage('');
 
@@ -48,9 +54,11 @@ export default function MainLayout() {
       } else {
         setChats([...chats, 
           { id: Date.now().toString(), message: message.trim(), sender: 'user' },
-          { id: (Date.now() + 1).toString(), message: "All questions answered. Thank you!", sender: 'bot' }
+          { id: (Date.now() + 1).toString(), message: "Refining Query...", sender: 'bot' }
         ]);
         setQuestions([]);
+        console.log("Q&A:", updatedQandA);
+        await sendRefinedQuery(updatedQandA);
       }
       return;
     }
@@ -64,10 +72,12 @@ export default function MainLayout() {
     setMessage('');
 
     try {
+      const token = await getToken();
       const response = await fetch("https://2f90-117-250-161-222.ngrok-free.app/refine_query", {
         method: "POST",
         headers: {
-          "Content-Type": "application/json"
+          "Content-Type": "application/json",
+          'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify({ query: message.trim() , flag:0,question:{} })
       });
@@ -89,6 +99,44 @@ export default function MainLayout() {
     }
   };
 
+  const sendRefinedQuery = async (updatedQandA: QandA) => {
+    try {
+      const token = await getToken();
+      const response = await fetch("https://2f90-117-250-161-222.ngrok-free.app/refine_query", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ query: chats[0].message.trim(), flag: 1, question: updatedQandA })
+      });
+      const data = await response.json();
+      setRefinedQuery(data.response);
+      setChats([...chats, { id: (Date.now() + 2).toString(), message: "REFINED QUERY :-", sender: 'bot' }]);
+    } catch (error) {
+      console.error("Error sending refined query:", error);
+    }
+  };
+
+  const handleGenerateWorkflow = async () => {
+    try {
+      const token = await getToken();
+      const response = await fetch("https://2f90-117-250-161-222.ngrok-free.app/fetch_json", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ query: refinedQuery })
+      });
+      const data = await response.json();
+      setWorkflowJson(data.response);
+      setShowWorkflow(true);
+    } catch (error) {
+      console.error("Error generating workflow:", error);
+    }
+  };
+
   const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
@@ -98,12 +146,15 @@ export default function MainLayout() {
 
   return (
     <div className="min-h-screen flex flex-col bg-[#171717] text-white">
-      <TopBar onMenuClick={() => setShowSidebar(true)} />
+      <div className="fixed top-0 left-0 right-0 z-50">
+        <TopBar onMenuClick={() => setShowSidebar(true)} />
+      </div>
+
       <Sidebar show={showSidebar} onClose={() => setShowSidebar(false)} />
 
-      <main className="flex-1 flex flex-col items-center pt-20 pb-24 px-4">
-        <div className="w-full max-w-2xl flex flex-col flex-grow overflow-hidden">
-          <div className="flex flex-col flex-grow overflow-y-auto space-y-4 p-4">
+      <main className={`flex-1 flex ${showWorkflow ? 'flex-row' : 'flex-col'} pt-20 pb-24 px-4 gap-4 relative`}>
+        <div className={`${showWorkflow ? 'w-1/2' : 'w-full'} max-w-3xl flex flex-col overflow-y-auto z-0`}>
+          <div className="flex flex-col space-y-4">
             {chats.length === 0 ? (
               <div className="flex flex-col items-center justify-center flex-grow">
                 <h1 className="text-3xl font-bold mb-4">SIGMOYD</h1>
@@ -138,11 +189,28 @@ export default function MainLayout() {
               ))
             )}
           </div>
+          {refinedQuery && (
+            <div className="max-w-[75%] px-10 py-3  rounded-lg mr-auto bg-green-500 text-white">
+                           {refinedQuery}
+              <button
+                onClick={handleGenerateWorkflow}
+                className="mt-4 px-4 py-2 bg-blue-500 rounded-full hover:bg-blue-600 transition-all duration-200"
+              >
+                Generate Workflow
+              </button>
+            </div>
+          )}
         </div>
+
+        {showWorkflow && workflowJson && (
+          <div className="w-1/2 fixed right-0 top-20 bottom-24 z-0">
+            <WorkflowGraph workflowJson={workflowJson} />
+          </div>
+        )}
       </main>
 
-      <div className="fixed bottom-0 left-0 right-0 bg-gray-800 p-4">
-        <div className="container mx-auto max-w-2xl flex gap-4 items-center">
+      <div className="fixed bottom-0 left-0 right-0 bg-gray-800 p-4 z-50">
+        <div className="container mx-auto max-w-3xl flex gap-4 items-center">
           <input
             type="text"
             value={message}
