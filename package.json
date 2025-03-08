@@ -11,10 +11,14 @@
   },
   "dependencies": {
     "@clerk/clerk-react": "^5.23.0",
+    "axios": "^1.8.1",
     "lucide-react": "^0.475.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
+    "react-icons": "^5.5.0",
     "react-router-dom": "^7.2.0",
+    "react-tooltip": "^5.28.0",
+    "reactflow": "^11.11.4",
     "tailwind": "^4.0.0",
     "zustand": "^5.0.3"
   },

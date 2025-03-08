@@ -26,6 +26,7 @@ export default function MainLayout() {
   const [showSidebar, setShowSidebar] = useState(false);
   const [message, setMessage] = useState('');
   const [chats, setChats] = useState<ChatMessage[]>([]);
+  const [mode, setMode] = useState<'workflow' | 'general'>('workflow'); // New toggle state
   const [flag, setFlag] = useState(2);
   const [qanda, setQanda] = useState<{ [key: string]: string }>({});
   const [questions, setQuestions] = useState<string[]>([]);
@@ -37,6 +38,32 @@ export default function MainLayout() {
 
   const handleSend = async () => {
     if (!message.trim()) return;
+    if (mode === 'general') {
+      // General Query Mode: Send directly to /general
+      setChats([...chats, { id: Date.now().toString(), message, sender: 'user' }, { id: (Date.now() + 1).toString(), message: "Fetching response...", sender: 'bot' }]);
+      setMessage('');
+
+      try {
+        const token = await getToken();
+        const response = await fetch("http://localhost:8000/general", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({ query: message.trim() })
+        });
+        const data = await response.json();
+        setChats(prevChats => prevChats.map(chat =>
+          chat.message === "Fetching response..." ? { ...chat, message: data.response } : chat
+        ));
+      } catch (error) {
+        setChats(prevChats => prevChats.map(chat =>
+          chat.message === "Fetching response..." ? { ...chat, message: "Error fetching response" } : chat
+        ));
+      }
+      return;
+    }
 
     if (flag === 2) setFlag(0);
 
@@ -73,7 +100,7 @@ export default function MainLayout() {
 
     try {
       const token = await getToken();
-      const response = await fetch("https://2f90-117-250-161-222.ngrok-free.app/refine_query", {
+      const response = await fetch("http://localhost:8000/refine_query", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -102,7 +129,7 @@ export default function MainLayout() {
   const sendRefinedQuery = async (updatedQandA: QandA) => {
     try {
       const token = await getToken();
-      const response = await fetch("https://2f90-117-250-161-222.ngrok-free.app/refine_query", {
+      const response = await fetch("http://localhost:8000/refine_query", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -117,11 +144,24 @@ export default function MainLayout() {
       console.error("Error sending refined query:", error);
     }
   };
+  const handleModeChange = (newMode: 'workflow' | 'general') => {
+    if (mode !== newMode) {
+      setMode(newMode);
+      setChats([]);
+      setMessage('');
+      setQuestions([]);
+      setCurrentQuestionIndex(0);
+      setQanda({});
+      setRefinedQuery(null);
+      setWorkflowJson(null);
+      setShowWorkflow(false);
+    }
+  };
 
   const handleGenerateWorkflow = async () => {
     try {
       const token = await getToken();
-      const response = await fetch("https://2f90-117-250-161-222.ngrok-free.app/fetch_json", {
+      const response = await fetch("http://localhost:8000/create_agents", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -153,11 +193,18 @@ export default function MainLayout() {
       <Sidebar show={showSidebar} onClose={() => setShowSidebar(false)} />
 
       <main className={`flex-1 flex ${showWorkflow ? 'flex-row' : 'flex-col'} pt-20 pb-24 px-4 gap-4 relative`}>
-        <div className={`${showWorkflow ? 'w-1/2' : 'w-full'} max-w-3xl flex flex-col overflow-y-auto z-0`}>
+      <div className={`${showWorkflow ? 'w-1/3' : 'w-full'} flex flex-col overflow-y-auto z-0`}>  
+        
           <div className="flex flex-col space-y-4">
+            
             {chats.length === 0 ? (
               <div className="flex flex-col items-center justify-center flex-grow">
+                
                 <h1 className="text-3xl font-bold mb-4">SIGMOYD</h1>
+                <div className="flex gap-4 mb-4">
+            <button onClick={() => handleModeChange('workflow')} className={`px-4 py-2 rounded ${mode === 'workflow' ? 'bg-blue-600' : 'bg-gray-700'}`}>Create Workflow</button>
+            <button onClick={() => handleModeChange('general')} className={`px-4 py-2 rounded ${mode === 'general' ? 'bg-blue-600' : 'bg-gray-700'}`}>General Query</button>
+          </div>
                 <input
                   type="text"
                   value={message}
@@ -166,6 +213,7 @@ export default function MainLayout() {
                   placeholder="Send a message..."
                   className="w-full max-w-xl bg-gray-700 rounded-lg px-6 py-4 focus:outline-none focus:ring-2 focus:ring-blue-500 mb-4"
                 />
+                {mode==='workflow' &&(
                 <div className="flex gap-2 overflow-x-auto">
                   {EXAMPLE_PROMPTS.map((prompt, index) => (
                     <button
@@ -176,7 +224,7 @@ export default function MainLayout() {
                       {prompt}
                     </button>
                   ))}
-                </div>
+                </div>)}
               </div>
             ) : (
               chats.map((chat) => (
@@ -203,13 +251,13 @@ export default function MainLayout() {
         </div>
 
         {showWorkflow && workflowJson && (
-          <div className="w-1/2 fixed right-0 top-20 bottom-24 z-0">
+          <div className="w-2/3 fixed right-0 top-0 bottom-0 z-0 pt-8 ">
             <WorkflowGraph workflowJson={workflowJson} />
           </div>
         )}
       </main>
-
-      <div className="fixed bottom-0 left-0 right-0 bg-gray-800 p-4 z-50">
+      {chats.length > 0 && (
+      <div className="fixed bottom-0 left-0 right-0 bg-gray-800 p-4 z-49">
         <div className="container mx-auto max-w-3xl flex gap-4 items-center">
           <input
             type="text"
@@ -227,7 +275,7 @@ export default function MainLayout() {
             <Send size={20} />
           </button>
         </div>
-      </div>
+      </div>)}
     </div>
   );
 }

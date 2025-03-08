@@ -1,7 +1,7 @@
 import { ClerkProvider, SignIn, SignedIn, SignedOut } from "@clerk/clerk-react";
 import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
 import MainLayout from "../src/components/MainLayout";
-import bgImage from "./assets/robot2.jpg";
+import bgImage from "./assets/robot_final.jpg";
 
 const CLERK_PUBLISHABLE_KEY =
   "pk_test_bWludC1kaW5vc2F1ci01NC5jbGVyay5hY2NvdW50cy5kZXYk";
@@ -40,7 +40,7 @@ function App() {
     },
     elements: {
       card: {
-        backgroundColor: "rgba(0, 174, 255, 0.29)", // Dark translucent box
+        backgroundColor: "rgba(0, 0, 0, 0.7)", // Dark translucent box
         border: "2px solid #00ffff", // Neon red border
         borderRadius: "15px",
         boxShadow: "0px 0px 20px #00ffff", // Neon red glow

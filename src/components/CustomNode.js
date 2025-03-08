@@ -40,7 +40,7 @@ const CustomNode = ({ data }) => {
       {/* Show Config Inputs if not empty */}
       {data.config_inputs && data.config_inputs.length > 0 && (
         <div className="node-section">
-          <strong>Config Inputs:</strong>
+          
           {data.config_inputs.map((input, index) => (
             <div key={index}>
               <label className="input-label">{input}</label>
