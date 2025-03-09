@@ -101,8 +101,8 @@ const generateNodesAndEdges = (workflowJson,handleValueChange) => {
         tool_action: node.tool_action || null,
         to_execute: node.to_execute,
         connectorName: node.to_execute
-          ? `Connector ${node.to_execute[0].replace("connector_", "")}`
-          : "",
+          ?(node.to_execute[0]? `Connector ${node.to_execute[0].replace("connector_", "")}`
+          : ""): "",
         description: node.description,
         id: node.id,
         type: node.type,
@@ -235,11 +235,7 @@ const WorkflowGraph: React.FC<WorkflowGraphProps> = ({ workflowJson }) => {
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
 
 
-  const saveWorkflow = async () => {
 
-    console.log("Updated JSON:", workflowData);
-    await axios.post("/save_workflow", workflowData);
-  };
   const onConnect = useCallback(
     (params) => setEdges((eds) => addEdge(params, eds)),
     [setEdges]
@@ -253,23 +249,82 @@ const WorkflowGraph: React.FC<WorkflowGraphProps> = ({ workflowJson }) => {
   };
 
   return (
-    <div style={{ height: "calc(100vh - 100px)", width: "100%", border: "1px solid #333", borderRadius: "8px" ,overflow: "hidden" }}>
-      <div style={{ display: "flex", justifyContent: "flex-end", padding: "10px" }}>
-        <button onClick={saveWorkflow} style={{ marginRight: "10px" }}>
-          <FaSave /> Save Workflow
-        </button>
-        <button onClick={runOrActivateWorkflow}>
-          {workflowJson.trigger.name === "TRIGGER_MANUAL" ? <FaPlay /> : <FaBolt />} 
-          {workflowJson.trigger.name === "TRIGGER_MANUAL" ? "Run Workflow" : "Activate Workflow"}
-        </button>
-      </div>
+    
+    <div style={{ 
+      position: "absolute",  
+      top: "70px",  /* Adjust this based on your top bar height */
+      bottom: "93px", /* Adjust this based on your bottom bar height */
+      left: "20px", /* Decrease left while keeping it square */
+      right: "5px",  
+      // width: "calc(100% - 100px)", /* Decrease width while keeping it square */
+      border: "1px solid #333",  
+      borderRadius: "8px",  
+      overflow: "hidden",  
+      margin: "auto"  
+  }}>
+      
       
       <ReactFlow nodes={nodes} edges={edges} onNodesChange={onNodesChange} onEdgesChange={onEdgesChange}onConnect={onConnect} nodeTypes={nodeTypes} fitView style={{ background: "#1a1a1a" }}>
     
         <MiniMap />
         <Controls />
         <Background />
+        <div className="react-flow__panel react-flow__controls top right" style={{ pointerEvents: "all" }}>
+  {/* <button
+    onClick={saveWorkflow}
+    className="flex items-center gap-2 px-4 py-2 text-white bg-blue-500 rounded-lg shadow-md transition-all duration-300 hover:bg-blue-600 hover:scale-105 active:scale-95"
+    style={{ marginRight: "10px" }}
+  >
+    <FaSave /> Save Workflow
+  </button> */}
+  
+</div>
+<div className="react-flow__panel react-flow__controls top left" style={{ pointerEvents: "all" }}>
+  <h2
+    onClick={(e) => {
+      const input = e.currentTarget.nextElementSibling;
+      input.style.display = "block";
+      input.focus();
+      e.currentTarget.style.display = "none";
+    }}
+    style={{ cursor: "pointer", fontSize: "24px", fontWeight: "bold", color: "#fff" }}
+  >
+    {workflowData.workflow_name}
+  </h2>
+  <input
+    type="text"
+    value={workflowData.workflow_name}
+    onBlur={(e) => {
+      e.target.style.display = "none";
+      e.target.previousElementSibling.style.display = "block";
+      setWorkflowData((prevData) => ({
+        ...prevData,
+        workflow_name: e.target.value,
+      }));
+    }}
+    onChange={(e) =>
+      setWorkflowData((prevData) => ({
+        ...prevData,
+        workflow_name: e.target.value,
+      }))
+    }
+    className="px-2 py-2 border rounded"
+    placeholder="Workflow Name"
+    style={{ display: "none" }}
+  />
+  <button
+    onClick={runOrActivateWorkflow}
+    className="flex items-center gap-2 px-4 py-2 text-white bg-red-500 rounded-lg shadow-md transition-all duration-300 hover:bg-green-600 hover:scale-105 active:scale-95"
+  >
+    {workflowJson.trigger.name === "TRIGGER_MANUAL" ? <FaPlay /> : <FaBolt />} 
+    {workflowJson.trigger.name === "TRIGGER_MANUAL" ? "Run Workflow" : "Activate Workflow"}
+  </button>
+</div>
+
+
       </ReactFlow>
+      
+    
     </div>
   );
 };

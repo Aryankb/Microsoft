@@ -11,15 +11,15 @@
   
   /* Node Type Colors */
   .node-llm {
-    background-color: #a2d2ff; /* Light Blue */
+    background-color: #a2f9ff8e; /* Light Blue */
   }
   
   .node-connector {
-    background-color: #ffdd57; /* Yellow */
+    background-color: #ffdd5783; /* Yellow */
   }
   
   .node-tool {
-    background-color: #ffb6c1; /* Pink */
+    background-color: #ffb6c17e; /* Pink */
   }
   
   .node-header {
@@ -35,7 +35,7 @@
   
   .node-action {
     font-size: 12px;
-    color: gray;
+    color: rgb(255, 255, 255);
   }
   
 /* Execution mark at bottom-right */
@@ -81,6 +81,7 @@
     resize: vertical; /* Allow manual resizing */
     overflow-y: auto; /* Enable scrolling for large content */
     white-space: pre-wrap; /* Prevent content from being cut off */
+    background-color: #00000060;
   }
   
   

@@ -93,7 +93,7 @@ export default function TopBar({ onMenuClick }: TopBarProps) {
         <div className="container mx-auto px-4 h-16 flex items-center justify-between">
           <div className="flex items-center gap-4">
             <button onClick={onMenuClick} className="p-2 hover:bg-gray-700 rounded">
-              <Menu size={24} />
+              <Menu size={25} />
             </button>
           </div>
 

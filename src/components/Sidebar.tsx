@@ -1,30 +1,60 @@
+import { useEffect, useState } from 'react';
 import { X } from 'lucide-react';
-import { useWorkflowStore } from '../store/workflowStore';
 import { useAuth, useUser, SignOutButton, UserButton } from '@clerk/clerk-react';
 
 interface SidebarProps {
   show: boolean;
   onClose: () => void;
+  setWorkflowJson: (json: any) => void; // Function to update workflowJson in Main Layout
+  setRefinedQuery: (query: string) => void; // Function to update refinedQuery in Main Layout
+  setShowWorkflow: (show: boolean) => void;
 }
 
-export default function Sidebar({ show, onClose }: SidebarProps) {
-  const { workflows, setCurrentWorkflow, currentWorkflow } = useWorkflowStore();
-  const { getToken, signOut } = useAuth();
-  const { user } = useUser();
+interface Workflow {
+  id: string;
+  name: string;
+  json: string;
+  prompt: string;
+  isActive?: boolean;
+}
 
-  const handleWorkflowClick = async (workflowId: string) => {
-    try {
-      const token = await getToken();
-      const response = await fetch(`/get_chat?workflowId=${workflowId}`, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
-      const chats = await response.json();
-      setCurrentWorkflow(workflowId);
-    } catch (error) {
-      console.error('Error fetching chats:', error);
-    }
+export default function Sidebar({ show, onClose, setWorkflowJson, setRefinedQuery, setShowWorkflow}: SidebarProps) {
+  const { getToken } = useAuth();
+  const { user } = useUser();
+  const [workflows, setWorkflows] = useState<Workflow[]>([]);
+  const [currentWorkflow, setCurrentWorkflow] = useState<string | null>(null);
+
+  // Fetch workflows on startup
+  useEffect(() => {
+    const fetchWorkflows = async () => {
+      try {
+        const token = await getToken();
+        const response = await fetch('http://localhost:8000/sidebar_workflows', {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+
+        if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
+
+        const data = await response.json();
+        setWorkflows(data);
+      } catch (error) {
+        console.error('Error fetching workflows:', error);
+      }
+    };
+
+    fetchWorkflows();
+  }, [getToken]);
+
+  // Handle workflow selection
+  const handleWorkflowClick = (workflowId: string) => {
+    const selectedWorkflow = workflows.find((w) => w.id === workflowId);
+    if (!selectedWorkflow) return;
+
+    setCurrentWorkflow(workflowId);
+    setWorkflowJson(JSON.parse(selectedWorkflow.json));
+    console.log(JSON.parse(selectedWorkflow.json))
+    setRefinedQuery(selectedWorkflow.prompt);
+    setShowWorkflow(true);
   };
 
   return (
@@ -53,12 +83,13 @@ export default function Sidebar({ show, onClose }: SidebarProps) {
                 }`}
               >
                 <div className="flex items-center gap-2">
-                  <div
-                    className={`w-2 h-2 rounded-full ${
-                      workflow.isActive ? 'bg-green-500' : 'bg-red-500'
-                    }`}
-                  />
-                  {workflow.name}
+                
+  <span>{workflow.name}</span>
+  <div
+    className={`w-2 h-2 rounded-full ${
+      workflow.isActive ? 'bg-green-500' : 'bg-red-500'
+    }`}
+  />
                 </div>
               </button>
             ))}
