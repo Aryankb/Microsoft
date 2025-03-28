@@ -1,13 +1,16 @@
 import { useEffect, useState } from 'react';
 import { X } from 'lucide-react';
 import { useAuth, useUser, SignOutButton, UserButton } from '@clerk/clerk-react';
-
 interface SidebarProps {
   show: boolean;
   onClose: () => void;
   setWorkflowJson: (json: any) => void; // Function to update workflowJson in Main Layout
   setRefinedQuery: (query: string) => void; // Function to update refinedQuery in Main Layout
   setShowWorkflow: (show: boolean) => void;
+  workflows: Workflow[];
+  setWorkflows: React.Dispatch<React.SetStateAction<Workflow[]>>;
+  currentWorkflow: string | null;
+  setCurrentWorkflow: React.Dispatch<React.SetStateAction<string | null>>;
 }
 
 interface Workflow {
@@ -15,32 +18,32 @@ interface Workflow {
   name: string;
   json: string;
   prompt: string;
-  isActive?: boolean;
+  active?: boolean;
 }
 
-export default function Sidebar({ show, onClose, setWorkflowJson, setRefinedQuery, setShowWorkflow}: SidebarProps) {
+export default function Sidebar({ show, onClose, setWorkflowJson, setRefinedQuery, setShowWorkflow,workflows,setWorkflows,currentWorkflow,setCurrentWorkflow}: SidebarProps) {
   const { getToken } = useAuth();
   const { user } = useUser();
-  const [workflows, setWorkflows] = useState<Workflow[]>([]);
-  const [currentWorkflow, setCurrentWorkflow] = useState<string | null>(null);
+  // const [workflows, setWorkflows] = useState<Workflow[]>([]);
+  // const [currentWorkflow, setCurrentWorkflow] = useState<string | null>(null);
+  const fetchWorkflows = async () => {
+    try {
+      const token = await getToken();
+      const response = await fetch('http://localhost:8000/sidebar_workflows', {
+        headers: { Authorization: `Bearer ${token}` },
+      });
 
+      if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
+
+      const data = await response.json();
+      setWorkflows(data);
+    } catch (error) {
+      console.error('Error fetching workflows:', error);
+    }
+  };
   // Fetch workflows on startup
   useEffect(() => {
-    const fetchWorkflows = async () => {
-      try {
-        const token = await getToken();
-        const response = await fetch('http://localhost:8000/sidebar_workflows', {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-
-        if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
-
-        const data = await response.json();
-        setWorkflows(data);
-      } catch (error) {
-        console.error('Error fetching workflows:', error);
-      }
-    };
+    
 
     fetchWorkflows();
   }, [getToken]);
@@ -58,11 +61,15 @@ export default function Sidebar({ show, onClose, setWorkflowJson, setRefinedQuer
   };
 
   return (
+    // <div
+    //   className={`fixed inset-y-0 left-0 w-64 bg-gray-800 text-white transform transition-transform duration-300 ease-in-out z-50 ${
+    //     show ? 'translate-x-0' : '-translate-x-full'
+    //   }`}
+    // ></div>
     <div
-      className={`fixed inset-y-0 left-0 w-64 bg-gray-800 text-white transform transition-transform duration-300 ease-in-out z-50 ${
-        show ? 'translate-x-0' : '-translate-x-full'
-      }`}
-    >
+  className={`fixed inset-y-0 left-0 bg-gray-800 text-white transform transition-all duration-300 ease-in-out z-50 overflow-hidden`}
+  style={{ width: show ? '300px' : '0px' }}  // Adjust px value as needed
+>
       <div className="p-4 h-full flex flex-col justify-between">
         {/* Workflows Section */}
         <div>
@@ -72,7 +79,7 @@ export default function Sidebar({ show, onClose, setWorkflowJson, setRefinedQuer
               <X size={20} />
             </button>
           </div>
-
+          {/* <WorkflowGraph workflows={workflows} setWorkflows={setWorkflows} /> Pass props */}
           <div className="space-y-2">
             {workflows.map((workflow) => (
               <button
@@ -86,8 +93,8 @@ export default function Sidebar({ show, onClose, setWorkflowJson, setRefinedQuer
                 
   <span>{workflow.name}</span>
   <div
-    className={`w-2 h-2 rounded-full ${
-      workflow.isActive ? 'bg-green-500' : 'bg-red-500'
+    className={`absolute left-0 w-2 h-2 rounded-full ${
+      workflow.active ? 'bg-green-500' : 'bg-red-500'
     }`}
   />
                 </div>

@@ -16,7 +16,13 @@ type ChatMessage = {
   message: string;
   sender: 'user' | 'bot';
 };
-
+interface Workflow {
+  id: string;
+  name: string;
+  json: string;
+  prompt: string;
+  active?: boolean;
+}
 type QandA = {
   question: string;
   answer: string;
@@ -36,6 +42,8 @@ export default function MainLayout() {
   const [workflowJson, setWorkflowJson] = useState(null);
   const [showWorkflow, setShowWorkflow] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [workflows, setWorkflows] = useState<Workflow[]>([]);
+  const [currentWorkflow, setCurrentWorkflow] = useState<string | null>(null);
   // const token= getToken();
   // useEffect(() => {
   //   fetch("http://localhost:8000/checkuser",{
@@ -82,7 +90,7 @@ export default function MainLayout() {
     if (flag === 2) setFlag(0);
 
     if (questions.length > 0 && currentQuestionIndex <= questions.length) {
-      const updatedQandA = { ...qanda, [questions[currentQuestionIndex]]: message.trim() };
+      const updatedQandA = { ...qanda, [questions[currentQuestionIndex-1]]: message.trim() };
       setQanda(updatedQandA);
       setMessage('');
 
@@ -213,7 +221,21 @@ export default function MainLayout() {
       setShowWorkflow(false);
     }
   };
+  const fetchWorkflows = async () => {
+    try {
+      const token = await getToken();
+      const response = await fetch('http://localhost:8000/sidebar_workflows', {
+        headers: { Authorization: `Bearer ${token}` },
+      });
 
+      if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
+
+      const data = await response.json();
+      setWorkflows(data);
+    } catch (error) {
+      console.error('Error fetching workflows:', error);
+    }
+  };
   const handleGenerateWorkflow = async (type:boolean) => {
     try {
       const token = await getToken();
@@ -230,6 +252,8 @@ export default function MainLayout() {
       const data = await response.json();
       // setShowWorkflow(false);
       setWorkflowJson(data.response);
+      fetchWorkflows();
+      setCurrentWorkflow(data.response.workflow_id);
       setShowWorkflow(true);
     } catch (error) {
       console.error("Error generating workflow:", error);
@@ -260,7 +284,8 @@ export default function MainLayout() {
       </div>
 
       <Sidebar show={showSidebar} onClose={() => setShowSidebar(false)} setWorkflowJson={setWorkflowJson} 
-        setRefinedQuery={setRefinedQuery} setShowWorkflow={setShowWorkflow}/>
+        setRefinedQuery={setRefinedQuery} setShowWorkflow={setShowWorkflow} workflows={workflows}
+        setWorkflows={setWorkflows} currentWorkflow={currentWorkflow} setCurrentWorkflow={setCurrentWorkflow}/>
 
       <main className={`flex-1 flex ${showWorkflow ? 'flex-row' : 'flex-col'} pt-20 pb-24 px-4 gap-4 relative`}>
       <div className={`${showWorkflow ? 'w-1/3' : 'w-full'} flex flex-col overflow-y-auto z-0`}>  
@@ -381,7 +406,7 @@ export default function MainLayout() {
         {showWorkflow && workflowJson && (
           console.log("in main layout:",workflowJson),
           <div className="w-2/3 fixed right-0 top-0 bottom-0 z-0 pt-8 pb-8 px-3 mx-auto ">
-            <WorkflowGraph key={JSON.stringify(workflowJson)} workflowJson={workflowJson} />
+            <WorkflowGraph key={JSON.stringify(workflowJson)} workflowJson={workflowJson} workflows={workflows} setWorkflows={setWorkflows} setCurrentWorkflow={setCurrentWorkflow} currentWorkflow={currentWorkflow} />
           </div>
         )}
       </main>

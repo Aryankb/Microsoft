@@ -11,8 +11,9 @@ import ReactFlow, {
 } from "reactflow";
 import CustomNode from './CustomNode.tsx';
 import "reactflow/dist/style.css";
-import axios from "axios";
-import { FaPlay, FaCheckCircle, FaSave, FaBolt } from "react-icons/fa";
+import { FaPlay, FaCheckCircle, FaSave, FaBolt, FaStop } from "react-icons/fa";
+import { useAuth } from '@clerk/clerk-react';
+
 
 interface WorkflowNode {
   id: string | number;
@@ -41,10 +42,20 @@ interface WorkflowJson {
   workflow_id: string | number;
   workflow: WorkflowNode[];
   data_flow_notebook_keys?: string[];
+  active: boolean
+}
+interface Workflow {
+  id: string;
+  name: string;
+  json: string;
+  prompt: string;
+  active?: boolean;
 }
 
 interface WorkflowGraphProps {
   workflowJson: WorkflowJson;
+  workflows: Workflow[];
+  setWorkflows: React.Dispatch<React.SetStateAction<Workflow[]>>;
 }
 
 const arrangeNodes = (workflow,trigger) => {
@@ -178,15 +189,17 @@ const nodeTypes = {
   customNode: CustomNode,
 };
 
-const WorkflowGraph: React.FC<WorkflowGraphProps> = ({ workflowJson }) => {
-
+const WorkflowGraph: React.FC<WorkflowGraphProps> = ({ workflowJson,workflows,setWorkflows }) => {
+  // const [key, setKey] = useState(0);
+  const { getToken } = useAuth();
+  const [loading, setLoading] = useState(false);
   const [workflowData, setWorkflowData] = useState(workflowJson);
   const workflowId = workflowJson.workflow_id;
   useEffect(() => {
     console.log("🔥 Workflow Data Updated USE EFFECT:", workflowData);
   }, [workflowData]); // ✅ Now logs AFTER state updates
   const handleValueChange = (nodeId, field, value, type) => {
-    console.log(`🔥 handleValueChange called: node ${nodeId}, field: ${field}, value:`, value, `type: ${type}`);
+    // console.log(`🔥 handleValueChange called: node ${nodeId}, field: ${field}, value:`, value, `type: ${type}`);
   
     setWorkflowData((prevData) => {
       // ✅ 1. Deep Clone the JSON
@@ -204,7 +217,7 @@ const WorkflowGraph: React.FC<WorkflowGraphProps> = ({ workflowJson }) => {
         
       } else {
         // ✅ 3. Update `workflow` nodes
-        console.log("yaaaaaaaa!!",typeof nodeId, typeof newJson.workflow[0].id);
+        // console.log("yaaaaaaaa!!",typeof nodeId, typeof newJson.workflow[0].id);
         newJson.workflow = newJson.workflow.map((node) =>
           
           node.id === Number(nodeId)
@@ -224,8 +237,28 @@ const WorkflowGraph: React.FC<WorkflowGraphProps> = ({ workflowJson }) => {
     });
   };
 
-  
-  
+  const fetchWorkflows = async () => {
+    try {
+      const token = await getToken();
+      const response = await fetch('http://localhost:8000/sidebar_workflows', {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
+
+      const data = await response.json();
+      setWorkflows(data);
+    } catch (error) {
+      console.error('Error fetching workflows:', error);
+    }
+  };
+  // const toggleActiveState = (id: string) => {
+  //   setWorkflows((prevWorkflows) =>
+  //     prevWorkflows.map((workflow) =>
+  //       workflow.id === id ? { ...workflow, active: !workflow.active } : workflow
+  //     )
+  //   );
+  // };
   
   
   
@@ -244,8 +277,34 @@ const WorkflowGraph: React.FC<WorkflowGraphProps> = ({ workflowJson }) => {
 
 
   const runOrActivateWorkflow = async () => {
-    const url = workflowJson.trigger.name === "TRIGGER_MANUAL" ? "/run_workflow" : "/activate_workflow";
-    await axios.post(url, { workflow_id: workflowId });
+    const token = await getToken();
+    setLoading(true);
+    const url = workflowJson.trigger.name === "TRIGGER_MANUAL" ? "http://localhost:8000/run_workflow" : "http://localhost:8000/activate_workflow";
+    console.log("🚀 Running or activating workflow:", workflowData);
+    const response = await fetch(url, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${token}`, // Replace with your actual auth token
+      },
+      body: JSON.stringify({ workflowjson: workflowData }),
+    });
+    setLoading(false);
+    if (!response.ok) {
+      const responseData = await response.json();
+      console.error("Failed to run or activate workflow", responseData.message);
+      if (responseData.message === "Please fill in your API keys to proceed.") {
+        window.location.href = "/api-keys"; // Redirect to API key page
+      }
+    }
+    else{
+      const responseData = await response.json();
+      console.log("🚀 Workflow activated:", responseData);
+      setWorkflowData(responseData.json);
+      // setKey(prevKey => prevKey + 1);
+      // toggleActiveState(workflowId.toString());
+      fetchWorkflows();
+    }
   };
 
   return (
@@ -262,6 +321,12 @@ const WorkflowGraph: React.FC<WorkflowGraphProps> = ({ workflowJson }) => {
       overflow: "hidden",  
       margin: "auto"  
   }}>
+    {loading && (
+      <div className="fixed inset-0 flex flex-col items-center justify-center bg-black bg-opacity-80 z-50">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-4 border-blue-500"></div>
+        <p className="mt-4 text-lg">Acivating/Deactivating workflow... Please wait</p>
+      </div>
+    )}
       
       
       <ReactFlow nodes={nodes} edges={edges} onNodesChange={onNodesChange} onEdgesChange={onEdgesChange}onConnect={onConnect} nodeTypes={nodeTypes} fitView style={{ background: "#1a1a1a" }}>
@@ -316,8 +381,8 @@ const WorkflowGraph: React.FC<WorkflowGraphProps> = ({ workflowJson }) => {
     onClick={runOrActivateWorkflow}
     className="flex items-center gap-2 px-4 py-2 text-white bg-red-500 rounded-lg shadow-md transition-all duration-300 hover:bg-green-600 hover:scale-105 active:scale-95"
   >
-    {workflowJson.trigger.name === "TRIGGER_MANUAL" ? <FaPlay /> : <FaBolt />} 
-    {workflowJson.trigger.name === "TRIGGER_MANUAL" ? "Run Workflow" : "Activate Workflow"}
+    {workflowJson.trigger.name === "TRIGGER_MANUAL" ? <FaPlay /> : (workflowData.active?<FaStop/>:<FaBolt />)} 
+    {workflowJson.trigger.name === "TRIGGER_MANUAL" ? "Run Workflow" : (workflowData.active?"Deactivate Workflow":"Activate Workflow")}
   </button>
 </div>
 

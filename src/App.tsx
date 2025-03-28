@@ -2,7 +2,9 @@ import { ClerkProvider, SignIn, SignedIn, SignedOut } from "@clerk/clerk-react";
 import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
 import MainLayout from "../src/components/MainLayout";
 import bgImage from "./assets/robot_final.jpg";
-
+import CreateToolPage from './components/CreateToolPage';
+import ApiKeyModal from './components/ApiKeyModal';
+import ManageAuth from './components/ManageAuth';
 const CLERK_PUBLISHABLE_KEY = "pk_test_bWludC1kaW5vc2F1ci01NC5jbGVyay5hY2NvdW50cy5kZXYk";
 
 function App() {
@@ -71,6 +73,9 @@ function App() {
         <SignedIn>
           <Routes>
             <Route path="/*" element={<MainLayoutWithAuthCheck />} />
+            <Route path="/create-tool" element={<CreateToolPage />} />
+            <Route path="/api-keys" element={<ManageAuth/>} />
+            <Route path="/manage-auths" element={<ManageAuth/>}/>
           </Routes>
         </SignedIn>
       </Router>
