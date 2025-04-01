@@ -37,7 +37,7 @@ jobs:
           docker pull ${{ secrets.DOCKER_USERNAME }}/sigmoyd-frontend:latest
           
           # Run the new frontend container in detached mode
-          docker run -d --name sigmoyd-frontend -p 5173:5173 ${{ secrets.DOCKER_USERNAME }}/sigmoyd-frontend:latest
+          docker run -d --name sigmoyd-frontend -p 80:5173 ${{ secrets.DOCKER_USERNAME }}/sigmoyd-frontend:latest
           
           # Confirm container is running
           docker ps -a
