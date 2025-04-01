@@ -11,7 +11,7 @@ WORKDIR /app
 #     nvm use 22.14.0
 
 # Install Yarn globally
-RUN npm install -g yarn
+RUN corepack enable
 
 # Copy package.json and yarn.lock to the container
 COPY package.json yarn.lock ./
