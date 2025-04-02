@@ -374,17 +374,17 @@ export default function MainLayout() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-background text-text relative">
+    <div className="min-h-screen flex flex-col bg-[var(--color-background)] text-[var(--color-text)] relative">
       {/* Loading Screen */}
       {loading && (
         <div className="fixed inset-0 flex flex-col items-center justify-center bg-black bg-opacity-80 z-50">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-4 border-primary"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-4 border-[var(--color-primary)]"></div>
           <p className="mt-4 text-lg">Generating workflow... Please wait</p>
         </div>
       )}
 
-      {/* Top Navigation */}
-      <div className="fixed top-0 left-0 right-0 z-50">
+      {/* Top Navigation Bar with black background */}
+      <div className="fixed top-0 left-0 right-0 z-50 bg-black">
         <TopBar
           onMenuClick={() => setShowSidebar(true)}
           onNewChatClick={handleNewChatClick}
@@ -412,7 +412,7 @@ export default function MainLayout() {
         <div
           className={`flex flex-col ${
             showWorkflow
-              ? "w-1/3 border-r border-gray-700 bg-background z-10"
+              ? "w-1/3 border-r border-gray-700 bg-[var(--color-background)] z-10"
               : "w-full max-w-4xl mx-auto"
           } px-4 pt-4 overflow-y-auto min-h-full`}
         >
@@ -457,7 +457,7 @@ export default function MainLayout() {
 
       {/* Input Bar */}
       {(chats.length > 0 || showWorkflow) && (
-        <div className="fixed bottom-0 left-0 right-0 bg-card border-t border-gray-700 p-4 z-[100]">
+        <div className="fixed bottom-0 left-0 right-0 bg-[var(--color-card)] border-t border-gray-700 p-4 z-[100]">
           <div
             className={`mx-auto ${
               showWorkflow ? "pl-[calc(100%/3)] pr-4" : "max-w-3xl"

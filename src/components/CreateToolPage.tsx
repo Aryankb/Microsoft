@@ -1,25 +1,27 @@
-import { useState } from 'react';
+import { useState } from "react";
 // import { useNavigate } from 'react-router-dom';
-import { Controlled as CodeMirror } from 'react-codemirror2';
-import 'codemirror/lib/codemirror.css';
-import 'codemirror/mode/python/python';
-import 'codemirror/theme/material.css';
+import { Controlled as CodeMirror } from "react-codemirror2";
+import "codemirror/lib/codemirror.css";
+import "codemirror/mode/python/python";
+import "codemirror/theme/material.css";
 
 export default function CreateToolPage() {
   // const navigate = useNavigate();
 
-  const [toolName, setToolName] = useState('');
-  const [description, setDescription] = useState('');
-  const [inputs, setInputs] = useState([{ name: '', type: '' }]);
-  const [outputs, setOutputs] = useState(['']);
-  const [code, setCode] = useState(`def function():\n    return {"status": "success"}`);
-  const [requirements, setRequirements] = useState('');
+  const [toolName, setToolName] = useState("");
+  const [description, setDescription] = useState("");
+  const [inputs, setInputs] = useState([{ name: "", type: "" }]);
+  const [outputs, setOutputs] = useState([""]);
+  const [code, setCode] = useState(
+    `def function():\n    return {"status": "success"}`
+  );
+  const [requirements, setRequirements] = useState("");
 
   // Add new input field
-  const addInput = () => setInputs([...inputs, { name: '', type: '' }]);
+  const addInput = () => setInputs([...inputs, { name: "", type: "" }]);
 
   // Add new output field
-  const addOutput = () => setOutputs([...outputs, '']);
+  const addOutput = () => setOutputs([...outputs, ""]);
 
   // Save Tool Data (Replace with API Call)
   const saveTool = () => {
@@ -29,9 +31,9 @@ export default function CreateToolPage() {
       inputs,
       outputs,
       code,
-      requirements: requirements.split(',').map(req => req.trim()), // Convert to array
+      requirements: requirements.split(",").map((req) => req.trim()), // Convert to array
     };
-    console.log('Tool Data:', toolData); // ✅ Replace with API call
+    console.log("Tool Data:", toolData); // ✅ Replace with API call
   };
 
   return (
@@ -84,7 +86,12 @@ export default function CreateToolPage() {
             />
           </div>
         ))}
-        <button onClick={addInput} className="mt-2 bg-blue-500 px-3 py-1 rounded">+ Add Input</button>
+        <button
+          onClick={addInput}
+          className="mt-2 bg-blue-500 px-3 py-1 rounded"
+        >
+          + Add Input
+        </button>
       </div>
 
       {/* Outputs */}
@@ -104,7 +111,12 @@ export default function CreateToolPage() {
             }}
           />
         ))}
-        <button onClick={addOutput} className="mt-2 bg-blue-500 px-3 py-1 rounded">+ Add Output</button>
+        <button
+          onClick={addOutput}
+          className="mt-2 bg-blue-500 px-3 py-1 rounded"
+        >
+          + Add Output
+        </button>
       </div>
 
       {/* Python Code Editor */}
@@ -112,13 +124,15 @@ export default function CreateToolPage() {
         <label className="block text-sm mb-1">Python Code</label>
         <CodeMirror
           value={code}
-          options={{ mode: 'python', theme: 'material', lineNumbers: true }}
+          options={{ mode: "python", theme: "material", lineNumbers: true }}
           onBeforeChange={(editor, data, value) => setCode(value)}
         />
       </div>
 
       {/* Requirements */}
-      <label className="block text-sm mt-4 mb-1">Requirements (comma-separated)</label>
+      <label className="block text-sm mt-4 mb-1">
+        Requirements (comma-separated)
+      </label>
       <input
         type="text"
         className="w-full p-2 rounded bg-gray-700 border border-gray-600"
@@ -127,7 +141,12 @@ export default function CreateToolPage() {
       />
 
       {/* Save Button */}
-      <button onClick={saveTool} className="mt-4 bg-green-500 px-4 py-2 rounded">Save Tool</button>
+      <button
+        onClick={saveTool}
+        className="mt-4 bg-green-500 px-4 py-2 rounded"
+      >
+        Save Tool
+      </button>
     </div>
   );
 }

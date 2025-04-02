@@ -310,11 +310,10 @@ const WorkflowGraph: React.FC<WorkflowGraphProps> = ({
     <div
       style={{
         position: "absolute",
-        top: "70px" /* Adjust this based on your top bar height */,
-        bottom: "93px" /* Adjust this based on your bottom bar height */,
-        left: "20px" /* Decrease left while keeping it square */,
+        top: "70px",
+        bottom: "93px",
+        left: "20px",
         right: "5px",
-        // width: "calc(100% - 100px)", /* Decrease width while keeping it square */
         border: "1px solid #333",
         borderRadius: "8px",
         overflow: "hidden",
@@ -323,9 +322,9 @@ const WorkflowGraph: React.FC<WorkflowGraphProps> = ({
     >
       {loading && (
         <div className="fixed inset-0 flex flex-col items-center justify-center bg-black bg-opacity-80 z-50">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-4 border-blue-500"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-4 border-primary"></div>
           <p className="mt-4 text-lg">
-            Acivating/Deactivating workflow... Please wait
+            Activating/Deactivating workflow... Please wait
           </p>
         </div>
       )}
@@ -338,23 +337,19 @@ const WorkflowGraph: React.FC<WorkflowGraphProps> = ({
         onConnect={onConnect}
         nodeTypes={nodeTypes}
         fitView
-        style={{ background: "#1a1a1a" }}
+        style={{ background: "var(--color-background)" }}
       >
-        <MiniMap />
+        <MiniMap
+          style={{ backgroundColor: "var(--color-card)" }}
+          nodeColor="var(--color-primary)"
+        />
         <Controls />
-        <Background />
+        <Background color="var(--color-text-accent)" />
+
         <div
           className="react-flow__panel react-flow__controls top right"
           style={{ pointerEvents: "all" }}
-        >
-          {/* <button
-    onClick={saveWorkflow}
-    className="flex items-center gap-2 px-4 py-2 text-white bg-blue-500 rounded-lg shadow-md transition-all duration-300 hover:bg-blue-600 hover:scale-105 active:scale-95"
-    style={{ marginRight: "10px" }}
-  >
-    <FaSave /> Save Workflow
-  </button> */}
-        </div>
+        ></div>
         <div
           className="react-flow__panel react-flow__controls top left"
           style={{ pointerEvents: "all" }}
@@ -370,7 +365,7 @@ const WorkflowGraph: React.FC<WorkflowGraphProps> = ({
               cursor: "pointer",
               fontSize: "24px",
               fontWeight: "bold",
-              color: "#fff",
+              color: "var(--color-text)",
             }}
           >
             {workflowData.workflow_name}
@@ -392,13 +387,20 @@ const WorkflowGraph: React.FC<WorkflowGraphProps> = ({
                 workflow_name: e.target.value,
               }))
             }
-            className="px-2 py-2 border rounded"
+            className="px-2 py-2 border rounded bg-card text-text"
             placeholder="Workflow Name"
             style={{ display: "none" }}
           />
-          <button
+          <div
             onClick={runOrActivateWorkflow}
-            className="flex items-center gap-2 px-4 py-2 text-white bg-red-500 rounded-lg shadow-md transition-all duration-300 hover:bg-green-600 hover:scale-105 active:scale-95"
+            className={`flex items-center gap-2 px-6 py-3 rounded-lg shadow-md transition-all duration-300 mt-4 font-medium cursor-pointer ${
+              workflowJson.trigger.name === "TRIGGER_MANUAL"
+                ? "bg-blue-400 text-gray-900 hover:shadow-[0px_0px_15px_rgba(96,165,250,0.7)]"
+                : workflowData.active
+                ? "bg-red-400 text-gray-900 hover:shadow-[0px_0px_15px_rgba(248,113,113,0.7)]"
+                : "bg-red-400 text-gray-900 hover:shadow-[0px_0px_15px_rgba(250,204,21,0.7)]"
+            } hover:scale-105 active:scale-95 border border-gray-600`}
+            style={{ minWidth: "180px", textAlign: "center" }}
           >
             {workflowJson.trigger.name === "TRIGGER_MANUAL" ? (
               <FaPlay />
@@ -407,12 +409,14 @@ const WorkflowGraph: React.FC<WorkflowGraphProps> = ({
             ) : (
               <FaBolt />
             )}
-            {workflowJson.trigger.name === "TRIGGER_MANUAL"
-              ? "Run Workflow"
-              : workflowData.active
-              ? "Deactivate Workflow"
-              : "Activate Workflow"}
-          </button>
+            <span>
+              {workflowJson.trigger.name === "TRIGGER_MANUAL"
+                ? "Run Workflow"
+                : workflowData.active
+                ? "Deactivate Workflow"
+                : "Activate Workflow"}
+            </span>
+          </div>
         </div>
       </ReactFlow>
     </div>

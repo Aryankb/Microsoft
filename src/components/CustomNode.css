@@ -11,15 +11,15 @@
 
 /* Node Type Colors */
 .node-llm {
-  background-color: #a2f9ff8e; /* Light Blue */
+  background-color: rgba(0, 173, 181, 0.2); /* Light Primary Color */
 }
 
 .node-connector {
-  background-color: #ffdd5783; /* Yellow */
+  background-color: rgba(255, 173, 70, 0.2); /* Light Warning Color */
 }
 
 .node-tool {
-  background-color: #ffb6c17e; /* Pink */
+  background-color: rgba(255, 107, 107, 0.2); /* Light Secondary Color */
 }
 
 .node-header {
@@ -65,11 +65,11 @@
 }
 
 .execution-mark.green {
-  background-color: green;
+  background-color: #22c55e; /* Success color */
 }
 
 .execution-mark.red {
-  background-color: red;
+  background-color: #ff6b6b; /* Secondary color */
 }
 
 .node-section {
@@ -98,7 +98,7 @@
 }
 
 .expand-button:hover {
-  background-color: rgba(0, 0, 0, 0.4);
+  background-color: rgba(0, 173, 181, 0.4); /* Primary color with opacity */
   transform: scale(1.1);
 }
 
@@ -113,7 +113,7 @@
   width: 600px;
   max-width: 90vw;
   max-height: 80vh;
-  background-color: #2a2a2a;
+  background-color: #1e1e1e; /* Card color */
   padding: 15px;
   border-radius: 8px;
   box-shadow: 0 8px 25px rgba(0, 0, 0, 0.4);
@@ -204,7 +204,7 @@
 }
 
 .expanded-close:hover {
-  background: rgba(255, 255, 255, 0.2);
+  background: rgba(0, 173, 181, 0.3); /* Primary color with opacity */
 }
 
 .textarea-container.expanded label {

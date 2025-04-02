@@ -27,11 +27,13 @@
 .App-link {
   color: #61dafb;
 }
-.cl-footer, .clerk-footer, .clerk-auth-footer {
+.cl-footer,
+.clerk-footer,
+.clerk-auth-footer {
   background-color: rgba(0, 0, 0, 0.5) !important;
-  box-shadow: 0px 0px 10px #00FFFF !important;
+  box-shadow: 0px 0px 10px #00ffff !important;
   border-radius: 10px !important;
-  border: 2px solid #00FFFF !important;
+  border: 2px solid #00ffff !important;
   color: white !important;
 }
 @keyframes App-logo-spin {

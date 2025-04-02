@@ -4,10 +4,91 @@
 
 :root {
   color-scheme: dark;
+
+  /* Custom color variables - using !important to ensure they're applied */
+  --color-background: #121212 !important;
+  --color-card: #1e1e1e !important;
+  --color-navbar: #000000 !important; /* New color for navbar */
+  --color-text: #e0e0e0 !important;
+  --color-text-accent: #b3b3b3 !important;
+  --color-primary: #00adb5 !important;
+  --color-secondary: #ff6b6b !important;
+  --color-success: #22c55e !important;
+  --color-warning: #ffad46 !important;
+  --color-button-secondary: #333333 !important;
 }
 
+html,
 body {
-  @apply bg-gray-900 text-white;
+  background-color: var(--color-background);
+  color: var(--color-text);
+  font-family: "Inter", sans-serif;
+  min-height: 100vh;
+  width: 100%;
+}
+
+/* Override text color for elements with better specificity */
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  color: var(--color-text) !important;
+  font-weight: bold;
+}
+
+/* Allow p, span, div to inherit color when needed */
+p,
+span,
+div {
+  color: inherit;
+}
+
+/* Default text color for general elements */
+.text-default {
+  color: var(--color-text);
+}
+
+.text-accent {
+  color: var(--color-text-accent);
+}
+
+/* Custom button styles */
+.btn-primary {
+  background-color: var(--color-primary);
+  color: var(--color-background);
+  @apply px-4 py-2 rounded-lg transition-all duration-300;
+}
+.btn-primary:hover {
+  box-shadow: 0px 0px 10px rgba(0, 173, 181, 0.6);
+}
+
+.btn-secondary {
+  background-color: var(--color-button-secondary);
+  color: var(--color-text);
+  @apply px-4 py-2 rounded-lg transition-all duration-300;
+}
+.btn-secondary:hover {
+  box-shadow: 0px 0px 5px rgba(224, 224, 224, 0.3);
+}
+
+.btn-danger {
+  background-color: var(--color-secondary);
+  color: var(--color-background);
+  @apply px-4 py-2 rounded-lg transition-all duration-300;
+}
+.btn-danger:hover {
+  box-shadow: 0px 0px 10px rgba(255, 107, 107, 0.6);
+}
+
+.btn-success {
+  background-color: var(--color-success);
+  color: var(--color-background);
+  @apply px-4 py-2 rounded-lg transition-all duration-300;
+}
+.btn-success:hover {
+  box-shadow: 0px 0px 10px rgba(34, 197, 94, 0.6);
 }
 
 /* Custom scrollbar */
@@ -17,13 +98,14 @@ body {
 }
 
 ::-webkit-scrollbar-track {
-  @apply bg-gray-800;
+  background-color: var(--color-card);
 }
 
 ::-webkit-scrollbar-thumb {
-  @apply bg-gray-600 rounded-full;
+  background-color: var(--color-button-secondary);
+  @apply rounded-full;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  @apply bg-gray-500;
+  background-color: var(--color-primary);
 }

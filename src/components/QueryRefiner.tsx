@@ -50,9 +50,9 @@ const QueryRefiner = ({
   }
 
   return (
-    <div className="bg-gray-800 p-4 rounded-lg shadow-md">
+    <div className="bg-gray-900 p-4 rounded-lg shadow-md border border-gray-700">
       <div
-        className="px-5 py-3 rounded-lg bg-green-500 text-white cursor-pointer mb-4"
+        className="px-5 py-3 rounded-lg text-white cursor-pointer mb-4"
         onClick={(e) => {
           const input = e.currentTarget
             .nextElementSibling as HTMLTextAreaElement;
@@ -94,7 +94,7 @@ const QueryRefiner = ({
             setTimeout(() => autoResizeTextarea(e.currentTarget), 0);
           }
         }}
-        className="w-full px-4 py-3 border rounded-lg resize-none bg-gray-700 text-white mb-4"
+        className="w-full px-4 py-3 border rounded-lg resize-none bg-gray-800 text-white mb-4 border-gray-600"
         placeholder="Refined Query"
         style={{
           display: "none",
@@ -104,26 +104,26 @@ const QueryRefiner = ({
       />
 
       <div className="flex justify-between gap-4">
-        <button
+        <div
           onClick={() => {
             const userChoice = showWorkflow
               ? window.confirm("Cancel → create new\nOK → update existing")
               : false;
             handleGenerateWorkflow(userChoice);
           }}
-          className="flex-1 px-4 py-2 bg-blue-500 rounded-lg hover:bg-blue-600 transition-all duration-200 text-center font-medium"
+          className="flex-1 px-4 py-3 bg-blue-400 text-gray-900 rounded-lg hover:shadow-[0px_0px_15px_rgba(96,165,250,0.7)] transition-all duration-200 text-center font-medium cursor-pointer"
         >
           Generate Workflow
-        </button>
+        </div>
 
         <button
           onClick={handleCopyText}
-          className="px-4 py-2 bg-gray-600 rounded-lg hover:bg-gray-700 transition-all duration-200 flex items-center gap-2 whitespace-nowrap"
+          className="px-4 py-2 bg-gray-800 hover:bg-gray-700 rounded-lg transition-all duration-200 flex items-center gap-2 whitespace-nowrap text-white"
           title="Copy to clipboard"
         >
           {copySuccess ? (
             <>
-              <Check size={16} className="text-green-400" />
+              <Check size={16} className="text-[#22C55E]" />
               <span>Copied</span>
             </>
           ) : (

@@ -20,14 +20,16 @@ const WelcomeScreen: React.FC<WelcomeScreenProps> = ({
 }) => {
   return (
     <div className="flex flex-col items-center justify-center flex-grow">
-      <h1 className="text-3xl font-bold mb-4 text-text">SIGMOYD</h1>
+      <h1 className="text-3xl font-bold mb-4 text-[var(--color-text)]">
+        SIGMOYD
+      </h1>
       <div className="flex gap-4 mb-4">
         <button
           onClick={() => onModeChange("workflow")}
           className={`px-4 py-2 rounded ${
             mode === "workflow"
-              ? "bg-primary text-background"
-              : "bg-button-secondary"
+              ? "bg-[var(--color-primary)] text-[var(--color-background)]"
+              : "bg-[var(--color-button-secondary)]"
           }`}
         >
           Create Workflow
@@ -36,8 +38,8 @@ const WelcomeScreen: React.FC<WelcomeScreenProps> = ({
           onClick={() => onModeChange("general")}
           className={`px-4 py-2 rounded ${
             mode === "general"
-              ? "bg-primary text-background"
-              : "bg-button-secondary"
+              ? "bg-[var(--color-primary)] text-[var(--color-background)]"
+              : "bg-[var(--color-button-secondary)]"
           }`}
         >
           General Query
@@ -56,7 +58,7 @@ const WelcomeScreen: React.FC<WelcomeScreenProps> = ({
           <button
             key={index}
             onClick={() => setMessage(prompt)}
-            className="px-4 py-2 bg-card rounded-full text-sm whitespace-nowrap hover:bg-button-secondary"
+            className="px-4 py-2 bg-[var(--color-card)] rounded-full text-sm whitespace-nowrap hover:bg-[var(--color-button-secondary)]"
           >
             {prompt}
           </button>

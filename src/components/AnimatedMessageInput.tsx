@@ -115,8 +115,8 @@ const AnimatedMessageInput = ({
     <div className="relative flex-1">
       <div
         className={cn(
-          "flex bg-gray-700 rounded-lg overflow-hidden transition-all duration-300",
-          isFocused && "ring-2 ring-blue-500"
+          "flex bg-[#444444] rounded-lg overflow-hidden transition-all duration-300 border border-gray-600",
+          isFocused && "ring-2 ring-[#00ADB5]"
         )}
       >
         <textarea
@@ -132,17 +132,17 @@ const AnimatedMessageInput = ({
           placeholder=""
           disabled={isDisabled}
           className={cn(
-            "w-full px-6 py-4 bg-transparent focus:outline-none resize-none overflow-y-auto",
+            "w-full px-6 py-4 bg-[#444444] focus:outline-none resize-none overflow-y-auto text-white",
             isDisabled && "opacity-50 cursor-not-allowed"
           )}
           style={{ minHeight: "56px", maxHeight: "150px" }}
           rows={1}
         />
 
-        <div className="flex items-center pr-3">
+        <div className="flex items-center pr-3 bg-[#444444]">
           <button
             onClick={handleMicClick}
-            className="text-gray-400 hover:text-gray-200 transition-colors p-2 hover:bg-gray-600 rounded-full mr-1"
+            className="text-gray-300 hover:text-white transition-colors p-2 hover:bg-[#555555] rounded-full mr-1"
             aria-label="Voice input"
           >
             <Mic size={18} />
@@ -154,8 +154,8 @@ const AnimatedMessageInput = ({
             className={cn(
               "p-2 rounded-full transition-all duration-300",
               message.trim()
-                ? "bg-blue-500 text-white hover:bg-blue-600"
-                : "bg-gray-600 text-gray-400 cursor-not-allowed"
+                ? "bg-[#00ADB5] text-white hover:shadow-[0px_0px_10px_rgba(0,173,181,0.6)]"
+                : "bg-[#555555] text-gray-400 cursor-not-allowed"
             )}
           >
             <ArrowRight
@@ -172,7 +172,7 @@ const AnimatedMessageInput = ({
       {/* Animated Placeholder Text */}
       {!message && (
         <div className="absolute inset-0 flex items-center pointer-events-none px-6">
-          <div className="text-gray-400 truncate transition-all duration-300">
+          <div className="text-gray-300 truncate transition-all duration-300">
             {!isFocused && (
               <div className="relative overflow-hidden h-6">
                 {placeholders.map((p, i) => (

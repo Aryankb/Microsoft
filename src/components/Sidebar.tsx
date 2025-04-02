@@ -136,12 +136,12 @@ export default function Sidebar({
 
   return (
     <div
-      className={`fixed inset-y-0 left-0 bg-gray-800 text-white transform transition-all duration-300 ease-in-out z-50 overflow-hidden`}
-      style={{ width: show ? "300px" : "0px" }} // Adjust px value as needed
+      className={`fixed inset-y-0 left-0 bg-gray-900 text-text transform transition-all duration-300 ease-in-out z-50 overflow-hidden`}
+      style={{ width: show ? "300px" : "0px" }}
     >
       {isDeleting && (
         <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center z-10">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white"></div>
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-text"></div>
         </div>
       )}
 
@@ -150,41 +150,43 @@ export default function Sidebar({
         <div>
           <div className="flex justify-between items-center mb-6">
             <h2 className="text-xl font-semibold">Your Workflows</h2>
-            <button onClick={onClose} className="p-2 hover:bg-gray-700 rounded">
+            <button onClick={onClose} className="p-2 hover:bg-gray-800 rounded">
               <X size={20} />
             </button>
           </div>
 
-          {/* New Chat Button */}
-          <button
+          {/* New Chat Button - Apply bg color directly to the div */}
+          <div
             onClick={() => {
               onNewChatClick();
-              onClose(); // Close sidebar after clicking new chat
+              onClose();
             }}
-            className="w-full flex items-center gap-2 px-4 py-3 mb-4 bg-blue-600 hover:bg-blue-700 rounded-md transition-colors"
+            className="w-full flex items-center gap-2 px-4 py-3 mb-4 bg-blue-400 text-gray-900 hover:shadow-[0px_0px_10px_rgba(96,165,250,0.7)] rounded-md transition-all duration-200 font-medium cursor-pointer"
           >
             <PlusCircle size={18} />
             <span>New Chat</span>
-          </button>
+          </div>
 
-          <div className="space-y-2">
+          <div className="space-y-2 py-2 mt-4">
             {workflows.map((workflow) => (
               <div
                 key={workflow.id}
-                className="relative flex items-center bg-gray-750 rounded-md overflow-hidden hover:bg-gray-700 transition-all duration-200 group"
+                className="relative flex items-center bg-gray-800 rounded-md overflow-hidden hover:bg-gray-700 transition-all duration-200 group"
               >
                 {/* Status indicator */}
                 <div
                   className={`w-1 h-full absolute left-0 top-0 ${
-                    workflow.active ? "bg-green-500" : "bg-red-500"
+                    workflow.active ? "bg-green-400" : "bg-red-400"
                   }`}
                 />
 
-                {/* Workflow button - with reduced right padding to make space for delete button */}
-                <button
+                {/* Workflow button - Apply bg color directly to the div */}
+                <div
                   onClick={() => handleWorkflowClick(workflow.id)}
-                  className={`flex-grow text-left pl-3 pr-12 py-2 transition-colors ${
-                    currentWorkflow === workflow.id ? "bg-blue-600" : ""
+                  className={`flex-grow text-left pl-3 pr-12 py-2 transition-colors cursor-pointer ${
+                    currentWorkflow === workflow.id
+                      ? "bg-blue-200 text-gray-900"
+                      : ""
                   }`}
                 >
                   <div className="flex items-center w-full">
@@ -194,9 +196,9 @@ export default function Sidebar({
                         : workflow.name}
                     </span>
                   </div>
-                </button>
+                </div>
 
-                {/* Delete button with improved visibility */}
+                {/* Delete button */}
                 <div
                   className="absolute right-0 top-0 bottom-0 w-10 flex items-center justify-center cursor-pointer z-10"
                   onClick={(e) => handleDeleteWorkflow(workflow.id, e)}
@@ -204,7 +206,7 @@ export default function Sidebar({
                   <div className="p-1.5 rounded-full group-hover:bg-red-500/20">
                     <Trash2
                       size={16}
-                      className={`group-hover:text-red-500 transition-colors`}
+                      className="group-hover:text-red-500 transition-colors"
                     />
                   </div>
                 </div>
@@ -219,16 +221,16 @@ export default function Sidebar({
             <UserButton />
             <div>
               <p className="text-sm font-semibold">{user?.fullName}</p>
-              <p className="text-xs text-gray-400">
+              <p className="text-xs text-text-accent">
                 {user?.primaryEmailAddress?.emailAddress}
               </p>
             </div>
           </div>
 
           <SignOutButton>
-            <button className="mt-3 w-full text-left px-4 py-2 bg-red-600 hover:bg-red-700 rounded">
+            <div className="mt-3 w-full text-left px-4 py-2 bg-red-400 text-white hover:bg-red-500 hover:shadow-md rounded transition-all cursor-pointer">
               Logout
-            </button>
+            </div>
           </SignOutButton>
         </div>
       </div>

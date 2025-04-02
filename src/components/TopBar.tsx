@@ -16,9 +16,9 @@ import {
 
 interface TopBarProps {
   onMenuClick: () => void;
-  onHomeClick?: () => void; // New prop for home button click
-  onNewChatClick: () => void; // New prop for starting a new chat
-  sidebarVisible: boolean; // Prop to know if sidebar is visible
+  onHomeClick?: () => void;
+  onNewChatClick: () => void;
+  sidebarVisible: boolean;
 }
 
 const menuItems = [
@@ -40,49 +40,47 @@ export default function TopBar({
 }: TopBarProps) {
   const navigate = useNavigate();
 
-  // Open Create Tool Page
   const handleCreateTool = () => {
     navigate("/create-tool");
   };
 
-  // Navigate to Manage Auths Page
   const handleManageAuths = () => {
     navigate("/manage-auths");
   };
 
   return (
-    <div className="fixed top-0 left-0 right-0 bg-gray-800 border-b border-gray-700 z-50">
+    <div className="fixed top-0 left-0 right-0 bg-black border-b border-gray-700 z-50">
       <div className="container mx-auto px-4 h-16 flex items-center justify-between">
         <div className="flex items-center gap-2">
           <button
             onClick={onMenuClick}
-            className="p-2 hover:bg-gray-700 rounded"
+            className="p-2 hover:bg-button-secondary rounded"
           >
             <Menu size={25} />
           </button>
 
           {/* Home Button */}
           {onHomeClick && (
-            <button
+            <div
               onClick={onHomeClick}
-              className="flex items-center gap-2 px-3 py-2 bg-blue-600 hover:bg-blue-700 rounded-md transition-colors"
+              className="hidden sm:flex items-center gap-2 px-3 py-2 bg-blue-400 text-gray-900 hover:shadow-[0px_0px_10px_rgba(96,165,250,0.7)] rounded-md transition-colors duration-300 font-medium cursor-pointer"
               title="Home"
             >
               <Home size={18} />
               <span className="hidden sm:inline">Home</span>
-            </button>
+            </div>
           )}
 
           {/* New Chat Button - Only show when sidebar is closed */}
           {!sidebarVisible && (
-            <button
+            <div
               onClick={onNewChatClick}
-              className="flex items-center gap-2 px-3 py-2 bg-blue-600 hover:bg-blue-700 rounded-md transition-colors"
+              className="hidden sm:flex items-center gap-2 px-3 py-2 bg-blue-400 text-gray-900 hover:shadow-[0px_0px_10px_rgba(96,165,250,0.7)] rounded-md transition-colors duration-300 font-medium cursor-pointer"
               title="Start a New Chat"
             >
               <PlusCircle size={18} />
               <span className="hidden sm:inline">New Chat</span>
-            </button>
+            </div>
           )}
         </div>
 
@@ -90,7 +88,7 @@ export default function TopBar({
           {menuItems.map((item, index) => (
             <button
               key={index}
-              className="p-2 hover:bg-gray-700 rounded"
+              className="p-2 hover:bg-button-secondary rounded"
               title={item.label}
               onClick={
                 item.label === "Add Auth"
