@@ -11,11 +11,14 @@ import {
   DollarSign,
   Plus,
   Home,
+  PlusCircle,
 } from "lucide-react";
 
 interface TopBarProps {
   onMenuClick: () => void;
   onHomeClick?: () => void; // New prop for home button click
+  onNewChatClick: () => void; // New prop for starting a new chat
+  sidebarVisible: boolean; // Prop to know if sidebar is visible
 }
 
 const menuItems = [
@@ -29,7 +32,12 @@ const menuItems = [
   { icon: Plus, label: "Create Tool" },
 ];
 
-export default function TopBar({ onMenuClick, onHomeClick }: TopBarProps) {
+export default function TopBar({
+  onMenuClick,
+  onHomeClick,
+  onNewChatClick,
+  sidebarVisible,
+}: TopBarProps) {
   const navigate = useNavigate();
 
   // Open Create Tool Page
@@ -62,6 +70,18 @@ export default function TopBar({ onMenuClick, onHomeClick }: TopBarProps) {
             >
               <Home size={18} />
               <span className="hidden sm:inline">Home</span>
+            </button>
+          )}
+
+          {/* New Chat Button - Only show when sidebar is closed */}
+          {!sidebarVisible && (
+            <button
+              onClick={onNewChatClick}
+              className="flex items-center gap-2 px-3 py-2 bg-blue-600 hover:bg-blue-700 rounded-md transition-colors"
+              title="Start a New Chat"
+            >
+              <PlusCircle size={18} />
+              <span className="hidden sm:inline">New Chat</span>
             </button>
           )}
         </div>

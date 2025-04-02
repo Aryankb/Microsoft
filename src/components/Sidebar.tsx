@@ -1,5 +1,11 @@
 import { useEffect, useState } from "react";
-import { X, Trash2, MoreVertical, AlertTriangle } from "lucide-react";
+import {
+  X,
+  Trash2,
+  MoreVertical,
+  AlertTriangle,
+  PlusCircle,
+} from "lucide-react";
 import {
   useAuth,
   useUser,
@@ -9,6 +15,7 @@ import {
 interface SidebarProps {
   show: boolean;
   onClose: () => void;
+  onNewChatClick: () => void; // New prop for starting a new chat
   setWorkflowJson: (json: any) => void; // Function to update workflowJson in Main Layout
   setRefinedQuery: (query: string) => void; // Function to update refinedQuery in Main Layout
   setShowWorkflow: (show: boolean) => void;
@@ -29,6 +36,7 @@ interface Workflow {
 export default function Sidebar({
   show,
   onClose,
+  onNewChatClick,
   setWorkflowJson,
   setRefinedQuery,
   setShowWorkflow,
@@ -146,6 +154,18 @@ export default function Sidebar({
               <X size={20} />
             </button>
           </div>
+
+          {/* New Chat Button */}
+          <button
+            onClick={() => {
+              onNewChatClick();
+              onClose(); // Close sidebar after clicking new chat
+            }}
+            className="w-full flex items-center gap-2 px-4 py-3 mb-4 bg-blue-600 hover:bg-blue-700 rounded-md transition-colors"
+          >
+            <PlusCircle size={18} />
+            <span>New Chat</span>
+          </button>
 
           <div className="space-y-2">
             {workflows.map((workflow) => (

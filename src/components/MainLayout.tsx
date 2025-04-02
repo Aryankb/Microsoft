@@ -421,6 +421,22 @@ export default function MainLayout() {
     }
   };
 
+  // Function to handle home/new chat button click
+  const handleNewChatClick = () => {
+    // Reset the UI to the initial message input state
+    setChats([]);
+    setMessage("");
+    setQuestions([]);
+    setCurrentQuestionIndex(0);
+    setQanda({});
+    setRefinedQuery(null);
+    setWorkflowJson(null);
+    setShowWorkflow(false);
+
+    // Make sure we're in workflow mode by default
+    setMode("workflow");
+  };
+
   return (
     <div className="min-h-screen flex flex-col bg-[#171717] text-white pt-40 pb-24 px-4 gap-4 relative">
       {/* Loading Screen */}
@@ -433,13 +449,15 @@ export default function MainLayout() {
       <div className="fixed top-0 left-0 right-0 z-50">
         <TopBar
           onMenuClick={() => setShowSidebar(true)}
-          onHomeClick={handleHomeClick}
+          onNewChatClick={handleNewChatClick}
+          sidebarVisible={showSidebar}
         />
       </div>
 
       <Sidebar
         show={showSidebar}
         onClose={() => setShowSidebar(false)}
+        onNewChatClick={handleNewChatClick}
         setWorkflowJson={setWorkflowJson}
         setRefinedQuery={setRefinedQuery}
         setShowWorkflow={setShowWorkflow}
@@ -671,7 +689,7 @@ export default function MainLayout() {
               />
               <button
                 onClick={handleMicClick}
-                className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-200 transition-colors p-1"
+                className="absolute pt-16 right-4 transform -translate-y-1/2 text-gray-400 hover:text-gray-200 transition-colors px-20 rounded-full"
               >
                 <Mic size={20} />
               </button>
