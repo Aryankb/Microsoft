@@ -14,6 +14,7 @@ import {
   FileIcon,
   Maximize2,
   Minimize2,
+  X,
 } from "lucide-react";
 
 interface CustomNodeData {
@@ -44,6 +45,11 @@ const CustomNode: React.FC<CustomNodeProps> = ({ id, data }) => {
   const { handleValueChange } = data;
   const [expandedField, setExpandedField] = useState<string | null>(null);
 
+  // Add state to track text length categories
+  const [textSizeCategory, setTextSizeCategory] = useState<{
+    [key: string]: "small" | "medium" | "large";
+  }>({});
+
   if (!handleValueChange) {
     console.error(`🚨 handleValueChange is missing for node ${id}`);
   }
@@ -53,8 +59,38 @@ const CustomNode: React.FC<CustomNodeProps> = ({ id, data }) => {
     data.handleValueChange(id, key, value, "config");
   };
 
+  // Function to determine text size category
+  const getTextSizeCategory = (text: string): "small" | "medium" | "large" => {
+    if (!text) return "small";
+    const length = text.length;
+    if (length < 100) return "small";
+    if (length < 500) return "medium";
+    return "large";
+  };
+
+  // Update size category when expanding a field
   const toggleTextareaExpand = (fieldName: string) => {
-    setExpandedField(expandedField === fieldName ? null : fieldName);
+    if (expandedField === fieldName) {
+      setExpandedField(null);
+    } else {
+      setExpandedField(fieldName);
+
+      // Set size category based on content
+      let content = "";
+      if (fieldName === "llm_prompt") {
+        content = data.llm_prompt || "";
+      } else if (fieldName === "validation_prompt") {
+        content = data.validation_prompt || "";
+      } else if (fieldName.startsWith("config_")) {
+        const key = fieldName.replace("config_", "");
+        content = data.config_inputs?.[key] || "";
+      }
+
+      setTextSizeCategory((prev) => ({
+        ...prev,
+        [fieldName]: getTextSizeCategory(content),
+      }));
+    }
   };
 
   const nodeClass =
@@ -181,7 +217,11 @@ const CustomNode: React.FC<CustomNodeProps> = ({ id, data }) => {
                 <label className="input-label">{key}</label>
                 <button
                   className="expand-button"
-                  onClick={() => toggleTextareaExpand(`config_${key}`)}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    toggleTextareaExpand(`config_${key}`);
+                  }}
+                  title="Click to expand"
                 >
                   {expandedField === `config_${key}` ? (
                     <Minimize2 size={14} />
@@ -192,18 +232,32 @@ const CustomNode: React.FC<CustomNodeProps> = ({ id, data }) => {
               </div>
               <div
                 className={`textarea-container ${
-                  expandedField === `config_${key}` ? "expanded" : ""
+                  expandedField === `config_${key}`
+                    ? `expanded ${textSizeCategory[`config_${key}`] || "small"}`
+                    : ""
                 }`}
               >
+                {expandedField === `config_${key}` && (
+                  <div className="expanded-header">
+                    <span className="expanded-title">{key}</span>
+                    <button
+                      className="expanded-close"
+                      onClick={() => setExpandedField(null)}
+                    >
+                      <X size={16} />
+                    </button>
+                  </div>
+                )}
                 <input
                   type="text"
                   className="node-input"
                   placeholder="enter"
                   defaultValue={value || ""}
                   onChange={(e) => handleInputChange(key, e.target.value)}
-                  onClick={() =>
-                    !expandedField && toggleTextareaExpand(`config_${key}`)
-                  }
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    if (!expandedField) toggleTextareaExpand(`config_${key}`);
+                  }}
                 />
               </div>
             </div>
@@ -218,7 +272,11 @@ const CustomNode: React.FC<CustomNodeProps> = ({ id, data }) => {
             <strong>LLM Prompt:</strong>
             <button
               className="expand-button"
-              onClick={() => toggleTextareaExpand("llm_prompt")}
+              onClick={(e) => {
+                e.stopPropagation();
+                toggleTextareaExpand("llm_prompt");
+              }}
+              title="Click to expand"
             >
               {expandedField === "llm_prompt" ? (
                 <Minimize2 size={14} />
@@ -229,18 +287,37 @@ const CustomNode: React.FC<CustomNodeProps> = ({ id, data }) => {
           </div>
           <div
             className={`textarea-container ${
-              expandedField === "llm_prompt" ? "expanded" : ""
+              expandedField === "llm_prompt"
+                ? `expanded ${textSizeCategory["llm_prompt"] || "medium"}`
+                : ""
             }`}
           >
+            {expandedField === "llm_prompt" && (
+              <div className="expanded-header">
+                <span className="expanded-title">LLM Prompt</span>
+                <button
+                  className="expanded-close"
+                  onClick={() => setExpandedField(null)}
+                >
+                  <X size={16} />
+                </button>
+              </div>
+            )}
             <textarea
               className="node-input"
               defaultValue={data.llm_prompt || ""}
-              onChange={(e) =>
-                handleValueChange(id, "llm_prompt", e.target.value, "prompt")
-              }
-              onClick={() =>
-                !expandedField && toggleTextareaExpand("llm_prompt")
-              }
+              onChange={(e) => {
+                handleValueChange(id, "llm_prompt", e.target.value, "prompt");
+                // Update size category as user types
+                setTextSizeCategory((prev) => ({
+                  ...prev,
+                  ["llm_prompt"]: getTextSizeCategory(e.target.value),
+                }));
+              }}
+              onClick={(e) => {
+                e.stopPropagation();
+                if (!expandedField) toggleTextareaExpand("llm_prompt");
+              }}
             />
           </div>
         </div>
@@ -253,7 +330,11 @@ const CustomNode: React.FC<CustomNodeProps> = ({ id, data }) => {
             <strong>Validation Prompt:</strong>
             <button
               className="expand-button"
-              onClick={() => toggleTextareaExpand("validation_prompt")}
+              onClick={(e) => {
+                e.stopPropagation();
+                toggleTextareaExpand("validation_prompt");
+              }}
+              title="Click to expand"
             >
               {expandedField === "validation_prompt" ? (
                 <Minimize2 size={14} />
@@ -264,15 +345,31 @@ const CustomNode: React.FC<CustomNodeProps> = ({ id, data }) => {
           </div>
           <div
             className={`textarea-container ${
-              expandedField === "validation_prompt" ? "expanded" : ""
+              expandedField === "validation_prompt"
+                ? `expanded ${
+                    textSizeCategory["validation_prompt"] || "medium"
+                  }`
+                : ""
             }`}
           >
+            {expandedField === "validation_prompt" && (
+              <div className="expanded-header">
+                <span className="expanded-title">Validation Prompt</span>
+                <button
+                  className="expanded-close"
+                  onClick={() => setExpandedField(null)}
+                >
+                  <X size={16} />
+                </button>
+              </div>
+            )}
             <textarea
               className="node-input"
               defaultValue={data.validation_prompt}
-              onClick={() =>
-                !expandedField && toggleTextareaExpand("validation_prompt")
-              }
+              onClick={(e) => {
+                e.stopPropagation();
+                if (!expandedField) toggleTextareaExpand("validation_prompt");
+              }}
             />
           </div>
         </div>

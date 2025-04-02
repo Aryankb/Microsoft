@@ -1,4 +1,5 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
+("react");
 import { Send } from "lucide-react";
 import Sidebar from "./Sidebar";
 import TopBar from "./TopBar";
@@ -44,19 +45,18 @@ export default function MainLayout() {
   const [loading, setLoading] = useState(false);
   const [workflows, setWorkflows] = useState<Workflow[]>([]);
   const [currentWorkflow, setCurrentWorkflow] = useState<string | null>(null);
-  // const token= getToken();
-  // useEffect(() => {
-  //   fetch("http://localhost:8000/checkuser",{
-  //     method: "POST",
-  //     headers: {
-  //       "Content-Type": "application/json",
-  //       'Authorization': `Bearer ${token}`
-  //     }
-  //   })
-  //     .then(response => response.json())
-  //     .then(data => console.log(data))
-  //     .catch(error => console.error("Error:", error));
-  // }, []);
+  const refinedQueryRef = useRef<HTMLTextAreaElement>(null);
+
+  // Function to auto-resize textarea based on content
+  const autoResizeTextarea = (element: HTMLTextAreaElement) => {
+    if (!element) return;
+
+    // Reset height to measure content properly
+    element.style.height = "auto";
+
+    // Set height to scroll height to display all content
+    element.style.height = `${element.scrollHeight}px`;
+  };
 
   const handleSend = async () => {
     if (!message.trim()) return;
@@ -488,19 +488,25 @@ export default function MainLayout() {
           )} */}
           {refinedQuery && (
             <div
-              className="max-w-[75%] px-10 py-3 rounded-lg mr-auto bg-green-500 text-white"
+              className="max-w-[75%] px-10 py-3 rounded-lg mr-auto bg-green-500 text-white cursor-pointer"
               onClick={(e) => {
-                const input = e.currentTarget.nextElementSibling;
+                const input = e.currentTarget
+                  .nextElementSibling as HTMLTextAreaElement;
                 input.style.display = "block";
                 input.focus();
                 e.currentTarget.style.display = "none";
+
+                // Auto-resize the textarea when displayed
+                autoResizeTextarea(input);
               }}
             >
               {refinedQuery}
             </div>
           )}
+
           {refinedQuery && (
             <textarea
+              ref={refinedQueryRef}
               value={refinedQuery}
               onBlur={(e) => {
                 e.target.style.display = "none";
@@ -509,22 +515,33 @@ export default function MainLayout() {
               }}
               onChange={(e) => {
                 setRefinedQuery(e.target.value);
-                e.target.style.height = "auto"; // Reset height to recalculate
-                e.target.style.height = e.target.scrollHeight + "px"; // Adjust height
+                // Auto-resize while typing
+                autoResizeTextarea(e.target);
+              }}
+              onFocus={(e) => {
+                // Ensure proper sizing when focused
+                autoResizeTextarea(e.target);
               }}
               onKeyDown={(e) => {
                 if (e.key === "Enter") {
-                  e.preventDefault(); // Prevent form submission (optional)
-                  setRefinedQuery(e.target.value + "\n"); // Add a new line
-                  e.target.style.height = "auto"; // Reset height
-                  e.target.style.height = e.target.scrollHeight + "px"; // Adjust height
+                  e.preventDefault();
+                  const newValue = e.currentTarget.value + "\n";
+                  setRefinedQuery(newValue);
+
+                  // Let React update the value, then resize
+                  setTimeout(() => autoResizeTextarea(e.currentTarget), 0);
                 }
               }}
-              className="px-2 py-2 border rounded w-full resize-none overflow-hidden"
+              className="px-4 py-3 border rounded-lg w-full max-w-[75%] mr-auto resize-none bg-gray-700 text-white"
               placeholder="Refined Query"
-              style={{ display: "none", minHeight: "40px" }} // Initial height
+              style={{
+                display: "none",
+                minHeight: "40px",
+                overflowY: "hidden", // Hide scrollbar when auto-sizing
+              }}
             />
           )}
+
           {refinedQuery && (
             <div>
               <button

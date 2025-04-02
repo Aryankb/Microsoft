@@ -85,16 +85,21 @@
 }
 
 .expand-button {
-  background: none;
-  border: none;
+  background-color: rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.3);
   cursor: pointer;
-  color: #555;
-  padding: 2px;
-  border-radius: 3px;
+  color: #fff;
+  padding: 3px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
 }
 
 .expand-button:hover {
-  background-color: rgba(0, 0, 0, 0.1);
+  background-color: rgba(0, 0, 0, 0.4);
+  transform: scale(1.1);
 }
 
 .textarea-container {
@@ -103,25 +108,103 @@
 }
 
 .textarea-container.expanded {
-  position: absolute;
-  z-index: 100;
-  width: 400px;
-  max-width: 80vw;
+  position: fixed;
+  z-index: 999;
+  width: 600px;
+  max-width: 90vw;
+  max-height: 80vh;
   background-color: #2a2a2a;
-  padding: 10px;
-  border-radius: 6px;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+  padding: 15px;
+  border-radius: 8px;
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.4);
   left: 50%;
-  transform: translateX(-50%);
+  top: 50%;
+  transform: translate(-50%, -50%);
+  overflow: auto;
+}
+
+/* Different sizes based on content length */
+.textarea-container.expanded.small {
+  width: 400px;
+  max-height: 60vh;
+}
+
+.textarea-container.expanded.medium {
+  width: 600px;
+  max-height: 70vh;
+}
+
+.textarea-container.expanded.large {
+  width: 800px;
+  max-height: 80vh;
+  max-width: 90vw; /* Ensure it doesn't go off screen */
+}
+
+/* Adjust textarea height based on content size */
+.textarea-container.expanded.small .node-input {
+  min-height: 50px;
+  max-height: 50vh;
+}
+
+.textarea-container.expanded.medium .node-input {
+  min-height: 150px;
+  max-height: 60vh;
+}
+
+.textarea-container.expanded.large .node-input {
+  min-height: 250px;
+  max-height: 70vh;
 }
 
 .textarea-container.expanded .node-input {
-  min-height: 40px;
+  min-height: auto;
+  max-height: 70vh;
   background-color: #3a3a3a;
   color: white;
-  font-size: 14px;
-  padding: 8px;
-  border: 1px solid #555;
+  font-size: 15px;
+  line-height: 1.5;
+  padding: 12px;
+  border: 1px solid #666;
+  box-shadow: inset 0 0 8px rgba(0, 0, 0, 0.2);
+}
+
+.textarea-container.expanded::before {
+  content: "";
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  z-index: -1;
+}
+
+.expanded-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #555;
+}
+
+.expanded-title {
+  font-weight: bold;
+  color: #fff;
+  font-size: 16px;
+}
+
+.expanded-close {
+  background: rgba(255, 255, 255, 0.1);
+  border: none;
+  color: white;
+  border-radius: 4px;
+  padding: 4px 8px;
+  cursor: pointer;
+}
+
+.expanded-close:hover {
+  background: rgba(255, 255, 255, 0.2);
 }
 
 .textarea-container.expanded label {
@@ -170,15 +253,26 @@
 
 /* Make expanded inputs from config more visually appealing */
 .config-input-item .textarea-container.expanded {
-  width: 300px;
-  z-index: 101; /* Higher than other expanded sections */
+  width: 500px;
+  z-index: 1001; /* Higher than other expanded sections */
 }
 
 .config-input-item .textarea-container.expanded input {
   font-size: 16px;
-  padding: 10px;
+  padding: 12px;
   background-color: #3a3a3a;
   color: white;
-  border: 1px solid #555;
+  border: 1px solid #666;
   height: auto;
+  width: 100%;
+}
+
+/* For input fields from config */
+.config-input-item .textarea-container.expanded.small {
+  width: 350px;
+}
+
+.config-input-item .textarea-container.expanded.medium,
+.config-input-item .textarea-container.expanded.large {
+  width: 500px;
 }

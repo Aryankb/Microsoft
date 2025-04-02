@@ -1,6 +1,11 @@
-import { useEffect, useState } from 'react';
-import { X } from 'lucide-react';
-import { useAuth, useUser, SignOutButton, UserButton } from '@clerk/clerk-react';
+import { useEffect, useState } from "react";
+import { X, Trash2, MoreVertical, AlertTriangle } from "lucide-react";
+import {
+  useAuth,
+  useUser,
+  SignOutButton,
+  UserButton,
+} from "@clerk/clerk-react";
 interface SidebarProps {
   show: boolean;
   onClose: () => void;
@@ -21,30 +26,39 @@ interface Workflow {
   active?: boolean;
 }
 
-export default function Sidebar({ show, onClose, setWorkflowJson, setRefinedQuery, setShowWorkflow,workflows,setWorkflows,currentWorkflow,setCurrentWorkflow}: SidebarProps) {
+export default function Sidebar({
+  show,
+  onClose,
+  setWorkflowJson,
+  setRefinedQuery,
+  setShowWorkflow,
+  workflows,
+  setWorkflows,
+  currentWorkflow,
+  setCurrentWorkflow,
+}: SidebarProps) {
   const { getToken } = useAuth();
   const { user } = useUser();
-  // const [workflows, setWorkflows] = useState<Workflow[]>([]);
-  // const [currentWorkflow, setCurrentWorkflow] = useState<string | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+
   const fetchWorkflows = async () => {
     try {
       const token = await getToken();
-      const response = await fetch('http://localhost:8000/sidebar_workflows', {
+      const response = await fetch("http://localhost:8000/sidebar_workflows", {
         headers: { Authorization: `Bearer ${token}` },
       });
 
-      if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
+      if (!response.ok)
+        throw new Error(`HTTP error! Status: ${response.status}`);
 
       const data = await response.json();
       setWorkflows(data);
     } catch (error) {
-      console.error('Error fetching workflows:', error);
+      console.error("Error fetching workflows:", error);
     }
   };
   // Fetch workflows on startup
   useEffect(() => {
-    
-
     fetchWorkflows();
   }, [getToken]);
 
@@ -55,21 +69,74 @@ export default function Sidebar({ show, onClose, setWorkflowJson, setRefinedQuer
 
     setCurrentWorkflow(workflowId);
     setWorkflowJson(JSON.parse(selectedWorkflow.json));
-    console.log(JSON.parse(selectedWorkflow.json))
+    console.log(JSON.parse(selectedWorkflow.json));
     setRefinedQuery(selectedWorkflow.prompt);
     setShowWorkflow(true);
   };
 
+  // Handle workflow deletion
+  const handleDeleteWorkflow = async (
+    workflowId: string,
+    e: React.MouseEvent
+  ) => {
+    e.stopPropagation(); // Prevent the workflow from being selected when clicking delete
+
+    // Confirm deletion with the user
+    if (
+      !window.confirm(
+        "Are you sure you want to delete this workflow? This action cannot be undone."
+      )
+    ) {
+      return;
+    }
+
+    setIsDeleting(true);
+
+    try {
+      const token = await getToken();
+      const response = await fetch("http://localhost:8000/delete_workflow", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ workflow_id: workflowId }),
+      });
+
+      if (response.ok) {
+        // If this was the currently selected workflow, clear it
+        if (currentWorkflow === workflowId) {
+          setCurrentWorkflow(null);
+          setWorkflowJson(null);
+          setRefinedQuery("");
+          setShowWorkflow(false);
+        }
+
+        // Update local workflows list by removing the deleted one
+        setWorkflows(workflows.filter((w) => w.id !== workflowId));
+      } else {
+        console.error("Failed to delete workflow");
+        alert("Failed to delete workflow. Please try again.");
+      }
+    } catch (error) {
+      console.error("Error deleting workflow:", error);
+      alert("An error occurred while trying to delete the workflow.");
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
   return (
-    // <div
-    //   className={`fixed inset-y-0 left-0 w-64 bg-gray-800 text-white transform transition-transform duration-300 ease-in-out z-50 ${
-    //     show ? 'translate-x-0' : '-translate-x-full'
-    //   }`}
-    // ></div>
     <div
-  className={`fixed inset-y-0 left-0 bg-gray-800 text-white transform transition-all duration-300 ease-in-out z-50 overflow-hidden`}
-  style={{ width: show ? '300px' : '0px' }}  // Adjust px value as needed
->
+      className={`fixed inset-y-0 left-0 bg-gray-800 text-white transform transition-all duration-300 ease-in-out z-50 overflow-hidden`}
+      style={{ width: show ? "300px" : "0px" }} // Adjust px value as needed
+    >
+      {isDeleting && (
+        <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center z-10">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white"></div>
+        </div>
+      )}
+
       <div className="p-4 h-full flex flex-col justify-between">
         {/* Workflows Section */}
         <div>
@@ -79,26 +146,49 @@ export default function Sidebar({ show, onClose, setWorkflowJson, setRefinedQuer
               <X size={20} />
             </button>
           </div>
-          {/* <WorkflowGraph workflows={workflows} setWorkflows={setWorkflows} /> Pass props */}
+
           <div className="space-y-2">
             {workflows.map((workflow) => (
-              <button
+              <div
                 key={workflow.id}
-                onClick={() => handleWorkflowClick(workflow.id)}
-                className={`w-full text-left px-4 py-2 rounded ${
-                  currentWorkflow === workflow.id ? 'bg-blue-500' : 'hover:bg-gray-700'
-                }`}
+                className="relative flex items-center bg-gray-750 rounded-md overflow-hidden hover:bg-gray-700 transition-all duration-200 group"
               >
-                <div className="flex items-center gap-2">
-                
-  <span>{workflow.name}</span>
-  <div
-    className={`absolute left-0 w-2 h-2 rounded-full ${
-      workflow.active ? 'bg-green-500' : 'bg-red-500'
-    }`}
-  />
+                {/* Status indicator */}
+                <div
+                  className={`w-1 h-full absolute left-0 top-0 ${
+                    workflow.active ? "bg-green-500" : "bg-red-500"
+                  }`}
+                />
+
+                {/* Workflow button - with reduced right padding to make space for delete button */}
+                <button
+                  onClick={() => handleWorkflowClick(workflow.id)}
+                  className={`flex-grow text-left pl-3 pr-12 py-2 transition-colors ${
+                    currentWorkflow === workflow.id ? "bg-blue-600" : ""
+                  }`}
+                >
+                  <div className="flex items-center w-full">
+                    <span className="max-w-[210px]" title={workflow.name}>
+                      {workflow.name.length > 40
+                        ? workflow.name.substring(0, 20) + "..."
+                        : workflow.name}
+                    </span>
+                  </div>
+                </button>
+
+                {/* Delete button with improved visibility */}
+                <div
+                  className="absolute right-0 top-0 bottom-0 w-10 flex items-center justify-center cursor-pointer z-10"
+                  onClick={(e) => handleDeleteWorkflow(workflow.id, e)}
+                >
+                  <div className="p-1.5 rounded-full group-hover:bg-red-500/20">
+                    <Trash2
+                      size={16}
+                      className={`group-hover:text-red-500 transition-colors`}
+                    />
+                  </div>
                 </div>
-              </button>
+              </div>
             ))}
           </div>
         </div>
@@ -109,7 +199,9 @@ export default function Sidebar({ show, onClose, setWorkflowJson, setRefinedQuer
             <UserButton />
             <div>
               <p className="text-sm font-semibold">{user?.fullName}</p>
-              <p className="text-xs text-gray-400">{user?.primaryEmailAddress?.emailAddress}</p>
+              <p className="text-xs text-gray-400">
+                {user?.primaryEmailAddress?.emailAddress}
+              </p>
             </div>
           </div>
 

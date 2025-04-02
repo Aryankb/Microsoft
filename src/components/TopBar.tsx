@@ -1,20 +1,30 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Menu, Settings, Book, MessageSquare, Zap, Key, BarChart3, DollarSign, Plus } from 'lucide-react';
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import {
+  Menu,
+  Settings,
+  Book,
+  MessageSquare,
+  Zap,
+  Key,
+  BarChart3,
+  DollarSign,
+  Plus,
+} from "lucide-react";
 
 interface TopBarProps {
   onMenuClick: () => void;
 }
 
 const menuItems = [
-  { icon: Key, label: 'Add Auth' },
-  { icon: Zap, label: 'Your Triggers' },
-  { icon: BarChart3, label: 'Workflow Logs' },
-  { icon: Book, label: 'Documentation' },
-  { icon: MessageSquare, label: 'Feedback' },
-  { icon: DollarSign, label: 'Plans and Usage' },
-  { icon: Settings, label: 'Your Collections' },
-  { icon: Plus, label: 'Create Tool' },
+  { icon: Key, label: "Add Auth" },
+  { icon: Zap, label: "Your Triggers" },
+  { icon: BarChart3, label: "Workflow Logs" },
+  { icon: Book, label: "Documentation" },
+  { icon: MessageSquare, label: "Feedback" },
+  { icon: DollarSign, label: "Plans and Usage" },
+  { icon: Settings, label: "Your Collections" },
+  { icon: Plus, label: "Create Tool" },
 ];
 
 export default function TopBar({ onMenuClick }: TopBarProps) {
@@ -22,12 +32,12 @@ export default function TopBar({ onMenuClick }: TopBarProps) {
 
   // Open Create Tool Page
   const handleCreateTool = () => {
-    navigate('/create-tool');
+    navigate("/create-tool");
   };
 
   // Navigate to Manage Auths Page
   const handleManageAuths = () => {
-    navigate('/manage-auths');
+    navigate("/manage-auths");
   };
 
   return (
@@ -44,9 +54,9 @@ export default function TopBar({ onMenuClick }: TopBarProps) {
               className="p-2 hover:bg-gray-700 rounded"
               title={item.label}
               onClick={
-                item.label === 'Add Auth'
+                item.label === "Add Auth"
                   ? handleManageAuths
-                  : item.label === 'Create Tool'
+                  : item.label === "Create Tool"
                   ? handleCreateTool
                   : undefined
               }
