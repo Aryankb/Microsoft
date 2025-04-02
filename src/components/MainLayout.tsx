@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 ("react");
-import { Send } from "lucide-react";
+import { Send, Mic, Copy, Check } from "lucide-react"; // Add Copy and Check icons
 import Sidebar from "./Sidebar";
 import TopBar from "./TopBar";
 import { useAuth } from "@clerk/clerk-react";
@@ -46,6 +46,7 @@ export default function MainLayout() {
   const [workflows, setWorkflows] = useState<Workflow[]>([]);
   const [currentWorkflow, setCurrentWorkflow] = useState<string | null>(null);
   const refinedQueryRef = useRef<HTMLTextAreaElement>(null);
+  const [copySuccess, setCopySuccess] = useState(false);
 
   // Function to auto-resize textarea based on content
   const autoResizeTextarea = (element: HTMLTextAreaElement) => {
@@ -54,8 +55,9 @@ export default function MainLayout() {
     // Reset height to measure content properly
     element.style.height = "auto";
 
-    // Set height to scroll height to display all content
-    element.style.height = `${element.scrollHeight}px`;
+    // Set height to scroll height to display all content, with a minimum height
+    const minHeight = 80; // Set minimum height in pixels
+    element.style.height = `${Math.max(element.scrollHeight, minHeight)}px`;
   };
 
   const handleSend = async () => {
@@ -396,6 +398,29 @@ export default function MainLayout() {
     setMode("workflow");
   };
 
+  // Function to handle microphone click - placeholder for speech recognition
+  const handleMicClick = () => {
+    // This would be where you'd integrate speech recognition
+    // For now, just show a placeholder alert
+    alert("Microphone functionality would be implemented here");
+  };
+
+  // Function to handle copy to clipboard
+  const handleCopyText = () => {
+    if (refinedQuery) {
+      navigator.clipboard
+        .writeText(refinedQuery)
+        .then(() => {
+          // Show success state temporarily
+          setCopySuccess(true);
+          setTimeout(() => setCopySuccess(false), 2000);
+        })
+        .catch((err) => {
+          console.error("Failed to copy text: ", err);
+        });
+    }
+  };
+
   return (
     <div className="min-h-screen flex flex-col bg-[#171717] text-white pt-40 pb-24 px-4 gap-4 relative">
       {/* Loading Screen */}
@@ -456,24 +481,33 @@ export default function MainLayout() {
                     General Query
                   </button>
                 </div>
-                <textarea
-                  value={message}
-                  onChange={(e) => {
-                    setMessage(e.target.value);
-                    autoResizeMessageInput(e.target);
-                  }}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter") {
-                      showWorkflow
-                        ? handleQueryUpdate(message)
-                        : handleKeyPress(e);
-                    }
-                  }}
-                  placeholder="Send a message..."
-                  className="w-full max-w-xl bg-gray-700 rounded-lg px-6 py-4 focus:outline-none focus:ring-2 focus:ring-blue-500 mb-4 resize-none overflow-y-auto"
-                  style={{ minHeight: "56px", maxHeight: "200px" }}
-                  rows={1}
-                />
+                <div className="relative w-full max-w-xl">
+                  <textarea
+                    value={message}
+                    onChange={(e) => {
+                      setMessage(e.target.value);
+                      autoResizeMessageInput(e.target);
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        showWorkflow
+                          ? handleQueryUpdate(message)
+                          : handleKeyPress(e);
+                      }
+                    }}
+                    placeholder="Send a message..."
+                    className="w-full max-w-xl bg-gray-700 rounded-lg px-6 py-4 focus:outline-none focus:ring-2 focus:ring-blue-500 mb-4 resize-none overflow-y-auto pr-12" /* Added pr-12 for padding on right */
+                    style={{ minHeight: "56px", maxHeight: "200px" }}
+                    rows={1}
+                  />
+                  <button
+                    onClick={handleMicClick}
+                    className="absolute pt-12 right-4 transform -translate-y-1/2 text-gray-400 hover:text-gray-200 transition-colors px-6 rounded-full"
+                    title="Voice Input"
+                  >
+                    <Mic size={20} />
+                  </button>
+                </div>
                 <div className="flex gap-2 overflow-x-auto">
                   {EXAMPLE_PROMPTS.map((prompt, index) => (
                     <button
@@ -551,14 +585,14 @@ export default function MainLayout() {
               placeholder="Refined Query"
               style={{
                 display: "none",
-                minHeight: "40px",
+                minHeight: "80px", // Set minimum height
                 overflowY: "hidden", // Hide scrollbar when auto-sizing
               }}
             />
           )}
 
           {refinedQuery && (
-            <div>
+            <div className="flex gap-2 mt-4">
               <button
                 onClick={() => {
                   const userChoice = showWorkflow
@@ -569,9 +603,27 @@ export default function MainLayout() {
                   console.log(userChoice);
                   handleGenerateWorkflow(userChoice);
                 }}
-                className="mt-4 px-4 py-2 bg-blue-500 rounded-full hover:bg-blue-600 transition-all duration-200"
+                className="px-4 py-2 bg-blue-500 rounded-full hover:bg-blue-600 transition-all duration-200"
               >
                 Generate Workflow
+              </button>
+
+              <button
+                onClick={handleCopyText}
+                className="px-4 py-2 bg-gray-600 rounded-full hover:bg-gray-700 transition-all duration-200 flex items-center gap-1"
+                title="Copy to clipboard"
+              >
+                {copySuccess ? (
+                  <>
+                    <Check size={16} className="text-green-400" />
+                    <span>Copied</span>
+                  </>
+                ) : (
+                  <>
+                    <Copy size={16} />
+                    <span>Copy</span>
+                  </>
+                )}
               </button>
             </div>
           )}
@@ -596,24 +648,34 @@ export default function MainLayout() {
       {(chats.length > 0 || showWorkflow) && (
         <div className="fixed bottom-0 left-0 right-0 bg-gray-800 p-4 z-49">
           <div className="container mx-auto max-w-3xl flex gap-4 items-center">
-            <textarea
-              value={message}
-              onChange={(e) => {
-                setMessage(e.target.value);
-                autoResizeMessageInput(e.target);
-              }}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") {
-                  showWorkflow ? handleQueryUpdate(message) : handleKeyPress(e);
+            <div className="relative flex-1">
+              <textarea
+                value={message}
+                onChange={(e) => {
+                  setMessage(e.target.value);
+                  autoResizeMessageInput(e.target);
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    showWorkflow
+                      ? handleQueryUpdate(message)
+                      : handleKeyPress(e);
+                  }
+                }}
+                placeholder={
+                  showWorkflow ? "Update the workflow..." : "Send a message..."
                 }
-              }}
-              placeholder={
-                showWorkflow ? "Update the workflow..." : "Send a message..."
-              }
-              className="flex-1 bg-gray-700 rounded-lg px-6 py-4 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none overflow-y-auto"
-              style={{ minHeight: "56px", maxHeight: "150px" }}
-              rows={1}
-            />
+                className="w-full bg-gray-700 rounded-lg px-6 py-4 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none overflow-y-auto pr-12" /* Added pr-12 for padding on right */
+                style={{ minHeight: "56px", maxHeight: "150px" }}
+                rows={1}
+              />
+              <button
+                onClick={handleMicClick}
+                className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-200 transition-colors p-1"
+              >
+                <Mic size={20} />
+              </button>
+            </div>
             <button
               onClick={() =>
                 showWorkflow ? handleQueryUpdate(message) : handleSend()
