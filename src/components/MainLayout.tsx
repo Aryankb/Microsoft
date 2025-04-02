@@ -369,6 +369,31 @@ export default function MainLayout() {
       e.preventDefault();
       handleSend();
     }
+    // No preventDefault when Shift+Enter is pressed, allowing new line
+  };
+
+  // Auto-resize textarea based on content
+  const autoResizeMessageInput = (element: HTMLTextAreaElement) => {
+    if (!element) return;
+    element.style.height = "0";
+    const newHeight = Math.min(element.scrollHeight, 200); // Max height of 200px
+    element.style.height = `${newHeight}px`;
+  };
+
+  // Function to handle home button click
+  const handleHomeClick = () => {
+    // Reset the UI to the initial message input state
+    setChats([]);
+    setMessage("");
+    setQuestions([]);
+    setCurrentQuestionIndex(0);
+    setQanda({});
+    setRefinedQuery(null);
+    setWorkflowJson(null);
+    setShowWorkflow(false);
+
+    // Make sure we're in workflow mode by default
+    setMode("workflow");
   };
 
   return (
@@ -381,7 +406,10 @@ export default function MainLayout() {
         </div>
       )}
       <div className="fixed top-0 left-0 right-0 z-50">
-        <TopBar onMenuClick={() => setShowSidebar(true)} />
+        <TopBar
+          onMenuClick={() => setShowSidebar(true)}
+          onHomeClick={handleHomeClick}
+        />
       </div>
 
       <Sidebar
@@ -428,11 +456,13 @@ export default function MainLayout() {
                     General Query
                   </button>
                 </div>
-                <input
-                  type="text"
+                <textarea
                   value={message}
-                  onChange={(e) => setMessage(e.target.value)}
-                  onKeyPress={(e) => {
+                  onChange={(e) => {
+                    setMessage(e.target.value);
+                    autoResizeMessageInput(e.target);
+                  }}
+                  onKeyDown={(e) => {
                     if (e.key === "Enter") {
                       showWorkflow
                         ? handleQueryUpdate(message)
@@ -440,21 +470,21 @@ export default function MainLayout() {
                     }
                   }}
                   placeholder="Send a message..."
-                  className="w-full max-w-xl bg-gray-700 rounded-lg px-6 py-4 focus:outline-none focus:ring-2 focus:ring-blue-500 mb-4"
+                  className="w-full max-w-xl bg-gray-700 rounded-lg px-6 py-4 focus:outline-none focus:ring-2 focus:ring-blue-500 mb-4 resize-none overflow-y-auto"
+                  style={{ minHeight: "56px", maxHeight: "200px" }}
+                  rows={1}
                 />
-                {mode === "workflow" && (
-                  <div className="flex gap-2 overflow-x-auto">
-                    {EXAMPLE_PROMPTS.map((prompt, index) => (
-                      <button
-                        key={index}
-                        onClick={() => setMessage(prompt)}
-                        className="px-4 py-2 bg-gray-800 rounded-full text-sm whitespace-nowrap hover:bg-gray-700"
-                      >
-                        {prompt}
-                      </button>
-                    ))}
-                  </div>
-                )}
+                <div className="flex gap-2 overflow-x-auto">
+                  {EXAMPLE_PROMPTS.map((prompt, index) => (
+                    <button
+                      key={index}
+                      onClick={() => setMessage(prompt)}
+                      className="px-4 py-2 bg-gray-800 rounded-full text-sm whitespace-nowrap hover:bg-gray-700"
+                    >
+                      {prompt}
+                    </button>
+                  ))}
+                </div>
               </div>
             ) : (
               chats.map((chat) => (
@@ -471,21 +501,6 @@ export default function MainLayout() {
               ))
             )}
           </div>
-          {/* {refinedQuery && (
-            <div className="max-w-[75%] px-10 py-3 rounded-lg mr-auto bg-green-500 text-white">
-              {refinedQuery}
-                <button
-                  onClick={() => {
-                    const userChoice = showWorkflow ? window.confirm("Cancel --> create new\nOK --> update existing") : false;
-                    console.log(userChoice);
-                    handleGenerateWorkflow(userChoice);
-                  }}
-                  className="mt-4 px-4 py-2 bg-blue-500 rounded-full hover:bg-blue-600 transition-all duration-200"
-                >
-                  Generate Workflow
-                </button>
-            </div>
-          )} */}
           {refinedQuery && (
             <div
               className="max-w-[75%] px-10 py-3 rounded-lg mr-auto bg-green-500 text-white cursor-pointer"
@@ -581,11 +596,13 @@ export default function MainLayout() {
       {(chats.length > 0 || showWorkflow) && (
         <div className="fixed bottom-0 left-0 right-0 bg-gray-800 p-4 z-49">
           <div className="container mx-auto max-w-3xl flex gap-4 items-center">
-            <input
-              type="text"
+            <textarea
               value={message}
-              onChange={(e) => setMessage(e.target.value)}
-              onKeyPress={(e) => {
+              onChange={(e) => {
+                setMessage(e.target.value);
+                autoResizeMessageInput(e.target);
+              }}
+              onKeyDown={(e) => {
                 if (e.key === "Enter") {
                   showWorkflow ? handleQueryUpdate(message) : handleKeyPress(e);
                 }
@@ -593,7 +610,9 @@ export default function MainLayout() {
               placeholder={
                 showWorkflow ? "Update the workflow..." : "Send a message..."
               }
-              className="flex-1 bg-gray-700 rounded-lg px-6 py-4 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="flex-1 bg-gray-700 rounded-lg px-6 py-4 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none overflow-y-auto"
+              style={{ minHeight: "56px", maxHeight: "150px" }}
+              rows={1}
             />
             <button
               onClick={() =>
