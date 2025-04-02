@@ -1,10 +1,11 @@
-import { useState, useEffect, useRef } from "react";
-("react");
-import { Send, Mic, Copy, Check } from "lucide-react"; // Add Copy and Check icons
+import { useState, useEffect } from "react";
 import Sidebar from "./Sidebar";
 import TopBar from "./TopBar";
 import { useAuth } from "@clerk/clerk-react";
 import WorkflowGraph from "./WorkflowGraph.tsx";
+import ChatInterface from "./ChatInterface";
+import QueryRefiner from "./QueryRefiner";
+import VanishingMessageInput from "./VanishingMessageInput.jsx";
 
 const EXAMPLE_PROMPTS = [
   "Create a workflow for social media post scheduling",
@@ -14,9 +15,10 @@ const EXAMPLE_PROMPTS = [
 
 type ChatMessage = {
   id: string;
-  message: string;
+  message: string | JSX.Element;
   sender: "user" | "bot";
 };
+
 interface Workflow {
   id: string;
   name: string;
@@ -24,6 +26,7 @@ interface Workflow {
   prompt: string;
   active?: boolean;
 }
+
 type QandA = {
   question: string;
   answer: string;
@@ -33,7 +36,7 @@ export default function MainLayout() {
   const [showSidebar, setShowSidebar] = useState(false);
   const [message, setMessage] = useState("");
   const [chats, setChats] = useState<ChatMessage[]>([]);
-  const [mode, setMode] = useState<"workflow" | "general">("workflow"); // New toggle state
+  const [mode, setMode] = useState<"workflow" | "general">("workflow");
   const [flag, setFlag] = useState(2);
   const [qanda, setQanda] = useState<{ [key: string]: string }>({});
   const [questions, setQuestions] = useState<string[]>([]);
@@ -45,20 +48,6 @@ export default function MainLayout() {
   const [loading, setLoading] = useState(false);
   const [workflows, setWorkflows] = useState<Workflow[]>([]);
   const [currentWorkflow, setCurrentWorkflow] = useState<string | null>(null);
-  const refinedQueryRef = useRef<HTMLTextAreaElement>(null);
-  const [copySuccess, setCopySuccess] = useState(false);
-
-  // Function to auto-resize textarea based on content
-  const autoResizeTextarea = (element: HTMLTextAreaElement) => {
-    if (!element) return;
-
-    // Reset height to measure content properly
-    element.style.height = "auto";
-
-    // Set height to scroll height to display all content, with a minimum height
-    const minHeight = 80; // Set minimum height in pixels
-    element.style.height = `${Math.max(element.scrollHeight, minHeight)}px`;
-  };
 
   const handleSend = async () => {
     if (!message.trim()) return;
@@ -307,6 +296,7 @@ export default function MainLayout() {
       console.error("Error sending refined query:", error);
     }
   };
+
   const handleModeChange = (newMode: "workflow" | "general") => {
     if (mode !== newMode) {
       setMode(newMode);
@@ -320,6 +310,7 @@ export default function MainLayout() {
       setShowWorkflow(false);
     }
   };
+
   const fetchWorkflows = async () => {
     try {
       const token = await getToken();
@@ -336,6 +327,7 @@ export default function MainLayout() {
       console.error("Error fetching workflows:", error);
     }
   };
+
   const handleGenerateWorkflow = async (type: boolean) => {
     try {
       const token = await getToken();
@@ -354,7 +346,6 @@ export default function MainLayout() {
       });
 
       const data = await response.json();
-      // setShowWorkflow(false);
       setWorkflowJson(data.response);
       fetchWorkflows();
       setCurrentWorkflow(data.response.workflow_id);
@@ -363,61 +354,6 @@ export default function MainLayout() {
       console.error("Error generating workflow:", error);
     } finally {
       setLoading(false);
-    }
-  };
-
-  const handleKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === "Enter" && !e.shiftKey) {
-      e.preventDefault();
-      handleSend();
-    }
-    // No preventDefault when Shift+Enter is pressed, allowing new line
-  };
-
-  // Auto-resize textarea based on content
-  const autoResizeMessageInput = (element: HTMLTextAreaElement) => {
-    if (!element) return;
-    element.style.height = "0";
-    const newHeight = Math.min(element.scrollHeight, 200); // Max height of 200px
-    element.style.height = `${newHeight}px`;
-  };
-
-  // Function to handle home button click
-  const handleHomeClick = () => {
-    // Reset the UI to the initial message input state
-    setChats([]);
-    setMessage("");
-    setQuestions([]);
-    setCurrentQuestionIndex(0);
-    setQanda({});
-    setRefinedQuery(null);
-    setWorkflowJson(null);
-    setShowWorkflow(false);
-
-    // Make sure we're in workflow mode by default
-    setMode("workflow");
-  };
-
-  // Function to handle microphone click - placeholder for speech recognition
-  const handleMicClick = () => {
-    // This would be where you'd integrate speech recognition
-    // For now, just show a placeholder alert
-    alert("Microphone functionality would be implemented here");
-  };
-
-  // Function to handle copy to clipboard
-  const handleCopyText = () => {
-    if (refinedQuery) {
-      navigator.clipboard
-        .writeText(refinedQuery)
-        .then(() => {
-          // Show success state temporarily
-          setCopySuccess(true);
-          setTimeout(() => setCopySuccess(false), 2000);
-        })
-        .catch((err) => {
-          console.error("Failed to copy text: ", err);
-        });
     }
   };
 
@@ -438,14 +374,16 @@ export default function MainLayout() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#171717] text-white pt-40 pb-24 px-4 gap-4 relative">
+    <div className="min-h-screen flex flex-col bg-background text-text relative">
       {/* Loading Screen */}
       {loading && (
         <div className="fixed inset-0 flex flex-col items-center justify-center bg-black bg-opacity-80 z-50">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-4 border-blue-500"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-4 border-primary"></div>
           <p className="mt-4 text-lg">Generating workflow... Please wait</p>
         </div>
       )}
+
+      {/* Top Navigation */}
       <div className="fixed top-0 left-0 right-0 z-50">
         <TopBar
           onMenuClick={() => setShowSidebar(true)}
@@ -454,6 +392,7 @@ export default function MainLayout() {
         />
       </div>
 
+      {/* Sidebar */}
       <Sidebar
         show={showSidebar}
         onClose={() => setShowSidebar(false)}
@@ -467,242 +406,74 @@ export default function MainLayout() {
         setCurrentWorkflow={setCurrentWorkflow}
       />
 
-      <main
-        className={`flex-1 flex ${
-          showWorkflow ? "flex-row" : "flex-col"
-        } pt-20 pb-24 px-4 gap-4 relative`}
-      >
+      {/* Main Content Area */}
+      <main className="flex flex-1 pt-16 pb-24 relative">
+        {/* Chat and Query Section */}
         <div
-          className={`${
-            showWorkflow ? "w-1/3" : "w-full"
-          } flex flex-col overflow-y-auto z-0`}
+          className={`flex flex-col ${
+            showWorkflow
+              ? "w-1/3 border-r border-gray-700 bg-background z-10"
+              : "w-full max-w-4xl mx-auto"
+          } px-4 pt-4 overflow-y-auto min-h-full`}
         >
-          <div className="flex flex-col space-y-4">
-            {chats.length === 0 && !showWorkflow ? (
-              <div className="flex flex-col items-center justify-center flex-grow">
-                <h1 className="text-3xl font-bold mb-4">SIGMOYD</h1>
-                <div className="flex gap-4 mb-4">
-                  <button
-                    onClick={() => handleModeChange("workflow")}
-                    className={`px-4 py-2 rounded ${
-                      mode === "workflow" ? "bg-blue-600" : "bg-gray-700"
-                    }`}
-                  >
-                    Create Workflow
-                  </button>
-                  <button
-                    onClick={() => handleModeChange("general")}
-                    className={`px-4 py-2 rounded ${
-                      mode === "general" ? "bg-blue-600" : "bg-gray-700"
-                    }`}
-                  >
-                    General Query
-                  </button>
-                </div>
-                <div className="relative w-full max-w-xl">
-                  <textarea
-                    value={message}
-                    onChange={(e) => {
-                      setMessage(e.target.value);
-                      autoResizeMessageInput(e.target);
-                    }}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter") {
-                        showWorkflow
-                          ? handleQueryUpdate(message)
-                          : handleKeyPress(e);
-                      }
-                    }}
-                    placeholder="Send a message..."
-                    className="w-full max-w-xl bg-gray-700 rounded-lg px-6 py-4 focus:outline-none focus:ring-2 focus:ring-blue-500 mb-4 resize-none overflow-y-auto pr-12" /* Added pr-12 for padding on right */
-                    style={{ minHeight: "56px", maxHeight: "200px" }}
-                    rows={1}
-                  />
-                  <button
-                    onClick={handleMicClick}
-                    className="absolute pt-12 right-4 transform -translate-y-1/2 text-gray-400 hover:text-gray-200 transition-colors px-6 rounded-full"
-                    title="Voice Input"
-                  >
-                    <Mic size={20} />
-                  </button>
-                </div>
-                <div className="flex gap-2 overflow-x-auto">
-                  {EXAMPLE_PROMPTS.map((prompt, index) => (
-                    <button
-                      key={index}
-                      onClick={() => setMessage(prompt)}
-                      className="px-4 py-2 bg-gray-800 rounded-full text-sm whitespace-nowrap hover:bg-gray-700"
-                    >
-                      {prompt}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            ) : (
-              chats.map((chat) => (
-                <div
-                  key={chat.id}
-                  className={`max-w-[75%] px-4 py-3 rounded-lg ${
-                    chat.sender === "user"
-                      ? "ml-auto bg-blue-500"
-                      : "mr-auto bg-gray-700"
-                  }`}
-                >
-                  {chat.message}
-                </div>
-              ))
-            )}
-          </div>
-          {refinedQuery && (
-            <div
-              className="max-w-[75%] px-10 py-3 rounded-lg mr-auto bg-green-500 text-white cursor-pointer"
-              onClick={(e) => {
-                const input = e.currentTarget
-                  .nextElementSibling as HTMLTextAreaElement;
-                input.style.display = "block";
-                input.focus();
-                e.currentTarget.style.display = "none";
-
-                // Auto-resize the textarea when displayed
-                autoResizeTextarea(input);
-              }}
-            >
-              {refinedQuery}
-            </div>
-          )}
+          <ChatInterface
+            chats={chats}
+            message={message}
+            setMessage={setMessage}
+            handleSend={handleSend}
+            examplePrompts={EXAMPLE_PROMPTS}
+            mode={mode}
+            handleModeChange={handleModeChange}
+            showWorkflow={showWorkflow}
+            handleQueryUpdate={handleQueryUpdate}
+          />
 
           {refinedQuery && (
-            <textarea
-              ref={refinedQueryRef}
-              value={refinedQuery}
-              onBlur={(e) => {
-                e.target.style.display = "none";
-                e.target.previousElementSibling.style.display = "block";
-                setRefinedQuery(e.target.value);
-              }}
-              onChange={(e) => {
-                setRefinedQuery(e.target.value);
-                // Auto-resize while typing
-                autoResizeTextarea(e.target);
-              }}
-              onFocus={(e) => {
-                // Ensure proper sizing when focused
-                autoResizeTextarea(e.target);
-              }}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") {
-                  e.preventDefault();
-                  const newValue = e.currentTarget.value + "\n";
-                  setRefinedQuery(newValue);
-
-                  // Let React update the value, then resize
-                  setTimeout(() => autoResizeTextarea(e.currentTarget), 0);
-                }
-              }}
-              className="px-4 py-3 border rounded-lg w-full max-w-[75%] mr-auto resize-none bg-gray-700 text-white"
-              placeholder="Refined Query"
-              style={{
-                display: "none",
-                minHeight: "80px", // Set minimum height
-                overflowY: "hidden", // Hide scrollbar when auto-sizing
-              }}
-            />
-          )}
-
-          {refinedQuery && (
-            <div className="flex gap-2 mt-4">
-              <button
-                onClick={() => {
-                  const userChoice = showWorkflow
-                    ? window.confirm(
-                        "Cancel --> create new\nOK --> update existing"
-                      )
-                    : false;
-                  console.log(userChoice);
-                  handleGenerateWorkflow(userChoice);
-                }}
-                className="px-4 py-2 bg-blue-500 rounded-full hover:bg-blue-600 transition-all duration-200"
-              >
-                Generate Workflow
-              </button>
-
-              <button
-                onClick={handleCopyText}
-                className="px-4 py-2 bg-gray-600 rounded-full hover:bg-gray-700 transition-all duration-200 flex items-center gap-1"
-                title="Copy to clipboard"
-              >
-                {copySuccess ? (
-                  <>
-                    <Check size={16} className="text-green-400" />
-                    <span>Copied</span>
-                  </>
-                ) : (
-                  <>
-                    <Copy size={16} />
-                    <span>Copy</span>
-                  </>
-                )}
-              </button>
+            <div className="my-4">
+              <QueryRefiner
+                refinedQuery={refinedQuery}
+                setRefinedQuery={setRefinedQuery}
+                handleGenerateWorkflow={handleGenerateWorkflow}
+                showWorkflow={showWorkflow}
+              />
             </div>
           )}
         </div>
 
-        {showWorkflow &&
-          workflowJson &&
-          (console.log("in main layout:", workflowJson),
-          (
-            <div className="w-2/3 fixed right-0 top-0 bottom-0 z-0 pt-8 pb-8 px-3 mx-auto ">
-              <WorkflowGraph
-                key={JSON.stringify(workflowJson)}
-                workflowJson={workflowJson}
-                workflows={workflows}
-                setWorkflows={setWorkflows}
-                setCurrentWorkflow={setCurrentWorkflow}
-                currentWorkflow={currentWorkflow}
-              />
-            </div>
-          ))}
+        {/* Workflow Graph Section */}
+        {showWorkflow && workflowJson && (
+          <div className="w-2/3 fixed right-0 top-0 bottom-0 z-0 pt-8 pb-8 px-3 mx-auto">
+            <WorkflowGraph
+              key={JSON.stringify(workflowJson)}
+              workflowJson={workflowJson}
+              workflows={workflows}
+              setWorkflows={setWorkflows}
+              setCurrentWorkflow={setCurrentWorkflow}
+              currentWorkflow={currentWorkflow}
+            />
+          </div>
+        )}
       </main>
+
+      {/* Input Bar */}
       {(chats.length > 0 || showWorkflow) && (
-        <div className="fixed bottom-0 left-0 right-0 bg-gray-800 p-4 z-49">
-          <div className="container mx-auto max-w-3xl flex gap-4 items-center">
-            <div className="relative flex-1">
-              <textarea
-                value={message}
-                onChange={(e) => {
-                  setMessage(e.target.value);
-                  autoResizeMessageInput(e.target);
-                }}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") {
-                    showWorkflow
-                      ? handleQueryUpdate(message)
-                      : handleKeyPress(e);
-                  }
-                }}
-                placeholder={
-                  showWorkflow ? "Update the workflow..." : "Send a message..."
-                }
-                className="w-full bg-gray-700 rounded-lg px-6 py-4 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none overflow-y-auto pr-12" /* Added pr-12 for padding on right */
-                style={{ minHeight: "56px", maxHeight: "150px" }}
-                rows={1}
-              />
-              <button
-                onClick={handleMicClick}
-                className="absolute pt-16 right-4 transform -translate-y-1/2 text-gray-400 hover:text-gray-200 transition-colors px-20 rounded-full"
-              >
-                <Mic size={20} />
-              </button>
-            </div>
-            <button
-              onClick={() =>
-                showWorkflow ? handleQueryUpdate(message) : handleSend()
+        <div className="fixed bottom-0 left-0 right-0 bg-card border-t border-gray-700 p-4 z-[100]">
+          <div
+            className={`mx-auto ${
+              showWorkflow ? "pl-[calc(100%/3)] pr-4" : "max-w-3xl"
+            }`}
+          >
+            <VanishingMessageInput
+              message={message}
+              setMessage={setMessage}
+              handleSend={handleSend}
+              placeholder={
+                showWorkflow ? "Update the workflow..." : "Send a message..."
               }
-              disabled={!message.trim()}
-              className="p-3 bg-blue-500 rounded-full hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
-            >
-              <Send size={20} />
-            </button>
+              showWorkflow={showWorkflow}
+              handleQueryUpdate={handleQueryUpdate}
+              isDisabled={loading}
+            />
           </div>
         </div>
       )}
