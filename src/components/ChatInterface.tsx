@@ -45,7 +45,7 @@ const ChatInterface = ({
               <button
                 onClick={() => handleModeChange("workflow")}
                 style={{
-                  backgroundColor: mode === "workflow" ? "#00ADB5" : "#333333",
+                  backgroundColor: mode === "workflow" ? "#62b6cb" : "#333333",
                   color: mode === "workflow" ? "#121212" : "#E0E0E0",
                   padding: "0.75rem 1.5rem",
                   borderRadius: "0.5rem",
@@ -58,7 +58,7 @@ const ChatInterface = ({
               <button
                 onClick={() => handleModeChange("general")}
                 style={{
-                  backgroundColor: mode === "general" ? "#00ADB5" : "#333333",
+                  backgroundColor: mode === "general" ? "#62b6cb" : "#333333",
                   color: mode === "general" ? "#121212" : "#E0E0E0",
                   padding: "0.75rem 1.5rem",
                   borderRadius: "0.5rem",
