@@ -122,6 +122,16 @@ div {
   background-color: var(--color-primary);
 }
 
+/* Hide UI elements when loading a workflow */
+html.workflow-loading .sidebar-container,
+html.workflow-loading .fixed.top-0.left-0.right-0.z-50.bg-black,
+html.workflow-loading .message-input-container,
+html.workflow-loading .query-refiner,
+html.workflow-loading .chat-container,
+html.workflow-loading .my-4 {
+  display: none !important;
+}
+
 /* Sidebar Styles */
 .sidebar-container {
   background-color: rgb(24, 24, 24); /* bg-gray-900 */

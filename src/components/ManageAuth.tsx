@@ -1,6 +1,10 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "@clerk/clerk-react";
-import { ExternalLink } from "lucide-react";
+import { ExternalLink, RefreshCw } from "lucide-react";
+import { toast, ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+import TopBar from "./TopBar";
+import "./ManageAuth.css";
 
 const AUTH_SERVICES = [
   "Gmail Trigger",
@@ -44,11 +48,13 @@ export default function ManageAuth() {
   const [authStatus, setAuthStatus] = useState<{ [key: string]: boolean }>({});
   const [keys, setKeys] = useState<{ [key: string]: string }>({});
   const [error, setError] = useState<string | null>(null);
-  const [comp,setComp] = useState<boolean>(false);
+  const [comp, setComp] = useState<boolean>(false);
   const [showPassword, setShowPassword] = useState<{ [key: string]: boolean }>(
     {}
   );
   const [loading, setLoading] = useState(false);
+  const [reloadingStatus, setReloadingStatus] = useState(false);
+
   // Function to get cached data
   const getCachedAuthData = () => {
     const cachedData = localStorage.getItem("authData");
@@ -62,10 +68,12 @@ export default function ManageAuth() {
   }) => {
     localStorage.setItem("authData", JSON.stringify(data));
   };
+
   const fetchAuthStatus = async () => {
     try {
       const token = await getToken();
       setLoading(true);
+      setReloadingStatus(true);
       const response = await fetch("http://127.0.0.1:8000/user_auths", {
         method: "GET",
         headers: {
@@ -78,17 +86,29 @@ export default function ManageAuth() {
         const data = await response.json();
         setAuthStatus(data.user_auths || {});
         setKeys(data.api_keys || {});
-        if (data.api_keys.composio){
+        if (data.api_keys.composio) {
           setComp(true);
         }
         updateCache(data); // Update cache after fetching
       } else {
-        console.error("Failed to fetch authentication data");
+        const errorData = await response
+          .json()
+          .catch(() => ({ message: "Failed to fetch authentication data" }));
+        toast.error(
+          `Authentication error: ${
+            errorData.message || "Failed to fetch authentication data"
+          }`
+        );
       }
     } catch (error) {
-      console.error("Error fetching authentication data:", error);
+      toast.error(
+        `Network error: ${
+          error instanceof Error ? error.message : "Could not connect to server"
+        }`
+      );
     }
     setLoading(false);
+    setReloadingStatus(false);
   };
 
   // Fetch user authentication status and API keys with caching
@@ -97,7 +117,7 @@ export default function ManageAuth() {
     if (cachedData) {
       setAuthStatus(cachedData.user_auths || {});
       setKeys(cachedData.api_keys || {});
-      if (cachedData.api_keys.composio){
+      if (cachedData.api_keys.composio) {
         setComp(true);
       }
       return; // Don't fetch if cache is available
@@ -118,15 +138,26 @@ export default function ManageAuth() {
           const data = await response.json();
           setAuthStatus(data.user_auths || {});
           setKeys(data.api_keys || {});
-          if (data.api_keys.composio){
+          if (data.api_keys.composio) {
             setComp(true);
           }
           updateCache(data); // Update cache after fetching
         } else {
-          console.error("Failed to fetch authentication data");
+          const errorData = await response.json().catch(() => ({}));
+          toast.error(
+            `Failed to fetch authentication data: ${
+              errorData.message || "Server error"
+            }`
+          );
         }
       } catch (error) {
-        console.error("Error fetching authentication data:", error);
+        toast.error(
+          `Network error: ${
+            error instanceof Error
+              ? error.message
+              : "Could not connect to server"
+          }`
+        );
       }
     };
 
@@ -156,22 +187,58 @@ export default function ManageAuth() {
       if (response.status === 200) {
         const authUrl = await response.json();
         if (enabled) {
-        console.log("Redirecting to:", authUrl.auth_url);
-        window.open(authUrl.auth_url, "_blank", "noopener,noreferrer");}
+          console.log("Redirecting to:", authUrl.auth_url);
+          window.open(authUrl.auth_url, "_blank", "noopener,noreferrer");
+          toast.info(
+            `Authentication window opened for ${service}. Please complete the process in the new window.`
+          );
+        }
       }
 
       if (response.ok) {
         const updatedAuthStatus = { ...authStatus, [service]: enabled };
         setAuthStatus(updatedAuthStatus);
         updateCache({ user_auths: updatedAuthStatus, api_keys: keys }); // Update cache
-      } else {
-        console.error(`Failed to update auth for ${service}`);
+
         if (!enabled) {
-          alert("Cannot delete auth");
+          toast.success(`Successfully disconnected ${service}`);
+        }
+      } else {
+        const errorData = await response.json().catch(() => ({}));
+        if (
+          errorData.detail &&
+          typeof errorData.detail === "string" &&
+          errorData.detail.includes("Invalid API key")
+        ) {
+          toast.error(
+            `Invalid API key detected. Please provide valid API keys before connecting services.`
+          );
+        } else if (
+          errorData.detail &&
+          typeof errorData.detail === "string" &&
+          errorData.detail.includes("in use")
+        ) {
+          toast.error(
+            `Cannot disconnect ${service}: Service is being used by active workflows.`
+          );
+        } else {
+          toast.error(
+            `${
+              enabled ? "Connection" : "Disconnection"
+            } error for ${service}: ${
+              errorData.message ||
+              errorData.detail ||
+              "Could not process request"
+            }`
+          );
         }
       }
     } catch (error) {
-      console.error(`Error updating auth for ${service}:`, error);
+      toast.error(
+        `Error processing ${service} authentication: ${
+          error instanceof Error ? error.message : "Unknown error"
+        }`
+      );
     }
   };
 
@@ -180,12 +247,24 @@ export default function ManageAuth() {
     e.preventDefault();
     setError("");
 
+    // Validate required keys
     if (!keys.composio) {
       setError("Composio API Key is required.");
+      toast.error("Composio API Key is required.");
       return;
     }
     if (!keys.openai && !keys.gemini) {
       setError("Please enter either OpenAI or Gemini API Key.");
+      toast.error("Please enter either OpenAI or Gemini API Key.");
+      return;
+    }
+
+    // Validate key format
+    if (keys.openai && !keys.openai.startsWith("sk-")) {
+      setError("OpenAI API Key should start with 'sk-'");
+      toast.error(
+        "OpenAI API Key format is invalid. It should start with 'sk-'"
+      );
       return;
     }
 
@@ -202,15 +281,40 @@ export default function ManageAuth() {
       });
 
       if (response.ok) {
-        alert("API Keys saved successfully!");
+        toast.success("API Keys saved successfully!");
         setComp(true);
         updateCache({ user_auths: authStatus, api_keys: keys }); // Update cache
       } else {
-        setError("Failed to save API keys. Try again.");
+        const errorData = await response.json().catch(() => ({}));
+
+        if (errorData.detail && typeof errorData.detail === "string") {
+          if (errorData.detail.includes("Invalid OpenAI")) {
+            toast.error("Invalid OpenAI API key. Please check and try again.");
+          } else if (errorData.detail.includes("Invalid Gemini")) {
+            toast.error("Invalid Gemini API key. Please check and try again.");
+          } else if (errorData.detail.includes("Invalid Composio")) {
+            toast.error(
+              "Invalid Composio API key. Please check and try again."
+            );
+          } else {
+            toast.error(`API key error: ${errorData.detail}`);
+          }
+        } else {
+          setError("Failed to save API keys. Try again.");
+          toast.error(
+            `Error saving API keys: ${
+              errorData.message || errorData.detail || "Please try again"
+            }`
+          );
+        }
       }
     } catch (error) {
       setError("Error saving API keys.");
-      console.error(error);
+      toast.error(
+        `Network error: ${
+          error instanceof Error ? error.message : "Could not connect to server"
+        }`
+      );
     }
   };
 
@@ -221,8 +325,16 @@ export default function ManageAuth() {
 
   // Copy key to clipboard
   const copyToClipboard = (key: string) => {
-    navigator.clipboard.writeText(keys[key]);
-    alert(`${key} API Key copied!`);
+    navigator.clipboard
+      .writeText(keys[key])
+      .then(() =>
+        toast.success(
+          `${
+            API_KEY_INFO[key as keyof typeof API_KEY_INFO].label
+          } copied to clipboard`
+        )
+      )
+      .catch(() => toast.error("Failed to copy to clipboard"));
   };
 
   // Function to redirect to API key page
@@ -234,149 +346,185 @@ export default function ManageAuth() {
     }
   };
 
+  // Function to navigate home
+  const handleHomeClick = () => {
+    window.location.href = "/";
+  };
+
   return (
-    <div className="h-screen flex flex-col items-center bg-gray-900 text-white p-6">
-      <h2 className="text-3xl font-semibold mb-6">Manage Authentications</h2>
+    <div className="min-h-screen flex flex-col bg-background">
+      <ToastContainer
+        position="top-right"
+        autoClose={5000}
+        hideProgressBar={false}
+        newestOnTop
+        closeOnClick
+        rtl={false}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+        theme="dark"
+        className="toast-container"
+      />
 
-      <div className="w-full max-w-6xl grid grid-cols-1 md:grid-cols-2 gap-8">
-        {/* API Key Entry Section */}
-        <div className="bg-gray-800 p-6 rounded-lg shadow-lg">
-          <h3 className="text-xl font-semibold mb-4 text-center">
-            Enter API Keys
-          </h3>
-          {error && <p className="text-red-500 text-sm mb-3">{error}</p>}
-          <form onSubmit={handleSubmit} className="space-y-4">
-            {Object.keys(API_KEY_INFO).map((service) => (
-              <div key={service} className="relative">
-                <label className="block text-sm font-medium mb-1">
-                  <div className="flex items-center">
-                    <span>
-                      {API_KEY_INFO[service as keyof typeof API_KEY_INFO].label}
-                      {API_KEY_INFO[service as keyof typeof API_KEY_INFO]
-                        .required && " (Required)"}
-                    </span>
-                    <button
-                      type="button"
-                      onClick={() => goToApiKeyPage(service)}
-                      className="ml-2 px-2 py-1 bg-blue-600 text-xs rounded-full flex items-center gap-1 hover:bg-blue-700 transition-colors"
-                      title={
-                        API_KEY_INFO[service as keyof typeof API_KEY_INFO]
-                          .tooltip
-                      }
-                    >
-                      <ExternalLink size={12} />
-                      <span>Get Key</span>
-                    </button>
-                  </div>
-                </label>
-                <div className="flex items-center bg-gray-700 rounded px-3 py-2">
-                  <input
-                    type={showPassword[service] ? "text" : "password"}
-                    value={keys[service] || ""}
-                    onChange={(e) =>
-                      setKeys({ ...keys, [service]: e.target.value })
-                    }
-                    className="flex-grow bg-transparent outline-none"
-                    required={
-                      API_KEY_INFO[service as keyof typeof API_KEY_INFO]
-                        .required
-                    }
-                    placeholder={`Enter ${service} API key...`}
-                  />
-                  <button
-                    type="button"
-                    onClick={() => togglePasswordVisibility(service)}
-                    className="ml-2 text-gray-400 hover:text-white"
-                  >
-                    {showPassword[service] ? "🙈" : "👁️"}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => copyToClipboard(service)}
-                    className="ml-2 text-gray-400 hover:text-white"
-                    disabled={!keys[service]}
-                  >
-                    📋
-                  </button>
-                </div>
-              </div>
-            ))}
-            <button
-              type="submit"
-              className="w-full bg-blue-500 text-white rounded py-2"
-            >
-              Save API Keys
-            </button>
-          </form>
-        </div>
+      {/* Add TopBar without New Chat button and sidebar handling */}
+      <TopBar
+        onMenuClick={() => {}} // Empty function - sidebar disabled
+        onHomeClick={handleHomeClick}
+        sidebarVisible={false} // Always false - sidebar disabled
+        hideNewChat={true} // Hide the New Chat button
+      />
 
-        {/* Authentication Services Table */}
+      {/* Main Content */}
+      <div className="flex-1 pt-16">
+        <div className="container mx-auto px-4 py-8">
+          <h2 className="text-3xl font-semibold mb-6 text-text">
+            Manage Authentications
+          </h2>
 
-        <div className="bg-gray-800 p-6 rounded-lg shadow-lg">
-          {loading && (
-            <div className="fixed inset-0 flex flex-col items-center justify-center bg-black bg-opacity-80 z-50">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-4 border-blue-500"></div>
-              <p className="mt-4 text-lg">
-                fetching auth status... Please wait
-              </p>
-            </div>
-          )}
-          <div className="flex justify-between items-center mb-4">
-            <h3 className="text-xl font-semibold">Connected Services</h3>
-            <button
-              onClick={fetchAuthStatus}
-              className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
-            >
-              🔄 Reload
-            </button>
-          </div>
-
-          {comp? (
-            <table className="w-full text-left">
-              <thead>
-                <tr>
-                  <th className="p-2">Service</th>
-                  <th className="p-2 text-center">Status</th>
-                </tr>
-              </thead>
-              <tbody>
-                {AUTH_SERVICES.map((service) => (
-                  <tr key={service} className="border-t border-gray-700">
-                    <td className="p-2">{service}</td>
-                    <td className="p-2 text-center">
-                      <label className="relative flex items-center cursor-pointer">
-                        <input
-                          type="checkbox"
-                          checked={authStatus[service] || false}
-                          onChange={() =>
-                            handleAuthToggle(service, !authStatus[service])
+          <div className="w-full grid grid-cols-1 md:grid-cols-2 gap-8">
+            {/* API Key Entry Section */}
+            <div className="auth-card p-6">
+              <h3 className="text-xl font-semibold mb-4 text-center text-text">
+                Enter API Keys
+              </h3>
+              {error && <p className="text-secondary text-sm mb-3">{error}</p>}
+              <form onSubmit={handleSubmit} className="space-y-4">
+                {Object.keys(API_KEY_INFO).map((service) => (
+                  <div key={service} className="api-key-field">
+                    <label className="block text-sm font-medium mb-1 text-text-accent">
+                      <div className="flex items-center">
+                        <span>
+                          {
+                            API_KEY_INFO[service as keyof typeof API_KEY_INFO]
+                              .label
                           }
-                          className="sr-only peer"
-                        />
-                        <div
-                          className={`w-12 h-6 flex items-center rounded-full p-1 transition ${
-                            authStatus[service] ? "bg-green-500" : "bg-red-500"
-                          }`}
+                          {API_KEY_INFO[service as keyof typeof API_KEY_INFO]
+                            .required && " (Required)"}
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => goToApiKeyPage(service)}
+                          className="ml-2 px-2 py-1 bg-primary text-xs rounded-full flex items-center gap-1 hover:bg-opacity-80 transition-colors"
+                          title={
+                            API_KEY_INFO[service as keyof typeof API_KEY_INFO]
+                              .tooltip
+                          }
                         >
-                          <div
-                            className={`w-5 h-5 bg-white rounded-full shadow-md transform transition ${
-                              authStatus[service]
-                                ? "translate-x-6"
-                                : "translate-x-1"
-                            }`}
-                          ></div>
-                        </div>
-                      </label>
-                    </td>
-                  </tr>
+                          <ExternalLink size={12} />
+                          <span>Get Key</span>
+                        </button>
+                      </div>
+                    </label>
+                    <div className="api-key-input">
+                      <input
+                        type={showPassword[service] ? "text" : "password"}
+                        value={keys[service] || ""}
+                        onChange={(e) =>
+                          setKeys({ ...keys, [service]: e.target.value })
+                        }
+                        required={
+                          API_KEY_INFO[service as keyof typeof API_KEY_INFO]
+                            .required
+                        }
+                        placeholder={`Enter ${service} API key...`}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => togglePasswordVisibility(service)}
+                      >
+                        {showPassword[service] ? "🙈" : "👁️"}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => copyToClipboard(service)}
+                        disabled={!keys[service]}
+                      >
+                        📋
+                      </button>
+                    </div>
+                  </div>
                 ))}
-              </tbody>
-            </table>
-          ) : (
-            <p className="text-gray-400 text-center">
-              Composio API Key required
-            </p>
-          )}
+                <button
+                  type="submit"
+                  className="w-full btn-primary hover:shadow-primary-glow"
+                >
+                  Save API Keys
+                </button>
+              </form>
+            </div>
+
+            {/* Authentication Services Table */}
+            <div className="auth-card p-6">
+              {loading && (
+                <div className="loading-overlay">
+                  <div className="loading-spinner"></div>
+                  <p className="mt-4 text-lg text-text">
+                    Fetching auth status... Please wait
+                  </p>
+                </div>
+              )}
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-xl font-semibold text-text">
+                  Connected Services
+                </h3>
+                <button
+                  onClick={fetchAuthStatus}
+                  disabled={reloadingStatus}
+                  className={`reload-button ${
+                    reloadingStatus ? "loading" : ""
+                  }`}
+                  aria-label="Reload authentication status"
+                >
+                  <RefreshCw size={18} className="reload-icon" />
+                  <span>
+                    {reloadingStatus ? "Refreshing..." : "Reload Status"}
+                  </span>
+                </button>
+              </div>
+
+              {comp ? (
+                <table className="auth-services-table">
+                  <thead>
+                    <tr>
+                      <th>Service</th>
+                      <th>Status</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {AUTH_SERVICES.map((service) => (
+                      <tr key={service}>
+                        <td>{service}</td>
+                        <td className="text-center">
+                          <label className="toggle-switch">
+                            <input
+                              type="checkbox"
+                              checked={authStatus[service] || false}
+                              onChange={() =>
+                                handleAuthToggle(service, !authStatus[service])
+                              }
+                              className="sr-only"
+                            />
+                            <div
+                              className={`toggle-track ${
+                                authStatus[service] ? "on" : "off"
+                              }`}
+                            >
+                              <div className="toggle-thumb"></div>
+                            </div>
+                          </label>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              ) : (
+                <p className="text-text-accent text-center py-8">
+                  Composio API Key required
+                </p>
+              )}
+            </div>
+          </div>
         </div>
       </div>
     </div>

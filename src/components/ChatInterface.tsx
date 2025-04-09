@@ -2,6 +2,7 @@ import { useState } from "react";
 // @ts-ignore
 import VanishingMessageInput from "./VanishingMessageInput.jsx";
 import BackgroundBeamsWithCollisionDemo from "./ui/background-beams-with-collision-demo";
+import { JSX } from "react/jsx-runtime";
 
 type ChatMessage = {
   id: string;

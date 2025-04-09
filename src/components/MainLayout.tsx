@@ -1,11 +1,12 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import Sidebar from "./Sidebar";
 import TopBar from "./TopBar";
 import { useAuth } from "@clerk/clerk-react";
 import WorkflowGraph from "./WorkflowGraph.tsx";
 import ChatInterface from "./ChatInterface";
 import QueryRefiner from "./QueryRefiner";
-import VanishingMessageInput from "./VanishingMessageInput.jsx";
+import VanishingMessageInput from "./VanishingMessageInput";
+import "./ChatStyles.css";
 
 const EXAMPLE_PROMPTS = [
   "Create a workflow for social media post scheduling",
@@ -51,19 +52,29 @@ export default function MainLayout() {
 
   const handleSend = async () => {
     if (!message.trim()) return;
-    if (mode === "general") {
-      // General Query Mode: Send directly to /general
-      setChats([
-        ...chats,
-        { id: Date.now().toString(), message, sender: "user" },
-        {
-          id: (Date.now() + 1).toString(),
-          message: "Fetching response...",
-          sender: "bot",
-        },
-      ]);
-      setMessage("");
 
+    const userMessageId = Date.now().toString();
+    const botMessageId = (Date.now() + 1).toString();
+
+    setChats((prevChats) => [
+      ...prevChats,
+      { id: userMessageId, message: message.trim(), sender: "user" },
+      {
+        id: botMessageId,
+        message: (
+          <div className="typing-indicator">
+            <div className="typing-dot"></div>
+            <div className="typing-dot"></div>
+            <div className="typing-dot"></div>
+          </div>
+        ),
+        sender: "bot",
+      },
+    ]);
+
+    setMessage("");
+
+    if (mode === "general") {
       try {
         const token = await getToken();
         const response = await fetch("http://localhost:8000/general", {
@@ -75,9 +86,10 @@ export default function MainLayout() {
           body: JSON.stringify({ query: message.trim() }),
         });
         const data = await response.json();
+
         setChats((prevChats) =>
           prevChats.map((chat) =>
-            chat.message === "Fetching response..."
+            chat.id === botMessageId
               ? { ...chat, message: data.response }
               : chat
           )
@@ -85,8 +97,12 @@ export default function MainLayout() {
       } catch (error) {
         setChats((prevChats) =>
           prevChats.map((chat) =>
-            chat.message === "Fetching response..."
-              ? { ...chat, message: "Error fetching response" }
+            chat.id === botMessageId
+              ? {
+                  ...chat,
+                  message:
+                    "Sorry, I couldn't process that request. Please try again.",
+                }
               : chat
           )
         );
@@ -102,7 +118,6 @@ export default function MainLayout() {
         [questions[currentQuestionIndex - 1]]: message.trim(),
       };
       setQanda(updatedQandA);
-      setMessage("");
 
       if (currentQuestionIndex + 1 <= questions.length) {
         setCurrentQuestionIndex(currentQuestionIndex + 1);
@@ -124,51 +139,66 @@ export default function MainLayout() {
             );
           });
 
-        setChats([
-          ...chats,
-          {
-            id: Date.now().toString(),
-            message: message.trim(),
-            sender: "user",
-          },
-          {
-            id: (Date.now() + 1).toString(),
-            message: <div>{formattedMessage}</div>,
-            sender: "bot",
-          },
-        ]);
+        setChats((prevChats) => {
+          const botIndex = prevChats.findIndex(
+            (chat) => chat.id === botMessageId
+          );
+
+          if (botIndex !== -1) {
+            return [
+              ...prevChats.slice(0, botIndex),
+              {
+                id: botMessageId,
+                message: <div>{formattedMessage}</div>,
+                sender: "bot",
+              },
+              ...prevChats.slice(botIndex + 1),
+            ];
+          }
+
+          return prevChats;
+        });
       } else {
-        setChats([
-          ...chats,
-          {
-            id: Date.now().toString(),
-            message: message.trim(),
-            sender: "user",
-          },
-          {
-            id: (Date.now() + 1).toString(),
-            message: "Refining Query...",
-            sender: "bot",
-          },
-        ]);
-        setQuestions([]);
-        console.log("Q&A:", updatedQandA);
-        await sendRefinedQuery(updatedQandA);
+        try {
+          setChats((prevChats) =>
+            prevChats.map((chat) =>
+              chat.id === botMessageId
+                ? {
+                    ...chat,
+                    message: (
+                      <div className="typing-indicator">
+                        <div className="typing-dot"></div>
+                        <div className="typing-dot"></div>
+                        <div className="typing-dot"></div>
+                      </div>
+                    ),
+                  }
+                : chat
+            )
+          );
+
+          setQuestions([]);
+          console.log("Q&A:", updatedQandA);
+          await sendRefinedQuery(updatedQandA);
+
+          setChats((prevChats) =>
+            prevChats.filter((chat) => chat.id !== botMessageId)
+          );
+        } catch (error) {
+          setChats((prevChats) =>
+            prevChats.map((chat) =>
+              chat.id === botMessageId
+                ? {
+                    ...chat,
+                    message: "Error refining your query. Please try again.",
+                  }
+                : chat
+            )
+          );
+        }
       }
       return;
     }
-
-    const newChats = [
-      ...chats,
-      { id: Date.now().toString(), message: message.trim(), sender: "user" },
-      {
-        id: (Date.now() + 1).toString(),
-        message: "Thinking...",
-        sender: "bot",
-      },
-    ];
-    setChats(newChats);
-    setMessage("");
 
     try {
       const token = await getToken();
@@ -202,22 +232,22 @@ export default function MainLayout() {
           });
         setQuestions(data.response);
         setCurrentQuestionIndex(1);
-        setChats([
-          ...newChats,
-          {
-            id: (Date.now() + 2).toString(),
-            message: <div>{formattedMessage}</div>,
-            sender: "bot",
-          },
-        ]);
+
+        setChats((prevChats) =>
+          prevChats.map((chat) =>
+            chat.id === botMessageId
+              ? { ...chat, message: <div>{formattedMessage}</div> }
+              : chat
+          )
+        );
       } else {
         setChats((prevChats) =>
           prevChats.map((chat) =>
-            chat.message === "Thinking..."
+            chat.id === botMessageId
               ? {
                   ...chat,
                   message:
-                    "No questions found. do you want to get refined query ?",
+                    "I don't have any clarifying questions. Would you like me to generate a workflow based on your query?",
                 }
               : chat
           )
@@ -226,8 +256,12 @@ export default function MainLayout() {
     } catch (error) {
       setChats((prevChats) =>
         prevChats.map((chat) =>
-          chat.message === "Thinking..."
-            ? { ...chat, message: "Error fetching response" }
+          chat.id === botMessageId
+            ? {
+                ...chat,
+                message:
+                  "I encountered an error processing your request. Please try again.",
+              }
             : chat
         )
       );
@@ -285,15 +319,31 @@ export default function MainLayout() {
       });
       const data = await response.json();
       setRefinedQuery(data.response);
+
       setChats([
         {
-          id: (Date.now() + 2).toString(),
-          message: "REFINED QUERY :-",
+          id: Date.now().toString(),
+          message: (
+            <div className="refined-query">
+              <span className="refined-query-header">
+                I've refined your query:
+              </span>
+              <div className="refined-query-content">{data.response}</div>
+            </div>
+          ),
           sender: "bot",
         },
       ]);
     } catch (error) {
       console.error("Error sending refined query:", error);
+      setChats([
+        {
+          id: Date.now().toString(),
+          message:
+            "I encountered an error refining your query. Please try again.",
+          sender: "bot",
+        },
+      ]);
     }
   };
 
@@ -357,9 +407,7 @@ export default function MainLayout() {
     }
   };
 
-  // Function to handle home/new chat button click
   const handleNewChatClick = () => {
-    // Reset the UI to the initial message input state
     setChats([]);
     setMessage("");
     setQuestions([]);
@@ -369,13 +417,11 @@ export default function MainLayout() {
     setWorkflowJson(null);
     setShowWorkflow(false);
 
-    // Make sure we're in workflow mode by default
     setMode("workflow");
   };
 
   return (
     <div className="min-h-screen flex flex-col bg-[var(--color-background)] text-[var(--color-text)] relative">
-      {/* Loading Screen */}
       {loading && (
         <div className="fixed inset-0 flex flex-col items-center justify-center bg-black bg-opacity-80 z-50">
           <div className="animate-spin rounded-full h-12 w-12 border-b-4 border-[var(--color-primary)]"></div>
@@ -383,7 +429,6 @@ export default function MainLayout() {
         </div>
       )}
 
-      {/* Top Navigation Bar with black background */}
       <div className="fixed top-0 left-0 right-0 z-50 bg-black">
         <TopBar
           onMenuClick={() => setShowSidebar(true)}
@@ -392,7 +437,6 @@ export default function MainLayout() {
         />
       </div>
 
-      {/* Sidebar */}
       <Sidebar
         show={showSidebar}
         onClose={() => setShowSidebar(false)}
@@ -406,9 +450,7 @@ export default function MainLayout() {
         setCurrentWorkflow={setCurrentWorkflow}
       />
 
-      {/* Main Content Area */}
       <main className="flex flex-1 pt-16 pb-24 relative">
-        {/* Chat and Query Section */}
         <div
           className={`flex flex-col ${
             showWorkflow
@@ -416,17 +458,32 @@ export default function MainLayout() {
               : "w-full max-w-4xl mx-auto"
           } px-4 pt-4 overflow-y-auto min-h-full`}
         >
-          <ChatInterface
-            chats={chats}
-            message={message}
-            setMessage={setMessage}
-            handleSend={handleSend}
-            examplePrompts={EXAMPLE_PROMPTS}
-            mode={mode}
-            handleModeChange={handleModeChange}
-            showWorkflow={showWorkflow}
-            handleQueryUpdate={handleQueryUpdate}
-          />
+          {chats.length === 0 ? (
+            <ChatInterface
+              chats={chats}
+              message={message}
+              setMessage={setMessage}
+              handleSend={handleSend}
+              examplePrompts={EXAMPLE_PROMPTS}
+              mode={mode}
+              handleModeChange={handleModeChange}
+              showWorkflow={showWorkflow}
+              handleQueryUpdate={handleQueryUpdate}
+            />
+          ) : (
+            <div className="chat-container">
+              {chats.map((chat) => (
+                <div
+                  key={chat.id}
+                  className={`message ${
+                    chat.sender === "user" ? "user-message" : "bot-message"
+                  }`}
+                >
+                  <div className="message-content">{chat.message}</div>
+                </div>
+              ))}
+            </div>
+          )}
 
           {refinedQuery && (
             <div className="my-4">
@@ -440,7 +497,6 @@ export default function MainLayout() {
           )}
         </div>
 
-        {/* Workflow Graph Section */}
         {showWorkflow && workflowJson && (
           <div className="w-2/3 fixed right-0 top-0 bottom-0 z-0 pt-8 pb-8 px-3 mx-auto">
             <WorkflowGraph
@@ -455,12 +511,15 @@ export default function MainLayout() {
         )}
       </main>
 
-      {/* Input Bar */}
-      {(chats.length > 0 ) && (
-        <div className="fixed bottom-0 left-0 right-0 bg-[var(--color-card)] border-t border-gray-700 p-4 z-[100]">
+      {/* Add padding at the bottom to prevent content being hidden under the input */}
+      <div className="input-spacer"></div>
+
+      {/* Message Input Area with CSS classes */}
+      {chats.length > 0 && (
+        <div className="message-input-container">
           <div
-            className={`mx-auto ${
-              showWorkflow ? "pl-[calc(100%/3)] pr-4" : "max-w-3xl"
+            className={`message-input-wrapper ${
+              showWorkflow ? "with-workflow" : ""
             }`}
           >
             <VanishingMessageInput

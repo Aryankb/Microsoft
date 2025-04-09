@@ -1,4 +1,4 @@
-import { useRef, useState, useEffect } from "react";
+import { useRef, useState } from "react";
 import { Copy, Check } from "lucide-react";
 
 interface QueryRefinerProps {
@@ -16,6 +16,7 @@ const QueryRefiner = ({
 }: QueryRefinerProps) => {
   const [copySuccess, setCopySuccess] = useState(false);
   const refinedQueryRef = useRef<HTMLTextAreaElement>(null);
+  const [isEditing, setIsEditing] = useState(false);
 
   // Function to auto-resize textarea based on content
   const autoResizeTextarea = (element: HTMLTextAreaElement) => {
@@ -45,65 +46,67 @@ const QueryRefiner = ({
     }
   };
 
+  const handleStartEditing = () => {
+    setIsEditing(true);
+    setTimeout(() => {
+      if (refinedQueryRef.current) {
+        refinedQueryRef.current.focus();
+        autoResizeTextarea(refinedQueryRef.current);
+      }
+    }, 0);
+  };
+
+  const handleEndEditing = () => {
+    setIsEditing(false);
+  };
+
   if (!refinedQuery) {
     return null;
   }
 
   return (
-    <div className="bg-gray-900 p-4 rounded-lg shadow-md border border-gray-700">
-      <div
-        className="px-5 py-3 rounded-lg text-white cursor-pointer mb-4"
-        onClick={(e) => {
-          const input = e.currentTarget
-            .nextElementSibling as HTMLTextAreaElement;
-          input.style.display = "block";
-          input.focus();
-          e.currentTarget.style.display = "none";
+    <div className="query-refiner">
+      {/* Improved edit prompt above the query display */}
+      {!isEditing && (
+        <div className="flex items-center justify-between mb-2">
+          <div className="text-text-accent text-xs flex items-center bg-card bg-opacity-50 px-2 py-1 rounded-md">
+            <span className="mr-1">✏️</span>
+            <span>Click query below to edit</span>
+          </div>
+        </div>
+      )}
 
-          // Auto-resize the textarea when displayed
-          autoResizeTextarea(input);
-        }}
-      >
-        {refinedQuery}
-      </div>
+      {!isEditing ? (
+        <div
+          className="query-display"
+          onClick={handleStartEditing}
+          title="Click to edit query"
+        >
+          {refinedQuery}
+        </div>
+      ) : (
+        <textarea
+          ref={refinedQueryRef}
+          value={refinedQuery}
+          onChange={(e) => {
+            setRefinedQuery(e.target.value);
+            autoResizeTextarea(e.target);
+          }}
+          onBlur={handleEndEditing}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") {
+              e.preventDefault();
+              const newValue = e.currentTarget.value + "\n";
+              setRefinedQuery(newValue);
+              setTimeout(() => autoResizeTextarea(e.currentTarget), 0);
+            }
+          }}
+          className="query-editor"
+          placeholder="Refined Query"
+        />
+      )}
 
-      <textarea
-        ref={refinedQueryRef}
-        value={refinedQuery}
-        onBlur={(e) => {
-          e.target.style.display = "none";
-          e.target.previousElementSibling.style.display = "block";
-          setRefinedQuery(e.target.value);
-        }}
-        onChange={(e) => {
-          setRefinedQuery(e.target.value);
-          // Auto-resize while typing
-          autoResizeTextarea(e.target);
-        }}
-        onFocus={(e) => {
-          // Ensure proper sizing when focused
-          autoResizeTextarea(e.target);
-        }}
-        onKeyDown={(e) => {
-          if (e.key === "Enter") {
-            e.preventDefault();
-            const newValue = e.currentTarget.value + "\n";
-            setRefinedQuery(newValue);
-
-            // Let React update the value, then resize
-            setTimeout(() => autoResizeTextarea(e.currentTarget), 0);
-          }
-        }}
-        className="w-full px-4 py-3 border rounded-lg resize-none bg-gray-800 text-white mb-4 border-gray-600"
-        placeholder="Refined Query"
-        style={{
-          display: "none",
-          minHeight: "80px", // Set minimum height
-          overflowY: "hidden", // Hide scrollbar when auto-sizing
-        }}
-      />
-
-      <div className="flex justify-between gap-4">
+      <div className="query-actions">
         <div
           onClick={() => {
             const userChoice = showWorkflow
@@ -111,19 +114,19 @@ const QueryRefiner = ({
               : false;
             handleGenerateWorkflow(userChoice);
           }}
-          className="flex-1 px-4 py-3 bg-blue-400 text-gray-900 rounded-lg hover:shadow-[0px_0px_15px_rgba(96,165,250,0.7)] transition-all duration-200 text-center font-medium cursor-pointer"
+          className="generate-button"
         >
           Generate Workflow
         </div>
 
         <button
           onClick={handleCopyText}
-          className="px-4 py-2 bg-gray-800 hover:bg-gray-700 rounded-lg transition-all duration-200 flex items-center gap-2 whitespace-nowrap text-white"
+          className="copy-button"
           title="Copy to clipboard"
         >
           {copySuccess ? (
             <>
-              <Check size={16} className="text-[#22C55E]" />
+              <Check size={16} className="success-icon" />
               <span>Copied</span>
             </>
           ) : (

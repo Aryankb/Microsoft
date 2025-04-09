@@ -17,8 +17,9 @@ import {
 interface TopBarProps {
   onMenuClick: () => void;
   onHomeClick?: () => void;
-  onNewChatClick: () => void;
+  onNewChatClick?: () => void; // Make optional
   sidebarVisible: boolean;
+  hideNewChat?: boolean; // Add prop to hide New Chat button
 }
 
 const menuItems = [
@@ -37,6 +38,7 @@ export default function TopBar({
   onHomeClick,
   onNewChatClick,
   sidebarVisible,
+  hideNewChat = false, // Default to showing the button
 }: TopBarProps) {
   const navigate = useNavigate();
 
@@ -71,8 +73,8 @@ export default function TopBar({
             </div>
           )}
 
-          {/* New Chat Button - Only show when sidebar is closed */}
-          {!sidebarVisible && (
+          {/* New Chat Button - Only show when sidebar is closed and not explicitly hidden */}
+          {!sidebarVisible && onNewChatClick && !hideNewChat && (
             <div
               onClick={onNewChatClick}
               className="hidden sm:flex items-center gap-2 px-3 py-2 bg-blue-400 text-gray-900 hover:shadow-[0px_0px_10px_rgba(96,165,250,0.7)] rounded-md transition-colors duration-300 font-medium cursor-pointer"

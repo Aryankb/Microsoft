@@ -8,11 +8,13 @@ import ReactFlow, {
   addEdge,
   Node,
   Edge,
+  Panel,
 } from "reactflow";
 import CustomNode from "./CustomNode.tsx";
 import "reactflow/dist/style.css";
 import { FaPlay, FaCheckCircle, FaSave, FaBolt, FaStop } from "react-icons/fa";
 import { useAuth } from "@clerk/clerk-react";
+import "./WorkflowLoadingAnimation.css";
 
 interface WorkflowNode {
   id: string | number;
@@ -57,90 +59,153 @@ interface WorkflowGraphProps {
   setWorkflows: React.Dispatch<React.SetStateAction<Workflow[]>>;
 }
 
+// Enhanced node arrangement function for better visualization
 const arrangeNodes = (workflow, trigger) => {
+  const dependencies = new Map();
+  const dependents = new Map();
   const levels = new Map();
-  const nodePositions = new Map();
-  const nodeSpacingX = 300;
-  const nodeSpacingY = 150;
-  // levels.set("trigger", 0);
-  nodePositions.set("trigger", { x: 0, y: 0 });
 
-  // Assign layers based on dependencies
   workflow.forEach((node) => {
-    let maxLevel = 0;
-    node.data_flow_inputs?.forEach((input) => {
-      const parentNode = workflow.find((n) =>
-        n.data_flow_outputs?.includes(input)
-      );
-      if (parentNode) {
-        maxLevel = Math.max(maxLevel, levels.get(parentNode.id) + 1 || 0);
-      }
-    });
-    levels.set(node.id, maxLevel);
+    dependencies.set(node.id, new Set());
+    dependents.set(node.id, new Set());
   });
 
-  // Position nodes based on levels
-  const levelCounts = new Map();
   workflow.forEach((node) => {
-    const level = levels.get(node.id) || 0;
-    const positionIndex = levelCounts.get(level) || 0;
-    nodePositions.set(node.id, {
-      x: positionIndex * nodeSpacingX + 200,
-      y: level * nodeSpacingY + 200,
+    if (node.data_flow_inputs) {
+      node.data_flow_inputs.forEach((input) => {
+        const parent = workflow.find((n) =>
+          n.data_flow_outputs?.includes(input)
+        );
+        if (parent) {
+          dependencies.get(node.id).add(parent.id);
+          dependents.get(parent.id).add(node.id);
+        }
+      });
+    }
+  });
+
+  if (trigger && trigger.output) {
+    workflow.forEach((node) => {
+      if (node.data_flow_inputs?.includes("trigger_output")) {
+        dependencies.get(node.id).add("trigger");
+        dependents.set("trigger", dependents.get("trigger") || new Set());
+        dependents.get("trigger").add(node.id);
+      }
     });
-    levelCounts.set(level, positionIndex + 1);
+  }
+
+  const visited = new Set();
+  const assignLevel = (nodeId, level = 0) => {
+    if (visited.has(nodeId)) return;
+    visited.add(nodeId);
+
+    levels.set(nodeId, Math.max(level, levels.get(nodeId) || 0));
+
+    const deps = dependents.get(nodeId);
+    if (deps) {
+      deps.forEach((depId) => {
+        assignLevel(depId, level + 1);
+      });
+    }
+  };
+
+  workflow.forEach((node) => {
+    if (dependencies.get(node.id).size === 0) {
+      assignLevel(node.id, 0);
+    }
+  });
+
+  if (trigger) {
+    assignLevel("trigger", 0);
+  }
+
+  workflow.forEach((node) => {
+    if (!levels.has(node.id)) {
+      assignLevel(node.id, 0);
+    }
+  });
+
+  const nodesByLevel = new Map();
+  levels.forEach((level, nodeId) => {
+    if (!nodesByLevel.has(level)) {
+      nodesByLevel.set(level, []);
+    }
+    nodesByLevel.get(level).push(nodeId);
+  });
+
+  const nodePositions = new Map();
+  const nodeSpacingX = 350;
+  const nodeSpacingY = 200;
+  const centerOffset = 150;
+
+  nodesByLevel.forEach((nodeIds, level) => {
+    const levelWidth = nodeIds.length * nodeSpacingX;
+    const startX = -(levelWidth / 2) + centerOffset;
+
+    nodeIds.forEach((nodeId, index) => {
+      const xPos = startX + index * nodeSpacingX;
+      const yPos = level * nodeSpacingY;
+      nodePositions.set(nodeId, { x: xPos, y: yPos });
+    });
   });
 
   return nodePositions;
 };
 
-
 const generateNodesAndEdges = (workflowJson, handleValueChange) => {
   const { workflow, trigger, data_flow_notebook_keys } = workflowJson;
   const positions = arrangeNodes(workflow, trigger);
 
-  const nodes = workflow
-    
-    .map((node) => ({
-      id: node.id.toString(),
-      type: "customNode",
-      position: positions.get(node.id),
-      data: {
-        handleValueChange,
-        label: node.name,
-        tool_action: node.tool_action || null,
-        to_execute: node.to_execute,
-        connectorName: node.to_execute
-          ? node.to_execute[0]
-            ? `Connector ${node.to_execute[0].replace("connector_", "")}`
-            : ""
-          : "",
-        description: node.description,
-        id: node.id,
-        type: node.type,
-        config_inputs: node.config_inputs,
-        llm_prompt: node.llm_prompt,
-        validation_prompt: node.validation_prompt,
-      },
-    }));
-
-  // Trigger Node
-  if (trigger.name !== "TRIGGER_MANUAL") {
-  nodes.push({
-    id: trigger.id.toString(),
+  const nodes = workflow.map((node) => ({
+    id: node.id.toString(),
     type: "customNode",
-    position: positions.get("trigger"),
+    position: positions.get(node.id) || { x: 0, y: 0 },
     data: {
       handleValueChange,
-      label: trigger.name,
-      description: trigger.description,
-      config_inputs: trigger.config_inputs,
-      isTrigger: true,
-      id: trigger.id,
-      type: "TRIGGER",
+      label: node.name,
+      tool_action: node.tool_action || null,
+      to_execute: node.to_execute,
+      connectorName: node.to_execute
+        ? node.to_execute[0]
+          ? `Connector ${node.to_execute[0].replace("connector_", "")}`
+          : ""
+        : "",
+      description: node.description,
+      id: node.id,
+      type: node.type,
+      config_inputs: node.config_inputs,
+      llm_prompt: node.llm_prompt,
+      validation_prompt: node.validation_prompt,
     },
-  });
+    style: {
+      boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
+      border: "1px solid #ddd",
+      borderRadius: "8px",
+    },
+  }));
+
+  if (trigger.name !== "TRIGGER_MANUAL") {
+    nodes.push({
+      id: trigger.id.toString(),
+      type: "customNode",
+      position: positions.get("trigger") || { x: 0, y: 0 },
+      data: {
+        handleValueChange,
+        label: trigger.name,
+        description: trigger.description,
+        config_inputs: trigger.config_inputs,
+        isTrigger: true,
+        id: trigger.id,
+        type: "TRIGGER",
+      },
+      style: {
+        boxShadow: "0 4px 6px rgba(0, 0, 0, 0.2)",
+        border: "2px solid var(--color-primary)",
+        borderRadius: "8px",
+      },
+    });
   }
+
   const edges = [];
   if (trigger.output && data_flow_notebook_keys?.includes("trigger_output")) {
     workflow.forEach((node) => {
@@ -151,7 +216,20 @@ const generateNodesAndEdges = (workflowJson, handleValueChange) => {
           target: node.id.toString(),
           label: trigger.output.toString(),
           animated: true,
-          style: { stroke: "blue", strokeWidth: 2 },
+          style: {
+            stroke: "var(--color-primary)",
+            strokeWidth: 2,
+          },
+          labelStyle: {
+            fill: "var(--color-text)",
+            fontWeight: 500,
+          },
+          labelBgStyle: {
+            fill: "var(--color-card)",
+            opacity: 0.8,
+            borderRadius: "4px",
+            padding: "2px",
+          },
         });
       }
     });
@@ -171,7 +249,24 @@ const generateNodesAndEdges = (workflowJson, handleValueChange) => {
               target: targetNode.id.toString(),
               label: output,
               animated: true,
-              style: { strokeDasharray: "5,5" },
+              style: {
+                stroke: "var(--color-secondary)",
+                strokeWidth: 1.5,
+                strokeDasharray: "5, 5",
+              },
+              labelStyle: {
+                fill: "var(--color-text)",
+                fontSize: 12,
+              },
+              labelBgStyle: {
+                fill: "var(--color-background)",
+                opacity: 0.7,
+                borderRadius: "4px",
+              },
+              markerEnd: {
+                type: "arrowclosed",
+                color: "var(--color-secondary)",
+              },
             });
           }
         });
@@ -182,7 +277,6 @@ const generateNodesAndEdges = (workflowJson, handleValueChange) => {
   return { nodes, edges };
 };
 
-// Move nodeTypes outside component and memoize
 const nodeTypes = {
   customNode: CustomNode,
 };
@@ -195,29 +289,43 @@ const WorkflowGraph: React.FC<WorkflowGraphProps> = ({
   const { getToken } = useAuth();
   const [loading, setLoading] = useState(false);
   const [workflowData, setWorkflowData] = useState(workflowJson);
-  // const workflowId = workflowJson.workflow_id;
-  const [showSaveButton, setShowSaveButton] = useState(false); // State to show/hide save button
+  const [showSaveButton, setShowSaveButton] = useState(false);
+  const [loadingStep, setLoadingStep] = useState<string>("");
+  const [loadingProgress, setLoadingProgress] = useState<number>(0);
+  const [bootPhase, setBootPhase] = useState(0);
+  const [bootComplete, setBootComplete] = useState(false);
 
-  // Update workflowData when workflowJson prop changes
+  const bootSequence = [
+    "Initializing workflow engine...",
+    "Analyzing workflow requirements...",
+    "Loading available tools...",
+    "Finding optimal tool combinations...",
+    "Configuring API connections...",
+    "Setting up data flows...",
+    "Creating intelligent agents...",
+    "Establishing trigger conditions...",
+    "Building execution paths...",
+    "Optimizing workflow logic...",
+    "Running security checks...",
+    "Finalizing configuration...",
+    "System ready.",
+  ];
+
   useEffect(() => {
     setWorkflowData(workflowJson);
-    console.log("changed flow")
-    
+    console.log("changed flow");
   }, [workflowJson]);
-  // Add useEffect to update nodes when workflowData changes
+
   useEffect(() => {
     const { nodes: newNodes, edges: newEdges } = generateNodesAndEdges(
       workflowData,
       handleValueChange
     );
-    // console.log("new nodes and edges",newNodes,newEdges)
     setNodes(newNodes);
     setEdges(newEdges);
-    
-    console.log("updated useeffect :",workflowJson);
-  }, [workflowData]); // This will trigger when workflowData changes
 
-  
+    console.log("updated useeffect :", workflowJson);
+  }, [workflowData]);
 
   const handleValueChange = (nodeId, field, value, type) => {
     setWorkflowData((prevData) => {
@@ -242,8 +350,8 @@ const WorkflowGraph: React.FC<WorkflowGraphProps> = ({
             : node
         );
       }
-      console.log("updated",newJson);
-      setShowSaveButton(true); // Show save button when workflowData changes
+      console.log("updated", newJson);
+      setShowSaveButton(true);
       return newJson;
     });
   };
@@ -266,12 +374,11 @@ const WorkflowGraph: React.FC<WorkflowGraphProps> = ({
 
       const responseData = await response.json();
       console.log("Workflow saved successfully:", responseData);
-      setShowSaveButton(false); // Hide save button after successful save
+      setShowSaveButton(false);
     } catch (error) {
       console.error("Error saving workflow:", error);
     }
   };
-
 
   const fetchWorkflows = async () => {
     try {
@@ -289,13 +396,6 @@ const WorkflowGraph: React.FC<WorkflowGraphProps> = ({
       console.error("Error fetching workflows:", error);
     }
   };
-  // const toggleActiveState = (id: string) => {
-  //   setWorkflows((prevWorkflows) =>
-  //     prevWorkflows.map((workflow) =>
-  //       workflow.id === id ? { ...workflow, active: !workflow.active } : workflow
-  //     )
-  //   );
-  // };
 
   const { nodes: initialNodes, edges: initialEdges } = generateNodesAndEdges(
     workflowJson,
@@ -304,41 +404,91 @@ const WorkflowGraph: React.FC<WorkflowGraphProps> = ({
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
 
-  // const onConnect = useCallback(
-  //   (params) => setEdges((eds) => addEdge(params, eds)),
-  //   [setEdges]
-  // );
-
   const runOrActivateWorkflow = async () => {
     const token = await getToken();
     setLoading(true);
+    setBootPhase(0);
+    setBootComplete(false);
+    setLoadingStep(bootSequence[0]);
+    setLoadingProgress(0);
+
+    document.documentElement.classList.add("workflow-loading");
+
+    let currentPhase = 0;
+
+    const advancePhase = () => {
+      if (currentPhase < bootSequence.length - 1) {
+        currentPhase++;
+        setBootPhase(currentPhase);
+        setLoadingStep(bootSequence[currentPhase]);
+        setLoadingProgress(
+          Math.floor((currentPhase / (bootSequence.length - 1)) * 100)
+        );
+
+        const delay = Math.random() * 300 + 400;
+        setTimeout(advancePhase, delay);
+      } else {
+        setBootComplete(true);
+      }
+    };
+
+    setTimeout(() => {
+      advancePhase();
+    }, 500);
+
     const url =
       workflowJson.trigger.name === "TRIGGER_MANUAL"
         ? "http://localhost:8000/run_workflow"
         : "http://localhost:8000/activate_workflow";
+
     console.log("🚀 Running or activating workflow:", workflowData);
-    const response = await fetch(url, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`, // Replace with your actual auth token
-      },
-      body: JSON.stringify({ workflowjson: workflowData }),
-    });
-    setLoading(false);
-    if (!response.ok) {
-      const responseData = await response.json();
-      console.error("Failed to run or activate workflow", responseData.message);
-      if (responseData.message === "Please fill in your API keys to proceed.") {
-        window.location.href = "/api-keys"; // Redirect to API key page
+
+    try {
+      const response = await fetch(url, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ workflowjson: workflowData }),
+      });
+
+      if (!response.ok) {
+        const responseData = await response.json();
+        console.error(
+          "Failed to run or activate workflow",
+          responseData.message
+        );
+        if (
+          responseData.message === "Please fill in your API keys to proceed."
+        ) {
+          window.location.href = "/api-keys";
+        }
+      } else {
+        const responseData = await response.json();
+        console.log("🚀 Workflow activated:", responseData);
+        setWorkflowData(responseData.json);
+        fetchWorkflows();
       }
-    } else {
-      const responseData = await response.json();
-      console.log("🚀 Workflow activated:", responseData);
-      setWorkflowData(responseData.json);
-      // setKey(prevKey => prevKey + 1);
-      // toggleActiveState(workflowId.toString());
-      fetchWorkflows();
+    } catch (error) {
+      console.error("Error activating workflow:", error);
+    } finally {
+      if (!bootComplete) {
+        const checkBootComplete = setInterval(() => {
+          if (bootComplete) {
+            clearInterval(checkBootComplete);
+            setLoading(false);
+            setLoadingStep("");
+            setLoadingProgress(0);
+            document.documentElement.classList.remove("workflow-loading");
+          }
+        }, 100);
+      } else {
+        setLoading(false);
+        setLoadingStep("");
+        setLoadingProgress(0);
+        document.documentElement.classList.remove("workflow-loading");
+      }
     }
   };
 
@@ -346,22 +496,56 @@ const WorkflowGraph: React.FC<WorkflowGraphProps> = ({
     <div
       style={{
         position: "absolute",
-        top: "70px",
-        bottom: "93px",
-        left: "20px",
-        right: "5px",
+        top: 0,
+        bottom: 0,
+        left: 0,
+        right: 0,
         border: "1px solid #333",
         borderRadius: "8px",
         overflow: "hidden",
-        margin: "auto",
       }}
     >
       {loading && (
-        <div className="fixed inset-0 flex flex-col items-center justify-center bg-black bg-opacity-80 z-50">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-4 border-primary"></div>
-          <p className="mt-4 text-lg">
-            Activating/Deactivating workflow... Please wait
-          </p>
+        <div className="boot-overlay">
+          <div className="boot-container">
+            <div className="boot-header">
+              <h1 className="boot-title">SIGMOYD AI</h1>
+              <p className="boot-subtitle">
+                {workflowJson.trigger.name === "TRIGGER_MANUAL"
+                  ? "WORKFLOW EXECUTION SEQUENCE"
+                  : workflowData.active
+                  ? "WORKFLOW DEACTIVATION SEQUENCE"
+                  : "WORKFLOW ACTIVATION SEQUENCE"}
+              </p>
+            </div>
+
+            <div className="boot-terminal">
+              <div className="boot-console">
+                {bootSequence.slice(0, bootPhase + 1).map((text, index) => (
+                  <div key={index} className="boot-line">
+                    <span className="boot-prompt">&gt;</span>
+                    <div
+                      className={`boot-message ${
+                        index === bootPhase ? "boot-cursor" : ""
+                      }`}
+                    >
+                      {text}
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              <div className="boot-progress-container">
+                <div className="boot-progress-bar">
+                  <div
+                    className="boot-progress-fill"
+                    style={{ width: `${loadingProgress}%` }}
+                  />
+                </div>
+                <div className="boot-progress-text">{loadingProgress}%</div>
+              </div>
+            </div>
+          </div>
         </div>
       )}
 
@@ -370,25 +554,48 @@ const WorkflowGraph: React.FC<WorkflowGraphProps> = ({
         edges={edges}
         onNodesChange={onNodesChange}
         onEdgesChange={onEdgesChange}
-        // onConnect={onConnect}
         nodeTypes={nodeTypes}
         fitView
+        fitViewOptions={{ padding: 0.2 }}
         style={{ background: "var(--color-background)" }}
+        proOptions={{ hideAttribution: true }}
+        minZoom={0.2}
+        maxZoom={1.5}
+        defaultEdgeOptions={{
+          animated: true,
+          type: "smoothstep",
+        }}
       >
         <MiniMap
-          style={{ backgroundColor: "var(--color-card)" }}
+          style={{
+            backgroundColor: "var(--color-card)",
+            border: "1px solid var(--color-text-accent)",
+            borderRadius: "4px",
+          }}
           nodeColor="var(--color-primary)"
+          maskColor="rgba(0, 0, 0, 0.1)"
         />
-        <Controls />
-        <Background color="var(--color-text-accent)" />
+        <Controls
+          position="bottom-right"
+          style={{
+            display: "flex",
+            flexDirection: "row",
+            gap: "4px",
+            backgroundColor: "var(--color-card)",
+            borderRadius: "4px",
+            padding: "4px",
+          }}
+        />
+        <Background
+          color="var(--color-text-accent)"
+          gap={16}
+          size={1}
+          variant="dots"
+        />
 
-        <div
-          className="react-flow__panel react-flow__controls top right"
-          style={{ pointerEvents: "all" }}
-        ></div>
-        <div
-          className="react-flow__panel react-flow__controls top left"
-          style={{ pointerEvents: "all" }}
+        <Panel
+          position="top-left"
+          style={{ background: "transparent", border: "none" }}
         >
           <h2
             onClick={(e) => {
@@ -427,9 +634,10 @@ const WorkflowGraph: React.FC<WorkflowGraphProps> = ({
             placeholder="Workflow Name"
             style={{ display: "none" }}
           />
+
           <div
             onClick={runOrActivateWorkflow}
-            className={`flex items-center gap-2 px-6 py-3 rounded-lg shadow-md transition-all duration-300 mt-4 font-medium cursor-pointer ${
+            className={`flex items-center gap-2 px-6 py-3 rounded-lg shadow-md transition-all duration-300 mt-8 font-medium cursor-pointer ${
               workflowJson.trigger.name === "TRIGGER_MANUAL"
                 ? "bg-blue-400 text-black rounded shadow hover:bg-blue-600"
                 : workflowData.active
@@ -453,17 +661,17 @@ const WorkflowGraph: React.FC<WorkflowGraphProps> = ({
                 : "Activate Workflow"}
             </span>
           </div>
-         {showSaveButton && ( <div
-            onClick={saveWorkflow}
-          className="flex items-center gap-2 px-6 py-3 rounded-lg shadow-md transition-all duration-300 mt-4 font-medium cursor-pointer bg-green-500 text-black rounded shadow hover:bg-green-600"
-            style={{ minWidth: "180px", textAlign: "center" }}
-          >
-            <FaSave className="inline-block mr-2" />
-            <span>
-              Save Changes
-            </span>
-          </div>)}
-        </div>
+          {showSaveButton && (
+            <div
+              onClick={saveWorkflow}
+              className="flex items-center gap-2 px-6 py-3 rounded-lg shadow-md transition-all duration-300 mt-4 font-medium cursor-pointer bg-green-500 text-black rounded shadow hover:bg-green-600"
+              style={{ minWidth: "180px", textAlign: "center" }}
+            >
+              <FaSave className="inline-block mr-2" />
+              <span>Save Changes</span>
+            </div>
+          )}
+        </Panel>
       </ReactFlow>
     </div>
   );
