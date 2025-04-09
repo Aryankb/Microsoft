@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Sidebar from "./Sidebar";
 import TopBar from "./TopBar";
 import { useAuth } from "@clerk/clerk-react";
@@ -7,6 +7,7 @@ import ChatInterface from "./ChatInterface";
 import QueryRefiner from "./QueryRefiner";
 import VanishingMessageInput from "./VanishingMessageInput";
 import "./ChatStyles.css";
+import "./WorkflowLoadingAnimation.css";
 
 const EXAMPLE_PROMPTS = [
   "Create a workflow for social media post scheduling",
@@ -49,6 +50,26 @@ export default function MainLayout() {
   const [loading, setLoading] = useState(false);
   const [workflows, setWorkflows] = useState<Workflow[]>([]);
   const [currentWorkflow, setCurrentWorkflow] = useState<string | null>(null);
+  const [loadingStep, setLoadingStep] = useState<string>("");
+  const [loadingProgress, setLoadingProgress] = useState<number>(0);
+  const [bootPhase, setBootPhase] = useState(0);
+  const [bootComplete, setBootComplete] = useState(false);
+
+  const bootSequence = [
+    "Initializing workflow engine...",
+    "Analyzing requirements...",
+    "Loading available tools...",
+    "Finding optimal tool combinations...",
+    "Configuring API connections...",
+    "Setting up data flows...",
+    "Creating intelligent agents...",
+    "Establishing workflow patterns...",
+    "Building execution paths...",
+    "Optimizing workflow logic...",
+    "Running security checks...",
+    "Finalizing configuration...",
+    "Workflow generation complete.",
+  ];
 
   const handleSend = async () => {
     if (!message.trim()) return;
@@ -382,6 +403,35 @@ export default function MainLayout() {
     try {
       const token = await getToken();
       setLoading(true);
+      setBootPhase(0);
+      setBootComplete(false);
+      setLoadingStep(bootSequence[0]);
+      setLoadingProgress(0);
+
+      document.documentElement.classList.add("workflow-loading");
+
+      let currentPhase = 0;
+
+      const advancePhase = () => {
+        if (currentPhase < bootSequence.length - 1) {
+          currentPhase++;
+          setBootPhase(currentPhase);
+          setLoadingStep(bootSequence[currentPhase]);
+          setLoadingProgress(
+            Math.floor((currentPhase / (bootSequence.length - 1)) * 100)
+          );
+
+          const delay = Math.random() * 300 + 400;
+          setTimeout(advancePhase, delay);
+        } else {
+          setBootComplete(true);
+        }
+      };
+
+      setTimeout(() => {
+        advancePhase();
+      }, 500);
+
       const response = await fetch("http://localhost:8000/create_agents", {
         method: "POST",
         headers: {
@@ -400,10 +450,44 @@ export default function MainLayout() {
       fetchWorkflows();
       setCurrentWorkflow(data.response.workflow_id);
       setShowWorkflow(true);
+
+      // Ensure loading animation is cleared once we have the workflow data
+      // regardless of the boot animation state
+      setLoading(false);
+      setLoadingStep("");
+      setLoadingProgress(0);
+      document.documentElement.classList.remove("workflow-loading");
+      setBootComplete(true); // Ensure boot animation doesn't continue
     } catch (error) {
       console.error("Error generating workflow:", error);
-    } finally {
+      // Make sure to clean up animation in case of error
       setLoading(false);
+      setLoadingStep("");
+      setLoadingProgress(0);
+      document.documentElement.classList.remove("workflow-loading");
+    } finally {
+      // This is now just a backup cleanup
+      // The animation should already be cleared in the success case
+      if (!bootComplete) {
+        const checkBootComplete = setInterval(() => {
+          if (bootComplete) {
+            clearInterval(checkBootComplete);
+            setLoading(false);
+            setLoadingStep("");
+            setLoadingProgress(0);
+            document.documentElement.classList.remove("workflow-loading");
+          } else {
+            // Force cleanup after 15 seconds as a safeguard
+            setTimeout(() => {
+              clearInterval(checkBootComplete);
+              setLoading(false);
+              setLoadingStep("");
+              setLoadingProgress(0);
+              document.documentElement.classList.remove("workflow-loading");
+            }, 15000);
+          }
+        }, 100);
+      }
     }
   };
 
@@ -423,9 +507,40 @@ export default function MainLayout() {
   return (
     <div className="min-h-screen flex flex-col bg-[var(--color-background)] text-[var(--color-text)] relative">
       {loading && (
-        <div className="fixed inset-0 flex flex-col items-center justify-center bg-black bg-opacity-80 z-50">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-4 border-[var(--color-primary)]"></div>
-          <p className="mt-4 text-lg">Generating workflow... Please wait</p>
+        <div className="boot-overlay">
+          <div className="boot-container">
+            <div className="boot-header">
+              <h1 className="boot-title">SIGMOYD AI</h1>
+              <p className="boot-subtitle">WORKFLOW GENERATION SEQUENCE</p>
+            </div>
+
+            <div className="boot-terminal">
+              <div className="boot-console">
+                {bootSequence.slice(0, bootPhase + 1).map((text, index) => (
+                  <div key={index} className="boot-line">
+                    <span className="boot-prompt">&gt;</span>
+                    <div
+                      className={`boot-message ${
+                        index === bootPhase ? "boot-cursor" : ""
+                      }`}
+                    >
+                      {text}
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              <div className="boot-progress-container">
+                <div className="boot-progress-bar">
+                  <div
+                    className="boot-progress-fill"
+                    style={{ width: `${loadingProgress}%` }}
+                  />
+                </div>
+                <div className="boot-progress-text">{loadingProgress}%</div>
+              </div>
+            </div>
+          </div>
         </div>
       )}
 
