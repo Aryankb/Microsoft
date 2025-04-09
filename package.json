@@ -16,7 +16,7 @@
     "axios": "^1.8.1",
     "clsx": "^2.1.1",
     "codemirror": "5",
-    "framer-motion": "^10.16.4",
+    "framer-motion": "^12.6.3",
     "lucide-react": "^0.475.0",
     "react": "^19.0.0",
     "react-codemirror2": "^8.0.1",

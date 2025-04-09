@@ -94,42 +94,44 @@ const arrangeNodes = (workflow, trigger) => {
   return nodePositions;
 };
 
+
 const generateNodesAndEdges = (workflowJson, handleValueChange) => {
-  // if (!workflow || !Array.isArray(workflow)) return { nodes: [], edges: [] };
   const { workflow, trigger, data_flow_notebook_keys } = workflowJson;
-  // console.log("Workflow:", workflow);
-  // console.log("Trigger:", trigger.id);
   const positions = arrangeNodes(workflow, trigger);
 
-  const nodes = workflow.map((node) => ({
-    id: node.id.toString(),
-    type: "customNode",
-    position: positions.get(node.id),
-    data: {
-      handleValueChange, // Pass the function to the node
-      label: node.name,
-      tool_action: node.tool_action || null,
-      to_execute: node.to_execute,
-      connectorName: node.to_execute
-        ? node.to_execute[0]
-          ? `Connector ${node.to_execute[0].replace("connector_", "")}`
-          : ""
-        : "",
-      description: node.description,
-      id: node.id,
-      type: node.type,
-      config_inputs: node.config_inputs,
-      llm_prompt: node.llm_prompt,
-      validation_prompt: node.validation_prompt,
-    },
-  }));
+  const nodes = workflow
+    
+    .map((node) => ({
+      id: node.id.toString(),
+      type: "customNode",
+      position: positions.get(node.id),
+      data: {
+        handleValueChange,
+        label: node.name,
+        tool_action: node.tool_action || null,
+        to_execute: node.to_execute,
+        connectorName: node.to_execute
+          ? node.to_execute[0]
+            ? `Connector ${node.to_execute[0].replace("connector_", "")}`
+            : ""
+          : "",
+        description: node.description,
+        id: node.id,
+        type: node.type,
+        config_inputs: node.config_inputs,
+        llm_prompt: node.llm_prompt,
+        validation_prompt: node.validation_prompt,
+      },
+    }));
+
   // Trigger Node
+  if (trigger.name !== "TRIGGER_MANUAL") {
   nodes.push({
     id: trigger.id.toString(),
     type: "customNode",
     position: positions.get("trigger"),
     data: {
-      handleValueChange, // ✅ Pass function to trigger node too
+      handleValueChange,
       label: trigger.name,
       description: trigger.description,
       config_inputs: trigger.config_inputs,
@@ -138,13 +140,11 @@ const generateNodesAndEdges = (workflowJson, handleValueChange) => {
       type: "TRIGGER",
     },
   });
+  }
   const edges = [];
-  // Trigger edges if output exists
-
   if (trigger.output && data_flow_notebook_keys?.includes("trigger_output")) {
     workflow.forEach((node) => {
       if (node.data_flow_inputs?.includes("trigger_output")) {
-        // console.log("Trigger Output:", trigger.output);
         edges.push({
           id: `e${trigger.id}-${node.id}`,
           source: trigger.id.toString(),
@@ -169,7 +169,7 @@ const generateNodesAndEdges = (workflowJson, handleValueChange) => {
               id: `e${node.id}-${targetNode.id}-${output}`,
               source: node.id.toString(),
               target: targetNode.id.toString(),
-              label: output, // Show key name on edge
+              label: output,
               animated: true,
               style: { strokeDasharray: "5,5" },
             });
@@ -179,8 +179,6 @@ const generateNodesAndEdges = (workflowJson, handleValueChange) => {
     }
   });
 
-  // console.log("Nodes:", nodes);
-  // console.log("Edges:", edges);
   return { nodes, edges };
 };
 
@@ -194,48 +192,86 @@ const WorkflowGraph: React.FC<WorkflowGraphProps> = ({
   workflows,
   setWorkflows,
 }) => {
-  // const [key, setKey] = useState(0);
   const { getToken } = useAuth();
   const [loading, setLoading] = useState(false);
   const [workflowData, setWorkflowData] = useState(workflowJson);
-  const workflowId = workflowJson.workflow_id;
-  useEffect(() => {
-    console.log("🔥 Workflow Data Updated USE EFFECT:", workflowData);
-  }, [workflowData]); // ✅ Now logs AFTER state updates
-  const handleValueChange = (nodeId, field, value, type) => {
-    // console.log(`🔥 handleValueChange called: node ${nodeId}, field: ${field}, value:`, value, `type: ${type}`);
+  // const workflowId = workflowJson.workflow_id;
+  const [showSaveButton, setShowSaveButton] = useState(false); // State to show/hide save button
 
+  // Update workflowData when workflowJson prop changes
+  useEffect(() => {
+    setWorkflowData(workflowJson);
+    console.log("changed flow")
+    
+  }, [workflowJson]);
+  // Add useEffect to update nodes when workflowData changes
+  useEffect(() => {
+    const { nodes: newNodes, edges: newEdges } = generateNodesAndEdges(
+      workflowData,
+      handleValueChange
+    );
+    // console.log("new nodes and edges",newNodes,newEdges)
+    setNodes(newNodes);
+    setEdges(newEdges);
+    
+    console.log("updated useeffect :",workflowJson);
+  }, [workflowData]); // This will trigger when workflowData changes
+
+  
+
+  const handleValueChange = (nodeId, field, value, type) => {
     setWorkflowData((prevData) => {
-      // ✅ 1. Deep Clone the JSON
       const newJson = JSON.parse(JSON.stringify(prevData));
 
       if (nodeId === "0") {
-        // ✅ 2. Update `config_inputs` inside `trigger`
         if (type === "config") {
           newJson.trigger.config_inputs = {
             ...newJson.trigger.config_inputs,
-            [field]: value, // ✅ Ensure a new object reference
+            [field]: value,
           };
         }
       } else {
-        // ✅ 3. Update `workflow` nodes
-        // console.log("yaaaaaaaa!!",typeof nodeId, typeof newJson.workflow[0].id);
         newJson.workflow = newJson.workflow.map((node) =>
           node.id === Number(nodeId)
             ? {
                 ...node,
                 ...(type === "config"
-                  ? { config_inputs: { ...node.config_inputs, [field]: value } } // ✅ Update `config_inputs`
-                  : { [field]: value }), // ✅ Update `llm_prompt` or `validation_prompt`
+                  ? { config_inputs: { ...node.config_inputs, [field]: value } }
+                  : { [field]: value }),
               }
             : node
         );
       }
-
-      console.log("🚀 Updated Workflow Data:", newJson); // ✅ Logs correct JSON before updating state
-      return newJson; // ✅ Returning a new object to trigger re-render
+      console.log("updated",newJson);
+      setShowSaveButton(true); // Show save button when workflowData changes
+      return newJson;
     });
   };
+
+  const saveWorkflow = async () => {
+    const token = await getToken();
+    try {
+      const response = await fetch("http://localhost:8000/save_workflow", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ workflowjson: workflowData }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to save workflow");
+      }
+
+      const responseData = await response.json();
+      console.log("Workflow saved successfully:", responseData);
+      setShowSaveButton(false); // Hide save button after successful save
+    } catch (error) {
+      console.error("Error saving workflow:", error);
+    }
+  };
+
 
   const fetchWorkflows = async () => {
     try {
@@ -268,10 +304,10 @@ const WorkflowGraph: React.FC<WorkflowGraphProps> = ({
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
 
-  const onConnect = useCallback(
-    (params) => setEdges((eds) => addEdge(params, eds)),
-    [setEdges]
-  );
+  // const onConnect = useCallback(
+  //   (params) => setEdges((eds) => addEdge(params, eds)),
+  //   [setEdges]
+  // );
 
   const runOrActivateWorkflow = async () => {
     const token = await getToken();
@@ -334,7 +370,7 @@ const WorkflowGraph: React.FC<WorkflowGraphProps> = ({
         edges={edges}
         onNodesChange={onNodesChange}
         onEdgesChange={onEdgesChange}
-        onConnect={onConnect}
+        // onConnect={onConnect}
         nodeTypes={nodeTypes}
         fitView
         style={{ background: "var(--color-background)" }}
@@ -395,10 +431,10 @@ const WorkflowGraph: React.FC<WorkflowGraphProps> = ({
             onClick={runOrActivateWorkflow}
             className={`flex items-center gap-2 px-6 py-3 rounded-lg shadow-md transition-all duration-300 mt-4 font-medium cursor-pointer ${
               workflowJson.trigger.name === "TRIGGER_MANUAL"
-                ? "bg-blue-400 text-gray-900 hover:shadow-[0px_0px_15px_rgba(96,165,250,0.7)]"
+                ? "bg-blue-400 text-black rounded shadow hover:bg-blue-600"
                 : workflowData.active
-                ? "bg-red-400 text-gray-900 hover:shadow-[0px_0px_15px_rgba(248,113,113,0.7)]"
-                : "bg-red-400 text-gray-900 hover:shadow-[0px_0px_15px_rgba(250,204,21,0.7)]"
+                ? "bg-red-400 text-black rounded shadow hover:bg-red-600"
+                : "bg-red-400 text-black rounded shadow hover:bg-red-600"
             } hover:scale-105 active:scale-95 border border-gray-600`}
             style={{ minWidth: "180px", textAlign: "center" }}
           >
@@ -417,6 +453,16 @@ const WorkflowGraph: React.FC<WorkflowGraphProps> = ({
                 : "Activate Workflow"}
             </span>
           </div>
+         {showSaveButton && ( <div
+            onClick={saveWorkflow}
+          className="flex items-center gap-2 px-6 py-3 rounded-lg shadow-md transition-all duration-300 mt-4 font-medium cursor-pointer bg-green-500 text-black rounded shadow hover:bg-green-600"
+            style={{ minWidth: "180px", textAlign: "center" }}
+          >
+            <FaSave className="inline-block mr-2" />
+            <span>
+              Save Changes
+            </span>
+          </div>)}
         </div>
       </ReactFlow>
     </div>

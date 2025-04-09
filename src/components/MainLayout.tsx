@@ -456,7 +456,7 @@ export default function MainLayout() {
       </main>
 
       {/* Input Bar */}
-      {(chats.length > 0 || showWorkflow) && (
+      {(chats.length > 0 ) && (
         <div className="fixed bottom-0 left-0 right-0 bg-[var(--color-card)] border-t border-gray-700 p-4 z-[100]">
           <div
             className={`mx-auto ${

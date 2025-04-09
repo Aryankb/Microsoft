@@ -30,7 +30,7 @@
 
 .node-title {
   font-weight: bold;
-  color: black;
+  color: rgb(230, 230, 230);
   display: flex;
   align-items: center;
   margin-bottom: 4px;
@@ -275,4 +275,21 @@
 .config-input-item .textarea-container.expanded.medium,
 .config-input-item .textarea-container.expanded.large {
   width: 500px;
+}
+
+/* Add these styles for file upload */
+.file-upload-label {
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.hidden-file-input {
+  display: none;
+}
+
+/* Optional: Add hover effect */
+.file-upload-label:hover {
+  opacity: 0.8;
 }

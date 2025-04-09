@@ -44,6 +44,7 @@ export default function ManageAuth() {
   const [authStatus, setAuthStatus] = useState<{ [key: string]: boolean }>({});
   const [keys, setKeys] = useState<{ [key: string]: string }>({});
   const [error, setError] = useState<string | null>(null);
+  const [comp,setComp] = useState<boolean>(false);
   const [showPassword, setShowPassword] = useState<{ [key: string]: boolean }>(
     {}
   );
@@ -77,6 +78,9 @@ export default function ManageAuth() {
         const data = await response.json();
         setAuthStatus(data.user_auths || {});
         setKeys(data.api_keys || {});
+        if (data.api_keys.composio){
+          setComp(true);
+        }
         updateCache(data); // Update cache after fetching
       } else {
         console.error("Failed to fetch authentication data");
@@ -93,6 +97,9 @@ export default function ManageAuth() {
     if (cachedData) {
       setAuthStatus(cachedData.user_auths || {});
       setKeys(cachedData.api_keys || {});
+      if (cachedData.api_keys.composio){
+        setComp(true);
+      }
       return; // Don't fetch if cache is available
     }
 
@@ -111,6 +118,9 @@ export default function ManageAuth() {
           const data = await response.json();
           setAuthStatus(data.user_auths || {});
           setKeys(data.api_keys || {});
+          if (data.api_keys.composio){
+            setComp(true);
+          }
           updateCache(data); // Update cache after fetching
         } else {
           console.error("Failed to fetch authentication data");
@@ -145,8 +155,9 @@ export default function ManageAuth() {
 
       if (response.status === 200) {
         const authUrl = await response.json();
+        if (enabled) {
         console.log("Redirecting to:", authUrl.auth_url);
-        window.open(authUrl.auth_url, "_blank", "noopener,noreferrer");
+        window.open(authUrl.auth_url, "_blank", "noopener,noreferrer");}
       }
 
       if (response.ok) {
@@ -180,6 +191,7 @@ export default function ManageAuth() {
 
     try {
       const token = await getToken();
+      console.log("API Keys:", keys);
       const response = await fetch("http://127.0.0.1:8000/save_api_keys", {
         method: "POST",
         headers: {
@@ -191,6 +203,7 @@ export default function ManageAuth() {
 
       if (response.ok) {
         alert("API Keys saved successfully!");
+        setComp(true);
         updateCache({ user_auths: authStatus, api_keys: keys }); // Update cache
       } else {
         setError("Failed to save API keys. Try again.");
@@ -318,7 +331,7 @@ export default function ManageAuth() {
             </button>
           </div>
 
-          {Object.keys(keys).length > 0 ? (
+          {comp? (
             <table className="w-full text-left">
               <thead>
                 <tr>
@@ -361,7 +374,7 @@ export default function ManageAuth() {
             </table>
           ) : (
             <p className="text-gray-400 text-center">
-              No API keys entered yet.
+              Composio API Key required
             </p>
           )}
         </div>

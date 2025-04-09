@@ -228,7 +228,7 @@ export default function Sidebar({
           </div>
 
           <SignOutButton>
-            <div className="mt-3 w-full text-left px-4 py-2 bg-red-400 text-white hover:bg-red-500 hover:shadow-md rounded transition-all cursor-pointer">
+            <div className="mt-3 w-full text-left px-4 py-2 bg-red-400 text-black hover:bg-red-500 hover:shadow-md rounded transition-all cursor-pointer">
               Logout
             </div>
           </SignOutButton>
