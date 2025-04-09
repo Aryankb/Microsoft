@@ -11,15 +11,15 @@
 
 /* Node Type Colors */
 .node-llm {
-  background-color: rgb(0, 147, 155); /* Light Primary Color */
+  background-color: rgba(0, 173, 181, 0.2); /* Light Primary Color */
 }
 
 .node-connector {
-  background-color: rgba(255, 140, 0, 0.791); /* Light Warning Color */
+  background-color: rgba(255, 173, 70, 0.2); /* Light Warning Color */
 }
 
 .node-tool {
-  background-color: rgba(255, 0, 0, 0.603); /* Light Secondary Color */
+  background-color: rgba(255, 107, 107, 0.2); /* Light Secondary Color */
 }
 
 .node-header {
