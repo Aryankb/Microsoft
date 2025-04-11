@@ -324,14 +324,14 @@ const WorkflowGraph: React.FC<WorkflowGraphProps> = ({
     setNodes(newNodes);
     setEdges(newEdges);
 
-    console.log("updated useeffect :", workflowJson);
+    console.log("updated useeffect :", workflowData);
   }, [workflowData]);
 
   const handleValueChange = (nodeId, field, value, type) => {
     setWorkflowData((prevData) => {
       const newJson = JSON.parse(JSON.stringify(prevData));
 
-      if (nodeId === "0") {
+      if (nodeId === 0) {
         if (type === "config") {
           newJson.trigger.config_inputs = {
             ...newJson.trigger.config_inputs,
@@ -373,6 +373,8 @@ const WorkflowGraph: React.FC<WorkflowGraphProps> = ({
       }
 
       const responseData = await response.json();
+      setWorkflowData(responseData.json);
+      fetchWorkflows();
       console.log("Workflow saved successfully:", responseData);
       alert("Workflow saved successfully!");
       setShowSaveButton(false);
@@ -477,7 +479,7 @@ const WorkflowGraph: React.FC<WorkflowGraphProps> = ({
         const responseData = await response.json();
         console.log("🚀 Workflow activated:", responseData);
         setWorkflowData(responseData.json);
-        fetchWorkflows();
+        // fetchWorkflows();
       }
 
     } catch (error) {
