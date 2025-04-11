@@ -19,6 +19,12 @@ const VanishingMessageInput = ({
     const intervalRef = useRef(null);
     const [isFocused, setIsFocused] = useState(false);
     const [animating, setAnimating] = useState(false);
+    const [isListening, setIsListening] = useState(false);
+    const recognitionRef = useRef(null);
+    const [currentCursorPosition, setCurrentCursorPosition] = useState(0);
+    const activePlaceholderRef = useRef("");
+    const [transcript, setTranscript] = useState('');
+    const lastProcessedIndex = useRef(0);
 
     // Example placeholders that rotate
     const placeholders = [
@@ -220,11 +226,141 @@ const VanishingMessageInput = ({
         }, 500); // Wait a bit for animation to start
     };
 
+    useEffect(() => {
+        // Store references to cursor position when input field changes
+        if (inputRef.current) {
+            const handleSelect = () => {
+                setCurrentCursorPosition(inputRef.current.selectionEnd || message.length);
+            };
+
+            inputRef.current.addEventListener('click', handleSelect);
+            inputRef.current.addEventListener('keyup', handleSelect);
+
+            // Initialize to end of message
+            setCurrentCursorPosition(message.length);
+
+            return () => {
+                if (inputRef.current) {
+                    inputRef.current.removeEventListener('click', handleSelect);
+                    inputRef.current.removeEventListener('keyup', handleSelect);
+                }
+            };
+        }
+    }, [message]);
+
+    useEffect(() => {
+        // Check if browser supports speech recognition
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+
+        if (SpeechRecognition) {
+            const recognition = new SpeechRecognition();
+            recognition.continuous = true;
+            recognition.interimResults = true;
+            recognition.lang = 'en-US';
+
+            recognition.onstart = () => {
+                setIsListening(true);
+                setCurrentCursorPosition(message.length);
+                setTranscript('');
+                lastProcessedIndex.current = 0;
+            };
+
+            recognition.onresult = (event) => {
+                let newTranscript = '';
+
+                for (let i = lastProcessedIndex.current; i < event.results.length; i++) {
+                    const result = event.results[i];
+
+                    if (result.isFinal) {
+                        newTranscript += result[0].transcript;
+                        lastProcessedIndex.current = i + 1;
+                    }
+                }
+
+                if (newTranscript) {
+                    setTranscript((prev) => prev + newTranscript);
+
+                    setMessage((currentMessage) => {
+                        const needsSpace =
+                            currentMessage.length > 0 &&
+                            !currentMessage.endsWith(' ') &&
+                            !newTranscript.startsWith(' ');
+
+                        const spacer = needsSpace ? ' ' : '';
+                        const updatedMessage = currentMessage + spacer + newTranscript;
+
+                        setCurrentCursorPosition(updatedMessage.length);
+
+                        // Decrease the delay to make voice input more responsive
+                        if (inputRef.current) {
+                            autoResizeMessageInput(inputRef.current);
+                        }
+
+                        return updatedMessage;
+                    });
+                }
+
+                let interimTranscript = '';
+                for (let i = lastProcessedIndex.current; i < event.results.length; i++) {
+                    const result = event.results[i];
+                    if (!result.isFinal) {
+                        interimTranscript += result[0].transcript;
+                    }
+                }
+
+                if (interimTranscript) {
+                    setTranscript((prev) => prev + interimTranscript);
+                }
+            };
+
+            recognition.onerror = (event) => {
+                console.error('Speech recognition error', event.error);
+                setIsListening(false);
+                lastProcessedIndex.current = 0;
+            };
+
+            recognition.onend = () => {
+                setIsListening(false);
+                setTranscript('');
+                lastProcessedIndex.current = 0;
+            };
+
+            recognitionRef.current = recognition;
+        }
+
+        return () => {
+            if (recognitionRef.current) {
+                recognitionRef.current.stop();
+            }
+        };
+    }, [setMessage]);
+
     const handleMicClick = () => {
         if (onMicClick) {
             onMicClick();
+            return;
+        }
+
+        if (recognitionRef.current) {
+            if (isListening) {
+                recognitionRef.current.stop();
+            } else {
+                // Don't add placeholder text when clicking mic
+                // Just focus the input and start recognition immediately
+                if (inputRef.current) {
+                    inputRef.current.focus();
+
+                    // Set cursor position to end of any existing text
+                    const len = message.length;
+                    inputRef.current.selectionStart = len;
+                    inputRef.current.selectionEnd = len;
+                    setCurrentCursorPosition(len);
+                }
+
+                recognitionRef.current.start();
+            }
         } else {
-            alert("Microphone functionality would be implemented here");
+            alert("Speech recognition is not supported in this browser");
         }
     };
 
@@ -233,10 +369,10 @@ const VanishingMessageInput = ({
             <div
                 className={cn(
                     "flex bg-[#333333] rounded-lg overflow-hidden transition-all duration-300 border border-gray-600",
-                    isFocused && "ring-2 ring-[#00ADB5]"
+                    isFocused && "ring-2 ring-[#00ADB5]",
+                    isListening && "ring-2 ring-red-500"
                 )}
             >
-                {/* Canvas for vanishing animation */}
                 <canvas
                     className={cn(
                         "absolute pointer-events-none text-base transform scale-50 top-[20%] left-2 sm:left-8 origin-top-left filter invert dark:invert-0",
@@ -255,10 +391,22 @@ const VanishingMessageInput = ({
                         }
                     }}
                     onKeyDown={handleKeyPress}
+                    onClick={(e) => {
+                        const target = e.target;
+                        if (target instanceof HTMLTextAreaElement) {
+                            setCurrentCursorPosition(target.selectionEnd || target.value.length);
+                        }
+                    }}
+                    onSelect={(e) => {
+                        const target = e.target;
+                        if (target instanceof HTMLTextAreaElement) {
+                            setCurrentCursorPosition(target.selectionEnd || target.value.length);
+                        }
+                    }}
                     onFocus={() => setIsFocused(true)}
                     onBlur={() => setIsFocused(false)}
                     placeholder=""
-                    disabled={isDisabled}
+                    disabled={isDisabled || animating}
                     className={cn(
                         "w-full px-6 py-4 bg-[#444444] focus:outline-none resize-none overflow-y-auto text-white",
                         isDisabled && "opacity-50 cursor-not-allowed",
@@ -271,11 +419,22 @@ const VanishingMessageInput = ({
                 <div className="flex items-center pr-3 bg-[#444444]">
                     <button
                         onClick={handleMicClick}
-                        className="text-gray-300 hover:text-white transition-colors p-2 hover:bg-[#555555] rounded-full mr-1"
-                        aria-label="Voice input"
+                        className={cn(
+                            "relative transition-colors p-2 rounded-full mr-1",
+                            isListening
+                                ? "bg-red-500 text-white hover:bg-red-600"
+                                : "text-gray-300 hover:text-white hover:bg-[#555555]"
+                        )}
+                        aria-label={isListening ? "Stop listening" : "Voice input"}
                         disabled={animating}
                     >
                         <Mic size={18} />
+                        {isListening && (
+                            <span className="absolute top-0 right-0 flex h-3 w-3">
+                                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                                <span className="relative inline-flex rounded-full h-3 w-3 bg-red-500"></span>
+                            </span>
+                        )}
                     </button>
 
                     <button
@@ -299,8 +458,7 @@ const VanishingMessageInput = ({
                 </div>
             </div>
 
-            {/* Improved Placeholder Display */}
-            {!message && (
+            {(!message || message.length <= 1) && !isListening && (
                 <div className="absolute inset-0 flex items-center pointer-events-none px-6">
                     <div className="text-gray-300 truncate transition-all duration-300 w-full">
                         {!isFocused ? (
