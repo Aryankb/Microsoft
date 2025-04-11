@@ -289,7 +289,81 @@
   display: none;
 }
 
+/* File upload and delete button styles */
+.file-delete-button {
+  margin-left: 10px;
+  padding: 4px 8px;
+  background-color: #f44336;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 12px;
+  transition: all 0.3s ease;
+}
+
+.file-delete-button:hover {
+  background-color: #d32f2f;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
 /* Optional: Add hover effect */
 .file-upload-label:hover {
   opacity: 0.8;
+}
+
+/* Uploaded files list styling */
+.file-list-section {
+  margin-top: 10px;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  padding-top: 8px;
+}
+
+.uploaded-files-header {
+  font-size: 12px;
+  font-weight: bold;
+  color: #fff;
+  margin-bottom: 6px;
+}
+
+.uploaded-file-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background-color: rgba(0, 0, 0, 0.2);
+  border-radius: 4px;
+  padding: 6px 8px;
+  margin-bottom: 6px;
+}
+
+.file-info {
+  flex: 1;
+  overflow: hidden;
+}
+
+.file-name {
+  font-size: 12px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 120px;
+  display: inline-block;
+}
+
+/* Adjust the delete button for uploaded files */
+.uploaded-file-item .file-delete-button {
+  margin-left: 8px;
+  padding: 2px 6px;
+  background-color: #f44336;
+  color: white;
+  border: none;
+  border-radius: 3px;
+  cursor: pointer;
+  font-size: 11px;
+  transition: all 0.2s ease;
+}
+
+.uploaded-file-item .file-delete-button:hover {
+  background-color: #d32f2f;
+  transform: scale(1.05);
 }

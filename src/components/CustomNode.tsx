@@ -87,13 +87,60 @@ const CustomNode: React.FC<CustomNodeProps> = ({ data }) => {
       if (data.id && handleValueChange) {
         handleValueChange(data.id, file.name, file_location_s3, "config");
       }
-
-      // Ensure the config_inputs dictionary is updated with the new file name
-      // if (data.config_inputs && handleValueChange) {
-      //   handleValueChange(data.id, file.name, file_location_s3, 'config');
-      // }
     } catch (error) {
       console.error("Error uploading file:", error);
+    }
+  };
+
+  // Function to handle file deletion
+  const handleFileDelete = async (fileLocation: string) => {
+    if (!fileLocation) return;
+
+    try {
+      const token = await getToken();
+      const response = await fetch("http://localhost:8000/file_delete", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ file_location: fileLocation }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Delete failed");
+      }
+
+      // Remove the file entry completely from the node's config_inputs
+      if (data.id && handleValueChange && data.config_inputs) {
+        // Find the key that contains the file path value
+        const fileKey = Object.entries(data.config_inputs).find(
+          ([_, value]) => value === fileLocation
+        )?.[0];
+
+        if (fileKey) {
+          // Create a completely new config_inputs without the deleted file
+          const newConfigInputs = {};
+
+          // Only keep files that aren't the one being deleted
+          Object.entries(data.config_inputs).forEach(([key, value]) => {
+            if (key !== fileKey) {
+              newConfigInputs[key] = value;
+            }
+          });
+
+          // Use a special handler to completely replace the config_inputs
+          // This sends a signal to MainLayout.tsx that the entire config structure needs to be updated
+          handleValueChange(
+            data.id,
+            "_replace_all_config_inputs_",
+            JSON.stringify(newConfigInputs),
+            "config"
+          );
+        }
+      }
+    } catch (error) {
+      console.error("Error deleting file:", error);
     }
   };
 
@@ -143,6 +190,7 @@ const CustomNode: React.FC<CustomNodeProps> = ({ data }) => {
     const label = data.label.toString().toUpperCase();
 
     if (label.includes("FILE_UPLOAD")) {
+      // Show upload button
       return (
         <>
           <FileIcon size={30} className="mr-1" />
@@ -433,6 +481,33 @@ const CustomNode: React.FC<CustomNodeProps> = ({ data }) => {
           ))}
         </div>
       )}
+
+      {/* Display uploaded files with delete buttons (for FILE_UPLOAD nodes only) */}
+      {data.label &&
+        data.label.toString().toUpperCase().includes("FILE_UPLOAD") &&
+        data.config_inputs &&
+        Object.keys(data.config_inputs).length > 0 && (
+          <div className="node-section file-list-section">
+            <div className="uploaded-files-header">Uploaded Files:</div>
+            {Object.entries(data.config_inputs)
+              .filter(([_, value]) => value && value.trim() !== "")
+              .map(([key, value]) => (
+                <div key={key} className="uploaded-file-item">
+                  <div className="file-info">
+                    <span className="file-name" title={key}>
+                      {key}
+                    </span>
+                  </div>
+                  <button
+                    className="file-delete-button"
+                    onClick={() => handleFileDelete(value)}
+                  >
+                    Delete
+                  </button>
+                </div>
+              ))}
+          </div>
+        )}
 
       {/* LLM Prompt */}
       {data.llm_prompt && (

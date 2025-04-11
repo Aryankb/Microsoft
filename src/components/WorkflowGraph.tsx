@@ -339,16 +339,37 @@ const WorkflowGraph: React.FC<WorkflowGraphProps> = ({
           };
         }
       } else {
-        newJson.workflow = newJson.workflow.map((node) =>
-          node.id === Number(nodeId)
-            ? {
-                ...node,
-                ...(type === "config"
-                  ? { config_inputs: { ...node.config_inputs, [field]: value } }
-                  : { [field]: value }),
-              }
-            : node
-        );
+        // Special handling for file deletion with _replace_all_config_inputs_ signal
+        if (type === "config" && field === "_replace_all_config_inputs_") {
+          // Replace all config inputs with the new structure
+          const newConfigInputs = JSON.parse(value);
+
+          newJson.workflow = newJson.workflow.map((node) =>
+            node.id === Number(nodeId)
+              ? {
+                  ...node,
+                  config_inputs: newConfigInputs,
+                }
+              : node
+          );
+        } else {
+          // Normal case: update a single field
+          newJson.workflow = newJson.workflow.map((node) =>
+            node.id === Number(nodeId)
+              ? {
+                  ...node,
+                  ...(type === "config"
+                    ? {
+                        config_inputs: {
+                          ...node.config_inputs,
+                          [field]: value,
+                        },
+                      }
+                    : { [field]: value }),
+                }
+              : node
+          );
+        }
       }
       console.log("updated", newJson);
       setShowSaveButton(true);
