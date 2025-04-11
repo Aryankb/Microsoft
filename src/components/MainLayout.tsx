@@ -460,6 +460,7 @@ export default function MainLayout() {
     setRefinedQuery(null);
     setWorkflowJson(null);
     setShowWorkflow(false);
+    setCurrentWorkflow(null);
 
     setMode("workflow");
   };
