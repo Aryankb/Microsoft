@@ -397,3 +397,101 @@
     flex-direction: column;
   }
 }
+
+/* Workflow Toggle Button - Updated to square shape with improved animations */
+.workflow-toggle-button {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%) translateX(-20%);
+  background: linear-gradient(
+    135deg,
+    var(--color-primary),
+    rgba(0, 173, 181, 0.7)
+  );
+  border: none;
+  border-radius: 4px;
+  width: 40px;
+  height: 60px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 100;
+  box-shadow: 0 0 15px rgba(0, 173, 181, 0.5);
+  transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1); /* Smooth elastic animation */
+}
+/* 
+.workflow-toggle-button:hover {
+  box-shadow: 0 0 20px rgba(0, 173, 181, 0.8);
+  transform: translateY(-50%) scale(1.05);
+}
+
+.workflow-toggle-button:active {
+  transform: translateY(-50%) translateX(-55%) scale(0.95);
+  transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+} */
+
+.workflow-toggle-icon {
+  font-size: 18px;
+  font-weight: bold;
+  color: white;
+  line-height: 1;
+  letter-spacing: -2px;
+}
+
+.workflow-toggle-text {
+  font-size: 10px;
+  color: white;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-top: 5px;
+}
+
+/* Badge styles for current workflow in TopBar */
+.workflow-badge {
+  display: flex;
+  align-items: center;
+  background: linear-gradient(135deg, rgba(0, 173, 181, 0.2), rgba(0, 0, 0, 0));
+  border-left: 3px solid #00adb5;
+  padding: 4px 10px;
+  border-radius: 4px;
+  transition: all 0.3s ease;
+  max-width: 300px;
+  overflow: hidden;
+  position: relative;
+}
+
+.workflow-badge-pulse {
+  animation: badgePulse 1s ease;
+}
+
+.workflow-icon {
+  color: #00adb5;
+  margin-right: 8px;
+  filter: drop-shadow(0 0 3px rgba(0, 173, 181, 0.6));
+}
+
+.workflow-name {
+  color: white;
+  font-weight: 500;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  overflow: hidden;
+  position: relative;
+}
+
+@keyframes badgePulse {
+  0% {
+    transform: scale(0.95);
+    opacity: 0.7;
+  }
+  50% {
+    transform: scale(1.05);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}

@@ -1,16 +1,17 @@
 /* Boot sequence loading animation */
-.boot-overlay {
-  position: fixed;
+.workflow-loading-overlay {
+  position: absolute; /* Absolute instead of fixed */
   top: 0;
   left: 0;
   right: 0;
   bottom: 0;
-  background-color: #000;
-  z-index: 9999; /* Highest z-index value to appear above everything */
+  background-color: rgba(0, 0, 0, 0.9); /* Semi-transparent background */
+  z-index: 100; /* Lower z-index than TopBar (z-50) */
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
+  border-radius: 8px; /* Match parent container's border radius */
 }
 
 .boot-container {

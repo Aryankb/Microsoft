@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   Menu,
@@ -12,14 +12,19 @@ import {
   Plus,
   Home,
   PlusCircle,
+  Activity,
 } from "lucide-react";
 
 interface TopBarProps {
   onMenuClick: () => void;
   onHomeClick?: () => void;
-  onNewChatClick?: () => void; // Make optional
+  onNewChatClick?: () => void;
   sidebarVisible: boolean;
-  hideNewChat?: boolean; // Add prop to hide New Chat button
+  hideNewChat?: boolean;
+  currentWorkflow?: {
+    name: string;
+    id: string;
+  } | null;
 }
 
 const menuItems = [
@@ -38,9 +43,20 @@ export default function TopBar({
   onHomeClick,
   onNewChatClick,
   sidebarVisible,
-  hideNewChat = false, // Default to showing the button
+  hideNewChat = false,
+  currentWorkflow = null,
 }: TopBarProps) {
   const navigate = useNavigate();
+  const [animateWorkflowName, setAnimateWorkflowName] = useState(false);
+
+  // Trigger animation when workflow changes
+  useEffect(() => {
+    if (currentWorkflow?.name) {
+      setAnimateWorkflowName(true);
+      const timer = setTimeout(() => setAnimateWorkflowName(false), 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [currentWorkflow?.name]);
 
   const handleCreateTool = () => {
     navigate("/create-tool");
@@ -82,6 +98,20 @@ export default function TopBar({
             >
               <PlusCircle size={18} />
               <span className="hidden sm:inline">New Chat</span>
+            </div>
+          )}
+
+          {/* Creative Workflow Name Display */}
+          {currentWorkflow && (
+            <div className="mx-4 flex items-center">
+              <div
+                className={`workflow-badge ${
+                  animateWorkflowName ? "workflow-badge-pulse" : ""
+                }`}
+              >
+                <Activity size={16} className="workflow-icon" />
+                <span className="workflow-name">{currentWorkflow.name}</span>
+              </div>
             </div>
           )}
         </div>

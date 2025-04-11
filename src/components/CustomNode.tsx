@@ -145,7 +145,6 @@ const CustomNode: React.FC<CustomNodeProps> = ({ data }) => {
     if (label.includes("FILE_UPLOAD")) {
       return (
       <>
-        <FileIcon size={30} className="mr-1" />
         <label className="file-upload-label">
         <input
           type="file"

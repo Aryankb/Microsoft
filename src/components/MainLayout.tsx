@@ -27,7 +27,7 @@ interface Workflow {
   json: string;
   prompt: string;
   active?: boolean;
-  unavailable:string
+  unavailable: string;
 }
 
 type QandA = {
@@ -55,8 +55,8 @@ export default function MainLayout() {
   const [loadingProgress, setLoadingProgress] = useState<number>(0);
   const [bootPhase, setBootPhase] = useState(0);
   const [bootComplete, setBootComplete] = useState(false);
+  const [fullScreenWorkflow, setFullScreenWorkflow] = useState(false);
 
-  // const [unavailable,setUnavailable]=useState(null);
   const bootSequence = [
     "Initializing workflow engine...",
     "Analyzing requirements...",
@@ -72,6 +72,8 @@ export default function MainLayout() {
     "Finalizing configuration...",
     "Workflow generation complete.",
   ];
+
+  const currentWorkflowObject = workflows.find((w) => w.id === currentWorkflow);
 
   const handleSend = async () => {
     if (!message.trim()) return;
@@ -342,21 +344,6 @@ export default function MainLayout() {
       });
       const data = await response.json();
       setRefinedQuery(data.response);
-
-      // setChats([
-      //   {
-      //     id: Date.now().toString(),
-      //     message: (
-      //       <div className="refined-query">
-      //         <span className="refined-query-header">
-      //           I've refined your query:
-      //         </span>
-      //         <div className="refined-query-content">{data.response}</div>
-      //       </div>
-      //     ),
-      //     sender: "bot",
-      //   },
-      // ]);
     } catch (error) {
       console.error("Error sending refined query:", error);
       setChats([
@@ -410,8 +397,6 @@ export default function MainLayout() {
       setLoadingStep(bootSequence[0]);
       setLoadingProgress(0);
 
-      document.documentElement.classList.add("workflow-loading");
-
       let currentPhase = 0;
 
       const advancePhase = () => {
@@ -447,50 +432,22 @@ export default function MainLayout() {
         }),
       });
 
+      setLoading(false);
+      setLoadingStep("");
+      setLoadingProgress(0);
+      setBootComplete(true);
+
       const data = await response.json();
       setWorkflowJson(data.response);
-      console.log("workflowjson",workflowJson);
       fetchWorkflows();
       setCurrentWorkflow(data.response.workflow_id);
       setShowWorkflow(true);
-      // setUnavailable(data.unavailable);
-      // Ensure loading animation is cleared once we have the workflow data
-      // regardless of the boot animation state
-      setLoading(false);
-      setLoadingStep("");
-      setLoadingProgress(0);
-      document.documentElement.classList.remove("workflow-loading");
-      setBootComplete(true); // Ensure boot animation doesn't continue
     } catch (error) {
       console.error("Error generating workflow:", error);
-      // Make sure to clean up animation in case of error
       setLoading(false);
       setLoadingStep("");
       setLoadingProgress(0);
-      document.documentElement.classList.remove("workflow-loading");
-    } finally {
-      // This is now just a backup cleanup
-      // The animation should already be cleared in the success case
-      if (!bootComplete) {
-        const checkBootComplete = setInterval(() => {
-          if (bootComplete) {
-            clearInterval(checkBootComplete);
-            setLoading(false);
-            setLoadingStep("");
-            setLoadingProgress(0);
-            document.documentElement.classList.remove("workflow-loading");
-          } else {
-            // Force cleanup after 15 seconds as a safeguard
-            setTimeout(() => {
-              clearInterval(checkBootComplete);
-              setLoading(false);
-              setLoadingStep("");
-              setLoadingProgress(0);
-              document.documentElement.classList.remove("workflow-loading");
-            }, 15000);
-          }
-        }, 100);
-      }
+      setBootComplete(true);
     }
   };
 
@@ -552,6 +509,14 @@ export default function MainLayout() {
           onMenuClick={() => setShowSidebar(true)}
           onNewChatClick={handleNewChatClick}
           sidebarVisible={showSidebar}
+          currentWorkflow={
+            currentWorkflowObject
+              ? {
+                  name: currentWorkflowObject.name,
+                  id: currentWorkflowObject.id,
+                }
+              : null
+          }
         />
       </div>
 
@@ -570,9 +535,11 @@ export default function MainLayout() {
 
       <main className="flex flex-1 pt-16 pb-24 relative">
         <div
-          className={`flex flex-col ${
+          className={`flex flex-col transition-all duration-500 ease-in-out ${
             showWorkflow
-              ? "w-1/3  border-gray-700 bg-[var(--color-background)] z-10"
+              ? fullScreenWorkflow
+                ? "w-0 opacity-0"
+                : "w-1/3  bg-[var(--color-background)] z-10"
               : "w-full max-w-4xl mx-auto"
           } px-4 pt-4 overflow-y-auto min-h-full`}
         >
@@ -603,8 +570,7 @@ export default function MainLayout() {
             </div>
           )}
 
-
-          {refinedQuery && (
+          {refinedQuery && !fullScreenWorkflow && (
             <div className="my-4">
               <QueryRefiner
                 refinedQuery={refinedQuery}
@@ -614,21 +580,43 @@ export default function MainLayout() {
               />
             </div>
           )}
-            {workflowJson?.unavailable && (
+          {workflowJson?.unavailable && (
             <div className="ai-reply-box my-4 p-4 bg-gray-800 text-white rounded-md">
               <p>{workflowJson.unavailable}</p>
               <div className="ai-reply-box my-4 p-4 bg-gray-800 text-white rounded-md">
-              <p>
-                THE GENERATED WORKFLOW MIGHT NOT WORK BECAUSE OF
-                UNAVAILABILITY
-              </p>
+                <p>
+                  THE GENERATED WORKFLOW MIGHT NOT WORK BECAUSE OF
+                  UNAVAILABILITY
+                </p>
               </div>
             </div>
-            )}
+          )}
         </div>
 
         {showWorkflow && workflowJson && (
-          <div className="w-2/3 fixed right-0 top-0 bottom-0 z-0 pt-8 pb-8 px-3 mx-auto">
+          <div
+            className={`transition-all duration-500 ease-in-out ${
+              fullScreenWorkflow
+                ? "w-full fixed left-0 right-0 top-0 bottom-0 z-0 pt-16"
+                : "w-2/3 fixed right-0 top-0 bottom-0 z-0 pt-16"
+            } pb-8 px-3 mx-auto`}
+          >
+            {/* Updated toggle button for fullscreen workflow */}
+            <button
+              onClick={() => setFullScreenWorkflow(!fullScreenWorkflow)}
+              className="workflow-toggle-button"
+              title={
+                fullScreenWorkflow ? "Show Query Panel" : "Hide Query Panel"
+              }
+            >
+              <div className="workflow-toggle-icon">
+                {fullScreenWorkflow ? ">>" : "<<"}
+              </div>
+              <span className="workflow-toggle-text">
+                {fullScreenWorkflow ? "Show" : "Hide"}
+              </span>
+            </button>
+
             <WorkflowGraph
               key={JSON.stringify(workflowJson)}
               workflowJson={workflowJson}
@@ -641,10 +629,8 @@ export default function MainLayout() {
         )}
       </main>
 
-      {/* Add padding at the bottom to prevent content being hidden under the input */}
       <div className="input-spacer"></div>
 
-      {/* Message Input Area with CSS classes */}
       {chats.length > 0 && !showWorkflow && (
         <div className="message-input-container">
           <div

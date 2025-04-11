@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import {
   X,
   Trash2,
@@ -48,6 +48,7 @@ export default function Sidebar({
   const { getToken } = useAuth();
   const { user } = useUser();
   const [isDeleting, setIsDeleting] = useState(false);
+  const sidebarRef = useRef<HTMLDivElement>(null);
 
   const fetchWorkflows = async () => {
     try {
@@ -134,8 +135,32 @@ export default function Sidebar({
     }
   };
 
+  // Handle clicks outside the sidebar to close it
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        show &&
+        sidebarRef.current &&
+        !sidebarRef.current.contains(event.target as Node)
+      ) {
+        onClose();
+      }
+    };
+
+    // Only add the event listener if the sidebar is shown
+    if (show) {
+      document.addEventListener("mousedown", handleClickOutside);
+    }
+
+    // Cleanup function to remove event listener
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [show, onClose]); // Re-run effect when show or onClose changes
+
   return (
     <div
+      ref={sidebarRef}
       className="sidebar-container"
       style={{
         width: show ? "300px" : "0px",
@@ -152,76 +177,76 @@ export default function Sidebar({
 
       <div className="p-4 h-full flex flex-col justify-between">
         {/* Fixed Header */}
-  <div className="sidebar-header flex justify-between items-center mb-2">
-    <h2 className="sidebar-title">Your Workflows</h2>
-    <button onClick={onClose} className="sidebar-close-btn">
-      <X size={20} />
-    </button>
-  </div>
+        <div className="sidebar-header flex justify-between items-center mb-2">
+          <h2 className="sidebar-title">Your Workflows</h2>
+          <button onClick={onClose} className="sidebar-close-btn">
+            <X size={20} />
+          </button>
+        </div>
 
-  {/* Scrollable Workflow Section */}
-  <div className="overflow-y-auto flex-grow">
-    {/* New Chat Button */}
-    <div
-      onClick={() => {
-        onNewChatClick();
-        onClose();
-      }}
-      className="sidebar-new-chat"
-    >
-      <PlusCircle size={18} />
-      <span>New Chat</span>
-    </div>
-
-    <div className="space-y-2 py-2 mt-4">
-      {workflows.map((workflow) => (
-        <div
-          key={workflow.id}
-          className={`sidebar-workflow-item ${
-            currentWorkflow === workflow.id
-              ? "sidebar-workflow-active"
-              : ""
-          } group`}
-        >
-          {/* Status indicator */}
+        {/* Scrollable Workflow Section */}
+        <div className="overflow-y-auto flex-grow">
+          {/* New Chat Button */}
           <div
-            className={`sidebar-status-indicator ${
-              workflow.active ? "bg-green-500" : "bg-red-500"
-            }`}
-          />
-
-          {/* Workflow button */}
-          <div
-            onClick={() => handleWorkflowClick(workflow.id)}
-            className={`sidebar-workflow-content ${
-              currentWorkflow === workflow.id
-                ? "bg-blue-200 text-gray-900"
-                : ""
-            }`}
+            onClick={() => {
+              onNewChatClick();
+              onClose();
+            }}
+            className="sidebar-new-chat"
           >
-            <div className="flex items-center w-full justify-between">
-              <span className="max-w-[210px]" title={workflow.name}>
-                {workflow.name.length > 40
-                  ? workflow.name.substring(0, 20) + "..."
-                  : workflow.name}
-              </span>
+            <PlusCircle size={18} />
+            <span>New Chat</span>
+          </div>
+
+          <div className="space-y-2 py-2 mt-4">
+            {workflows.map((workflow) => (
               <div
-                className="sidebar-delete-btn"
-                onClick={(e) => handleDeleteWorkflow(workflow.id, e)}
+                key={workflow.id}
+                className={`sidebar-workflow-item ${
+                  currentWorkflow === workflow.id
+                    ? "sidebar-workflow-active"
+                    : ""
+                } group`}
               >
-                <div className="sidebar-delete-icon group-hover:bg-red-500/20">
-                  <Trash2
-                    size={16}
-                    className="group-hover:text-red-500 transition-colors"
-                  />
+                {/* Status indicator */}
+                <div
+                  className={`sidebar-status-indicator ${
+                    workflow.active ? "bg-green-500" : "bg-red-500"
+                  }`}
+                />
+
+                {/* Workflow button */}
+                <div
+                  onClick={() => handleWorkflowClick(workflow.id)}
+                  className={`sidebar-workflow-content ${
+                    currentWorkflow === workflow.id
+                      ? "bg-blue-200 text-gray-900"
+                      : ""
+                  }`}
+                >
+                  <div className="flex items-center w-full justify-between">
+                    <span className="max-w-[210px]" title={workflow.name}>
+                      {workflow.name.length > 40
+                        ? workflow.name.substring(0, 20) + "..."
+                        : workflow.name}
+                    </span>
+                    <div
+                      className="sidebar-delete-btn"
+                      onClick={(e) => handleDeleteWorkflow(workflow.id, e)}
+                    >
+                      <div className="sidebar-delete-icon group-hover:bg-red-500/20">
+                        <Trash2
+                          size={16}
+                          className="group-hover:text-red-500 transition-colors"
+                        />
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
-            </div>
+            ))}
           </div>
         </div>
-      ))}
-    </div>
-  </div>
 
         {/* Profile and Logout Section */}
         <div className="sidebar-footer mt-auto">
@@ -236,11 +261,9 @@ export default function Sidebar({
           </div>
 
           <SignOutButton>
-
             <div className="mt-3 w-full text-left px-4 py-2 bg-red-400 text-black hover:bg-red-500 hover:shadow-md rounded transition-all cursor-pointer">
               Logout
             </div>
-
           </SignOutButton>
         </div>
       </div>

@@ -1,6 +1,18 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "@clerk/clerk-react";
-import { ExternalLink, RefreshCw } from "lucide-react";
+import {
+  ExternalLink,
+  RefreshCw,
+  Mail,
+  FileText,
+  Youtube as YoutubeIcon,
+  Linkedin,
+  Calendar,
+  FileType,
+  Table,
+  BellRing,
+  AlarmCheck,
+} from "lucide-react";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import TopBar from "./TopBar";
@@ -16,6 +28,18 @@ const AUTH_SERVICES = [
   "Googledocs",
   "Googlesheets",
 ];
+
+// Service icon mapping
+const SERVICE_ICONS = {
+  "Gmail Trigger": <BellRing size={20} className="service-icon gmail" />,
+  Gmail: <Mail size={20} className="service-icon gmail" />,
+  Notion: <FileText size={20} className="service-icon notion" />,
+  Youtube: <YoutubeIcon size={20} className="service-icon youtube" />,
+  Linkedin: <Linkedin size={20} className="service-icon linkedin" />,
+  Googlecalendar: <Calendar size={20} className="service-icon google" />,
+  Googledocs: <FileType size={20} className="service-icon google" />,
+  Googlesheets: <Table size={20} className="service-icon google" />,
+};
 
 // API Key URLs - Updated with more descriptive comments
 const API_KEY_URLS = {
@@ -494,7 +518,10 @@ export default function ManageAuth() {
                   <tbody>
                     {AUTH_SERVICES.map((service) => (
                       <tr key={service}>
-                        <td>{service}</td>
+                        <td className="flex items-center gap-3">
+                          {SERVICE_ICONS[service]}
+                          <span>{service}</span>
+                        </td>
                         <td className="text-center">
                           <label className="toggle-switch">
                             <input

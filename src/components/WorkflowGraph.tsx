@@ -415,7 +415,8 @@ const WorkflowGraph: React.FC<WorkflowGraphProps> = ({
     setLoadingStep(bootSequence[0]);
     setLoadingProgress(0);
 
-    document.documentElement.classList.add("workflow-loading");
+    // Don't modify document classes anymore - this was causing the issue
+    // Instead, we'll use component-level state to control the loading overlay
 
     let currentPhase = 0;
 
@@ -456,11 +457,13 @@ const WorkflowGraph: React.FC<WorkflowGraphProps> = ({
         body: JSON.stringify({ workflowjson: workflowData }),
       });
 
+      // Immediately reset loading state
+      setLoading(false);
+      setLoadingStep("");
+      setLoadingProgress(0);
+      setBootComplete(true);
+
       if (!response.ok) {
-        setLoading(false);
-        setLoadingStep("");
-        setLoadingProgress(0);
-        setBootComplete(true);
         const responseData = await response.json();
         console.error(
           "Failed to run or activate workflow",
@@ -472,35 +475,19 @@ const WorkflowGraph: React.FC<WorkflowGraphProps> = ({
           window.location.href = "/api-keys";
         }
       } else {
-        setLoading(false);
-        setLoadingStep("");
-        setLoadingProgress(0);
-        setBootComplete(true);
         const responseData = await response.json();
         console.log("🚀 Workflow activated:", responseData);
         setWorkflowData(responseData.json);
         // fetchWorkflows();
       }
-
     } catch (error) {
       console.error("Error activating workflow:", error);
-    } finally {
-      if (!bootComplete) {
-        const checkBootComplete = setInterval(() => {
-          if (bootComplete) {
-            clearInterval(checkBootComplete);
-            setLoading(false);
-            setLoadingStep("");
-            setLoadingProgress(0);
-            document.documentElement.classList.remove("workflow-loading");
-          }
-        }, 100);
-      } else {
-        setLoading(false);
-        setLoadingStep("");
-        setLoadingProgress(0);
-        document.documentElement.classList.remove("workflow-loading");
-      }
+
+      // Ensure loading state is cleared on error
+      setLoading(false);
+      setLoadingStep("");
+      setLoadingProgress(0);
+      setBootComplete(true);
     }
   };
 
@@ -518,7 +505,7 @@ const WorkflowGraph: React.FC<WorkflowGraphProps> = ({
       }}
     >
       {loading && (
-        <div className="boot-overlay">
+        <div className="workflow-loading-overlay">
           <div className="boot-container">
             <div className="boot-header">
               <h1 className="boot-title">SIGMOYD AI</h1>
@@ -649,29 +636,31 @@ const WorkflowGraph: React.FC<WorkflowGraphProps> = ({
 
           <div
             onClick={runOrActivateWorkflow}
-            className={`flex items-center gap-2 px-6 py-3 rounded-lg shadow-md transition-all duration-300 mt-8 font-medium cursor-pointer ${
+            className={`flex items-center justify-center gap-2 px-6 py-3 rounded-lg shadow-md transition-all duration-300 mt-8 font-medium cursor-pointer ${
               workflowJson.trigger.name === "TRIGGER_MANUAL"
                 ? "bg-blue-400 text-black rounded shadow hover:bg-blue-600"
                 : workflowData.active
                 ? "bg-red-400 text-black rounded shadow hover:bg-red-600"
                 : "bg-red-400 text-black rounded shadow hover:bg-red-600"
             } hover:scale-105 active:scale-95 border border-gray-600`}
-            style={{ minWidth: "180px", textAlign: "center" }}
+            style={{ width: "220px", textAlign: "center" }}
           >
-            {workflowJson.trigger.name === "TRIGGER_MANUAL" ? (
-              <FaPlay />
-            ) : workflowData.active ? (
-              <FaStop />
-            ) : (
-              <FaBolt />
-            )}
-            <span>
-              {workflowJson.trigger.name === "TRIGGER_MANUAL"
-                ? "Run Workflow"
-                : workflowData.active
-                ? "Deactivate Workflow"
-                : "Activate Workflow"}
-            </span>
+            <div className="flex items-center justify-center">
+              {workflowJson.trigger.name === "TRIGGER_MANUAL" ? (
+                <FaPlay className="mr-2" />
+              ) : workflowData.active ? (
+                <FaStop className="mr-2" />
+              ) : (
+                <FaBolt className="mr-2" />
+              )}
+              <span>
+                {workflowJson.trigger.name === "TRIGGER_MANUAL"
+                  ? "Run Workflow"
+                  : workflowData.active
+                  ? "Deactivate Workflow"
+                  : "Activate Workflow"}
+              </span>
+            </div>
           </div>
           {showSaveButton && (
             <div
