@@ -27,6 +27,7 @@ interface Workflow {
   json: string;
   prompt: string;
   active?: boolean;
+  unavailable:string
 }
 
 type QandA = {
@@ -55,6 +56,7 @@ export default function MainLayout() {
   const [bootPhase, setBootPhase] = useState(0);
   const [bootComplete, setBootComplete] = useState(false);
 
+  // const [unavailable,setUnavailable]=useState(null);
   const bootSequence = [
     "Initializing workflow engine...",
     "Analyzing requirements...",
@@ -341,20 +343,20 @@ export default function MainLayout() {
       const data = await response.json();
       setRefinedQuery(data.response);
 
-      setChats([
-        {
-          id: Date.now().toString(),
-          message: (
-            <div className="refined-query">
-              <span className="refined-query-header">
-                I've refined your query:
-              </span>
-              <div className="refined-query-content">{data.response}</div>
-            </div>
-          ),
-          sender: "bot",
-        },
-      ]);
+      // setChats([
+      //   {
+      //     id: Date.now().toString(),
+      //     message: (
+      //       <div className="refined-query">
+      //         <span className="refined-query-header">
+      //           I've refined your query:
+      //         </span>
+      //         <div className="refined-query-content">{data.response}</div>
+      //       </div>
+      //     ),
+      //     sender: "bot",
+      //   },
+      // ]);
     } catch (error) {
       console.error("Error sending refined query:", error);
       setChats([
@@ -447,10 +449,11 @@ export default function MainLayout() {
 
       const data = await response.json();
       setWorkflowJson(data.response);
+      console.log("workflowjson",workflowJson);
       fetchWorkflows();
       setCurrentWorkflow(data.response.workflow_id);
       setShowWorkflow(true);
-
+      // setUnavailable(data.unavailable);
       // Ensure loading animation is cleared once we have the workflow data
       // regardless of the boot animation state
       setLoading(false);
@@ -569,7 +572,7 @@ export default function MainLayout() {
         <div
           className={`flex flex-col ${
             showWorkflow
-              ? "w-1/3 border-r border-gray-700 bg-[var(--color-background)] z-10"
+              ? "w-1/3  border-gray-700 bg-[var(--color-background)] z-10"
               : "w-full max-w-4xl mx-auto"
           } px-4 pt-4 overflow-y-auto min-h-full`}
         >
@@ -600,6 +603,7 @@ export default function MainLayout() {
             </div>
           )}
 
+
           {refinedQuery && (
             <div className="my-4">
               <QueryRefiner
@@ -610,6 +614,17 @@ export default function MainLayout() {
               />
             </div>
           )}
+            {workflowJson?.unavailable && (
+            <div className="ai-reply-box my-4 p-4 bg-gray-800 text-white rounded-md">
+              <p>{workflowJson.unavailable}</p>
+              <div className="ai-reply-box my-4 p-4 bg-gray-800 text-white rounded-md">
+              <p>
+                THE GENERATED WORKFLOW MIGHT NOT WORK BECAUSE OF
+                UNAVAILABILITY
+              </p>
+              </div>
+            </div>
+            )}
         </div>
 
         {showWorkflow && workflowJson && (
@@ -630,7 +645,7 @@ export default function MainLayout() {
       <div className="input-spacer"></div>
 
       {/* Message Input Area with CSS classes */}
-      {chats.length > 0 && (
+      {chats.length > 0 && !showWorkflow && (
         <div className="message-input-container">
           <div
             className={`message-input-wrapper ${

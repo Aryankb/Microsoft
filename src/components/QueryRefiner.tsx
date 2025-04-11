@@ -69,10 +69,16 @@ const QueryRefiner = ({
       {/* Improved edit prompt above the query display */}
       {!isEditing && (
         <div className="flex items-center justify-between mb-2">
+          <div className="refined-query">
+              <span className="refined-query-header">
+                I've refined your query:
+              </span>
+            </div>
           <div className="text-text-accent text-xs flex items-center bg-card bg-opacity-50 px-2 py-1 rounded-md">
             <span className="mr-1">✏️</span>
             <span>Click query below to edit</span>
           </div>
+          
         </div>
       )}
 

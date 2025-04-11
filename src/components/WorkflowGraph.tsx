@@ -374,6 +374,7 @@ const WorkflowGraph: React.FC<WorkflowGraphProps> = ({
 
       const responseData = await response.json();
       console.log("Workflow saved successfully:", responseData);
+      alert("Workflow saved successfully!");
       setShowSaveButton(false);
     } catch (error) {
       console.error("Error saving workflow:", error);
@@ -454,6 +455,10 @@ const WorkflowGraph: React.FC<WorkflowGraphProps> = ({
       });
 
       if (!response.ok) {
+        setLoading(false);
+        setLoadingStep("");
+        setLoadingProgress(0);
+        setBootComplete(true);
         const responseData = await response.json();
         console.error(
           "Failed to run or activate workflow",
@@ -465,11 +470,16 @@ const WorkflowGraph: React.FC<WorkflowGraphProps> = ({
           window.location.href = "/api-keys";
         }
       } else {
+        setLoading(false);
+        setLoadingStep("");
+        setLoadingProgress(0);
+        setBootComplete(true);
         const responseData = await response.json();
         console.log("🚀 Workflow activated:", responseData);
         setWorkflowData(responseData.json);
         fetchWorkflows();
       }
+
     } catch (error) {
       console.error("Error activating workflow:", error);
     } finally {
@@ -563,7 +573,7 @@ const WorkflowGraph: React.FC<WorkflowGraphProps> = ({
         maxZoom={1.5}
         defaultEdgeOptions={{
           animated: true,
-          type: "smoothstep",
+          // type: "smoothstep",
         }}
       >
         <MiniMap

@@ -388,7 +388,7 @@ const CustomNode: React.FC<CustomNodeProps> = ({ data }) => {
               </button>
             </div>
           )}
-          {data.label!=="file_upload" &&
+          {data.label!=="FILE_UPLOAD" &&
           (<input
             type="text"
             className="node-input"

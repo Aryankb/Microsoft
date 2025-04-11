@@ -151,78 +151,77 @@ export default function Sidebar({
       )}
 
       <div className="p-4 h-full flex flex-col justify-between">
-        {/* Workflows Section */}
-        <div className="overflow-y-auto flex-grow">
-          <div className="sidebar-header">
-            <h2 className="sidebar-title">Your Workflows</h2>
-            <button onClick={onClose} className="sidebar-close-btn">
-              <X size={20} />
-            </button>
-          </div>
+        {/* Fixed Header */}
+  <div className="sidebar-header flex justify-between items-center mb-2">
+    <h2 className="sidebar-title">Your Workflows</h2>
+    <button onClick={onClose} className="sidebar-close-btn">
+      <X size={20} />
+    </button>
+  </div>
 
-          {/* New Chat Button */}
+  {/* Scrollable Workflow Section */}
+  <div className="overflow-y-auto flex-grow">
+    {/* New Chat Button */}
+    <div
+      onClick={() => {
+        onNewChatClick();
+        onClose();
+      }}
+      className="sidebar-new-chat"
+    >
+      <PlusCircle size={18} />
+      <span>New Chat</span>
+    </div>
+
+    <div className="space-y-2 py-2 mt-4">
+      {workflows.map((workflow) => (
+        <div
+          key={workflow.id}
+          className={`sidebar-workflow-item ${
+            currentWorkflow === workflow.id
+              ? "sidebar-workflow-active"
+              : ""
+          } group`}
+        >
+          {/* Status indicator */}
           <div
-            onClick={() => {
-              onNewChatClick();
-              onClose();
-            }}
-            className="sidebar-new-chat"
+            className={`sidebar-status-indicator ${
+              workflow.active ? "bg-green-500" : "bg-red-500"
+            }`}
+          />
+
+          {/* Workflow button */}
+          <div
+            onClick={() => handleWorkflowClick(workflow.id)}
+            className={`sidebar-workflow-content ${
+              currentWorkflow === workflow.id
+                ? "bg-blue-200 text-gray-900"
+                : ""
+            }`}
           >
-            <PlusCircle size={18} />
-            <span>New Chat</span>
-          </div>
-
-          <div className="space-y-2 py-2 mt-4">
-            {workflows.map((workflow) => (
+            <div className="flex items-center w-full justify-between">
+              <span className="max-w-[210px]" title={workflow.name}>
+                {workflow.name.length > 40
+                  ? workflow.name.substring(0, 20) + "..."
+                  : workflow.name}
+              </span>
               <div
-                key={workflow.id}
-                className={`sidebar-workflow-item ${
-                  currentWorkflow === workflow.id
-                    ? "sidebar-workflow-active"
-                    : ""
-                } group`}
+                className="sidebar-delete-btn"
+                onClick={(e) => handleDeleteWorkflow(workflow.id, e)}
               >
-                {/* Status indicator */}
-                <div
-                  className={`sidebar-status-indicator ${
-                    workflow.active ? "bg-green-500" : "bg-red-500"
-                  }`}
-                />
-
-                {/* Workflow button */}
-                <div
-                  onClick={() => handleWorkflowClick(workflow.id)}
-                  className={`sidebar-workflow-content ${
-                    currentWorkflow === workflow.id
-                      ? "bg-blue-200 text-gray-900"
-                      : ""
-                  }`}
-                >
-                  <div className="flex items-center w-full">
-                    <span className="max-w-[210px]" title={workflow.name}>
-                      {workflow.name.length > 40
-                        ? workflow.name.substring(0, 20) + "..."
-                        : workflow.name}
-                    </span>
-                  </div>
-                </div>
-
-                {/* Delete button */}
-                <div
-                  className="sidebar-delete-btn"
-                  onClick={(e) => handleDeleteWorkflow(workflow.id, e)}
-                >
-                  <div className="sidebar-delete-icon group-hover:bg-red-500/20">
-                    <Trash2
-                      size={16}
-                      className="group-hover:text-red-500 transition-colors"
-                    />
-                  </div>
+                <div className="sidebar-delete-icon group-hover:bg-red-500/20">
+                  <Trash2
+                    size={16}
+                    className="group-hover:text-red-500 transition-colors"
+                  />
                 </div>
               </div>
-            ))}
+            </div>
           </div>
         </div>
+      ))}
+    </div>
+  </div>
 
         {/* Profile and Logout Section */}
         <div className="sidebar-footer mt-auto">
