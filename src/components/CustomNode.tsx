@@ -107,9 +107,9 @@ const CustomNode: React.FC<CustomNodeProps> = ({ data }) => {
         body: JSON.stringify({ file_location: fileLocation }),
       });
 
-      if (!response.ok) {
-        throw new Error("Delete failed");
-      }
+      // if (!response.ok) {
+      //   throw new Error("Delete failed");
+      // }
 
       // Remove the file entry completely from the node's config_inputs
       if (data.id && handleValueChange && data.config_inputs) {

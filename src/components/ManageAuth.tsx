@@ -31,14 +31,14 @@ const AUTH_SERVICES = [
 
 // Service icon mapping
 const SERVICE_ICONS = {
-  "Gmail Trigger": <BellRing size={20} className="service-icon gmail" />,
-  Gmail: <Mail size={20} className="service-icon gmail" />,
-  Notion: <FileText size={20} className="service-icon notion" />,
-  Youtube: <YoutubeIcon size={20} className="service-icon youtube" />,
-  Linkedin: <Linkedin size={20} className="service-icon linkedin" />,
-  Googlecalendar: <Calendar size={20} className="service-icon google" />,
-  Googledocs: <FileType size={20} className="service-icon google" />,
-  Googlesheets: <Table size={20} className="service-icon google" />,
+  "Gmail Trigger": <BellRing size={40} className="service-icon gmail" />,
+  Gmail: <Mail size={40} className="service-icon gmail" />,
+  Notion: <FileText size={40} className="service-icon notion" />,
+  Youtube: <YoutubeIcon size={40} className="service-icon youtube" />,
+  Linkedin: <Linkedin size={40} className="service-icon linkedin" />,
+  Googlecalendar: <Calendar size={40} className="service-icon google" />,
+  Googledocs: <FileType size={40} className="service-icon google" />,
+  Googlesheets: <Table size={40} className="service-icon google" />,
 };
 
 // API Key URLs - Updated with more descriptive comments

@@ -483,7 +483,7 @@ const WorkflowGraph: React.FC<WorkflowGraphProps> = ({
       setLoadingStep("");
       setLoadingProgress(0);
       setBootComplete(true);
-
+      fetchWorkflows();
       if (!response.ok) {
         const responseData = await response.json();
         console.error(
@@ -683,16 +683,16 @@ const WorkflowGraph: React.FC<WorkflowGraphProps> = ({
               </span>
             </div>
           </div>
-          {showSaveButton && (
+            {showSaveButton && (
             <div
               onClick={saveWorkflow}
-              className="flex items-center gap-2 px-6 py-3 rounded-lg shadow-md transition-all duration-300 mt-4 font-medium cursor-pointer bg-green-500 text-black rounded shadow hover:bg-green-600"
-              style={{ minWidth: "180px", textAlign: "center" }}
+              className="flex flex items-center justify-center gap-2 px-6 py-3 rounded-lg shadow-md transition-all duration-300 mt-4 font-medium cursor-pointer bg-green-500 text-black rounded shadow hover:bg-green-600"
+              style={{ width: "220px", textAlign: "center" }}
             >
               <FaSave className="inline-block mr-2" />
               <span>Save Changes</span>
             </div>
-          )}
+            )}
         </Panel>
       </ReactFlow>
     </div>
