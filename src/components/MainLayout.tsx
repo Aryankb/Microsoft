@@ -6,6 +6,7 @@ import WorkflowGraph from "./WorkflowGraph.tsx";
 import ChatInterface from "./ChatInterface";
 import QueryRefiner from "./QueryRefiner";
 import VanishingMessageInput from "./VanishingMessageInput";
+import { useWorkflowLogs, LogMessage } from "./FetchLogs";
 import "./ChatStyles.css";
 import "./WorkflowLoadingAnimation.css";
 
@@ -19,6 +20,8 @@ type ChatMessage = {
   id: string;
   message: string | JSX.Element;
   sender: "user" | "bot";
+  isLog?: boolean;
+  timestamp?: string;
 };
 
 interface Workflow {
@@ -465,6 +468,126 @@ export default function MainLayout() {
     setMode("workflow");
   };
 
+  // Add state for workflow logs
+  const [workflowLogs, setWorkflowLogs] = useState<LogMessage[]>([]);
+  
+  // Use the custom hook to connect to WebSocket and receive logs
+  useWorkflowLogs((log: LogMessage) => {
+    setWorkflowLogs(prevLogs => [...prevLogs, log]);
+    
+    // If this log belongs to the current workflow, add it to the chat panel
+    if (currentWorkflow === log.workflow_id) {
+      console.log("Received log:", log);
+      const logMessage = (
+        <div className="workflow-log">
+          <div className="log-header flex items-center justify-between bg-card text-text-primary p-2 rounded-t-md">
+            <span className="log-agent font-bold">{log.agent_name}</span>
+            <span className="log-status flex items-center">
+          {log.status === "executed successfully" ? (
+            <span className="text-green-500 mr-2">✔</span>
+          ) : (
+            <span className="text-yellow-500 mr-2">⚠</span>
+          )}
+          {log.status}
+            </span>
+            <span className="log-time text-sm text-gray-400">
+          {new Date(log.timestamp).toLocaleTimeString()}
+            </span>
+          </div>
+          <div className="log-content bg-[var(--color-background)] p-3 rounded-b-md">
+            {/* <div className="font-semibold">Data Flow Notebook:</div> */}
+            <div className="data-flow-notebook bg-[var(--color-background)] p-3 rounded-md shadow-md">
+          {Object.entries(log.data).map(([key, value]) => (
+            <div key={key} className="flex justify-between border-b py-1">
+              <span className="font-medium text-blue">{key}:</span>
+              <span className="text-white-900">{value}</span>
+            </div>
+          ))}
+            </div>
+          </div>
+        </div>
+          );
+      
+      setChats(prevChats => [
+        ...prevChats,
+        {
+          id: Date.now().toString(),
+          message: logMessage,
+          sender: "bot",
+          isLog: true,
+          log_id: log.workflow_id,
+          // timestamp: log.timestamp
+        }
+      ]);
+      
+    }
+  });
+
+  // Filter logs for the current workflow
+  // const currentWorkflowLogs = workflowLogs.filter(
+  //   log => log.workflow_id === currentWorkflow
+  // );
+
+  useEffect(() => {
+    fetchWorkflows();
+  }, []);
+
+  // When currentWorkflow changes, add any existing logs for this workflow to the chat
+  // useEffect(() => {
+  //   if (currentWorkflow) {
+  //     // Clear previous logs from chat when switching workflows
+  //     console.log("yes i am settttting");
+  //     setChats(prevChats => prevChats.filter(chat => !chat.isLog));
+      
+  //     // Add any existing logs for this workflow to the chat
+  //     const relevantLogs = workflowLogs.filter(log => log.workflow_id === currentWorkflow);
+      
+  //     if (relevantLogs.length > 0) {
+  //       const logChatMessages = relevantLogs.map(log => {
+  //         const logMessage = (
+  //       <div className="workflow-log">
+  //         <div className="log-header flex items-center justify-between bg-gray-800 text-white p-2 rounded-t-md">
+  //           <span className="log-agent font-bold">{log.agent_name}</span>
+  //           <span className="log-status flex items-center">
+  //         {log.status === "executed successfully" ? (
+  //           <span className="text-green-500 mr-2">✔</span>
+  //         ) : (
+  //           <span className="text-yellow-500 mr-2">⚠</span>
+  //         )}
+  //         {log.status}
+  //           </span>
+  //           <span className="log-time text-sm text-gray-400">
+  //         {new Date(log.timestamp).toLocaleTimeString()}
+  //           </span>
+  //         </div>
+  //         <div className="log-content bg-gray-100 p-3 rounded-b-md">
+  //           <div className="font-semibold">Data Flow Notebook:</div>
+  //           <div className="data-flow-notebook bg-white p-3 rounded-md shadow-md">
+  //         {Object.entries(log.data).map(([key, value]) => (
+  //           <div key={key} className="flex justify-between border-b py-1">
+  //             <span className="font-medium text-gray-700">{key}:</span>
+  //             <span className="text-gray-900">{value}</span>
+  //           </div>
+  //         ))}
+  //           </div>
+  //         </div>
+  //       </div>
+  //         );
+
+  //         return {
+  //       id: `log-${log.timestamp}`,
+  //       message: logMessage,
+  //       sender: "bot",
+  //       isLog: true,
+  //       timestamp: log.timestamp
+  //         };
+  //       });
+
+  //       setChats(prevChats => [...prevChats, ...logChatMessages]);
+  //     }
+  //   }
+  // }, [currentWorkflow]);
+
   return (
     <div className="min-h-screen flex flex-col bg-[var(--color-background)] text-[var(--color-text)] relative">
       {loading && (
@@ -562,10 +685,15 @@ export default function MainLayout() {
                 <div
                   key={chat.id}
                   className={`message ${
-                    chat.sender === "user" ? "user-message" : "bot-message"
+                    chat.sender === "user" ? "user-message" : chat.isLog ? "bot-message" : "bot-message"
                   }`}
                 >
-                  <div className="message-content">{chat.message}</div>
+                 { ((workflowJson && workflowJson.workflow_id===chat.log_id) || (!workflowJson)) && <div className="message-content">{chat.message}</div>}
+                  { chat.timestamp && (
+                    <div className="message-timestamp">
+                      {new Date(chat.timestamp).toLocaleTimeString()}
+                    </div>
+                  )}
                 </div>
               ))}
             </div>

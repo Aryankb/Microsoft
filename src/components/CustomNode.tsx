@@ -352,7 +352,7 @@ const CustomNode: React.FC<CustomNodeProps> = ({ data }) => {
             <path d="M6 18a4 4 0 0 1-1.967-.516" />
             <path d="M19.967 17.484A4 4 0 0 1 18 18" />
           </svg>
-          <span>AI : {data.label}</span>
+          <span>{data.label}</span>
         </>
       );
     }
