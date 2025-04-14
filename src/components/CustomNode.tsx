@@ -16,6 +16,7 @@ import {
   Maximize2,
   Minimize2,
   X,
+  AlarmCheck,
 } from "lucide-react";
 
 interface CustomNodeData {
@@ -262,6 +263,13 @@ const CustomNode: React.FC<CustomNodeProps> = ({ data }) => {
           <span>Docs</span>
         </>
       );
+      } else if (label.includes("GOOGLEMEET") || label.includes("GOOGLE MEET")) {
+        return (
+        <>
+          <AlarmCheck size={30} className="mr-1" />
+          <span>Google Meet</span>
+        </>
+        );
     } else if (label.includes("ITERATOR")) {
       return (
         <>
@@ -366,7 +374,7 @@ const CustomNode: React.FC<CustomNodeProps> = ({ data }) => {
       <div className="node-header">
         <div className="flex justify-between w-full">
           <span className="node-title">
-            {/* {data.id} */}
+            {data.id}.
             {typeof data.label === "string"
               ? renderLabelWithIcon()
               : data.label}

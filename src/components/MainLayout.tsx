@@ -495,18 +495,21 @@ export default function MainLayout() {
             </span>
           </div>
           <div className="log-content bg-[var(--color-background)] p-3 rounded-b-md">
-            {/* <div className="font-semibold">Data Flow Notebook:</div> */}
             <div className="data-flow-notebook bg-[var(--color-background)] p-3 rounded-md shadow-md">
           {Object.entries(log.data).map(([key, value]) => (
             <div key={key} className="flex justify-between border-b py-1">
               <span className="font-medium text-blue">{key}:</span>
-              <span className="text-white-900">{value}</span>
+              <span className="text-white-900">
+                {typeof value === 'object' && value !== null
+                  ? renderObjectValue(value)
+                  : String(value)}
+              </span>
             </div>
           ))}
             </div>
           </div>
         </div>
-          );
+      );
       
       setChats(prevChats => [
         ...prevChats,
@@ -516,116 +519,83 @@ export default function MainLayout() {
           sender: "bot",
           isLog: true,
           log_id: log.workflow_id,
-          // timestamp: log.timestamp
         }
       ]);
-      
     }
   });
 
-  // Filter logs for the current workflow
-  // const currentWorkflowLogs = workflowLogs.filter(
-  //   log => log.workflow_id === currentWorkflow
-  // );
+  // Helper function to render object values
+  const renderObjectValue = (obj: any): React.ReactNode => {
+    if (Array.isArray(obj)) {
+      return (
+        <div className="pl-2 mt-1">
+          {obj.map((item, index) => (
+            <div key={index} className="mb-1">
+              {typeof item === 'object' && item !== null
+                ? renderObjectValue(item)
+                : String(item)}
+            </div>
+          ))}
+        </div>
+      );
+    }
+    
+    return (
+      <div className="pl-2 mt-1">
+        {Object.entries(obj).map(([k, v], idx) => (
+          <div key={idx} className="mb-1">
+            <span className="font-medium text-blue">{k}: </span>
+            {typeof v === 'object' && v !== null
+              ? renderObjectValue(v)
+              : String(v)}
+          </div>
+        ))}
+      </div>
+    );
+  };
 
   useEffect(() => {
     fetchWorkflows();
   }, []);
 
-  // When currentWorkflow changes, add any existing logs for this workflow to the chat
-  // useEffect(() => {
-  //   if (currentWorkflow) {
-  //     // Clear previous logs from chat when switching workflows
-  //     console.log("yes i am settttting");
-  //     setChats(prevChats => prevChats.filter(chat => !chat.isLog));
-      
-  //     // Add any existing logs for this workflow to the chat
-  //     const relevantLogs = workflowLogs.filter(log => log.workflow_id === currentWorkflow);
-      
-  //     if (relevantLogs.length > 0) {
-  //       const logChatMessages = relevantLogs.map(log => {
-  //         const logMessage = (
-  //       <div className="workflow-log">
-  //         <div className="log-header flex items-center justify-between bg-gray-800 text-white p-2 rounded-t-md">
-  //           <span className="log-agent font-bold">{log.agent_name}</span>
-  //           <span className="log-status flex items-center">
-  //         {log.status === "executed successfully" ? (
-  //           <span className="text-green-500 mr-2">✔</span>
-  //         ) : (
-  //           <span className="text-yellow-500 mr-2">⚠</span>
-  //         )}
-  //         {log.status}
-  //           </span>
-  //           <span className="log-time text-sm text-gray-400">
-  //         {new Date(log.timestamp).toLocaleTimeString()}
-  //           </span>
-  //         </div>
-  //         <div className="log-content bg-gray-100 p-3 rounded-b-md">
-  //           <div className="font-semibold">Data Flow Notebook:</div>
-  //           <div className="data-flow-notebook bg-white p-3 rounded-md shadow-md">
-  //         {Object.entries(log.data).map(([key, value]) => (
-  //           <div key={key} className="flex justify-between border-b py-1">
-  //             <span className="font-medium text-gray-700">{key}:</span>
-  //             <span className="text-gray-900">{value}</span>
-  //           </div>
-  //         ))}
-  //           </div>
-  //         </div>
-  //       </div>
-  //         );
-
-  //         return {
-  //       id: `log-${log.timestamp}`,
-  //       message: logMessage,
-  //       sender: "bot",
-  //       isLog: true,
-  //       timestamp: log.timestamp
-  //         };
-  //       });
-
-  //       setChats(prevChats => [...prevChats, ...logChatMessages]);
-  //     }
-  //   }
-  // }, [currentWorkflow]);
-
   return (
     <div className="min-h-screen flex flex-col bg-[var(--color-background)] text-[var(--color-text)] relative">
       {loading && (
-        <div className="boot-overlay">
-          <div className="boot-container">
-            <div className="boot-header">
-              <h1 className="boot-title">SIGMOYD AI</h1>
-              <p className="boot-subtitle">WORKFLOW GENERATION SEQUENCE</p>
-            </div>
+      <div className="boot-overlay fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-75">
+        <div className="boot-container">
+        <div className="boot-header">
+          <h1 className="boot-title">SIGMOYD AI</h1>
+          <p className="boot-subtitle">WORKFLOW GENERATION SEQUENCE</p>
+        </div>
 
-            <div className="boot-terminal">
-              <div className="boot-console">
-                {bootSequence.slice(0, bootPhase + 1).map((text, index) => (
-                  <div key={index} className="boot-line">
-                    <span className="boot-prompt">&gt;</span>
-                    <div
-                      className={`boot-message ${
-                        index === bootPhase ? "boot-cursor" : ""
-                      }`}
-                    >
-                      {text}
-                    </div>
-                  </div>
-                ))}
-              </div>
-
-              <div className="boot-progress-container">
-                <div className="boot-progress-bar">
-                  <div
-                    className="boot-progress-fill"
-                    style={{ width: `${loadingProgress}%` }}
-                  />
-                </div>
-                <div className="boot-progress-text">{loadingProgress}%</div>
-              </div>
+        <div className="boot-terminal">
+          <div className="boot-console">
+          {bootSequence.slice(0, bootPhase + 1).map((text, index) => (
+            <div key={index} className="boot-line">
+            <span className="boot-prompt">&gt;</span>
+            <div
+              className={`boot-message ${
+              index === bootPhase ? "boot-cursor" : ""
+              }`}
+            >
+              {text}
             </div>
+            </div>
+          ))}
+          </div>
+
+          <div className="boot-progress-container">
+          <div className="boot-progress-bar">
+            <div
+            className="boot-progress-fill"
+            style={{ width: `${loadingProgress}%` }}
+            />
+          </div>
+          <div className="boot-progress-text">{loadingProgress}%</div>
           </div>
         </div>
+        </div>
+      </div>
       )}
 
       <div className="fixed top-0 left-0 right-0 z-50 bg-black">

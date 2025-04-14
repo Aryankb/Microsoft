@@ -155,8 +155,11 @@ const arrangeNodes = (workflow, trigger) => {
 const generateNodesAndEdges = (workflowJson, handleValueChange) => {
   const { workflow, trigger, data_flow_notebook_keys } = workflowJson;
   const positions = arrangeNodes(workflow, trigger);
-
+  
   const nodes = workflow.map((node) => ({
+    // if (node.to_execute && node.to_execute.length === 1) {
+    //   node.to_execute = node.to_execute[0];
+    // }
     id: node.id.toString(),
     type: "customNode",
     position: positions.get(node.id) || { x: 0, y: 0 },
@@ -167,7 +170,9 @@ const generateNodesAndEdges = (workflowJson, handleValueChange) => {
       to_execute: node.to_execute,
       connectorName: node.to_execute
         ? node.to_execute[0]
-          ? `Connector ${node.to_execute[0].replace("connector_", "")}`
+          ? node.to_execute.length === 1
+            ? `${node.to_execute[0][0].replace("connector_", "")}`:
+            `${node.to_execute[0].replace("connector_", "")}`
           : ""
         : "",
       description: node.description,

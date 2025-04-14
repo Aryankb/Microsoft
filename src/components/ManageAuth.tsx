@@ -27,6 +27,7 @@ const AUTH_SERVICES = [
   "Googlecalendar",
   "Googledocs",
   "Googlesheets",
+  "Googlemeet",
 ];
 
 // Service icon mapping
@@ -37,6 +38,7 @@ const SERVICE_ICONS = {
   Youtube: <YoutubeIcon size={40} className="service-icon youtube" />,
   Linkedin: <Linkedin size={40} className="service-icon linkedin" />,
   Googlecalendar: <Calendar size={40} className="service-icon google" />,
+  Googlemeet: <AlarmCheck size={40} className="service-icon google" />,
   Googledocs: <FileType size={40} className="service-icon google" />,
   Googlesheets: <Table size={40} className="service-icon google" />,
 };
@@ -397,6 +399,7 @@ export default function ManageAuth() {
         onHomeClick={handleHomeClick}
         sidebarVisible={false} // Always false - sidebar disabled
         hideNewChat={true} // Hide the New Chat button
+        
       />
 
       {/* Main Content */}
