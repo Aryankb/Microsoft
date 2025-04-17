@@ -526,11 +526,23 @@ export default function MainLayout() {
 
   // Helper function to render object values
   const renderObjectValue = (obj: any): React.ReactNode => {
+    // Check for null or undefined
+    if (obj === null || obj === undefined) {
+      return "null";
+    }
+      
+    // Special handling for strings to prevent iteration over individual characters
+    if (typeof obj === 'string') {
+      return obj;
+    }
+    
+    // Handle arrays
     if (Array.isArray(obj)) {
       return (
         <div className="pl-2 mt-1">
           {obj.map((item, index) => (
-            <div key={index} className="mb-1">
+            <div key={`array-item-${index}`} className="mb-1">
+              <span className="font-medium text-gray-400">[{index}]: </span>
               {typeof item === 'object' && item !== null
                 ? renderObjectValue(item)
                 : String(item)}
@@ -540,18 +552,39 @@ export default function MainLayout() {
       );
     }
     
-    return (
-      <div className="pl-2 mt-1">
-        {Object.entries(obj).map(([k, v], idx) => (
-          <div key={idx} className="mb-1">
-            <span className="font-medium text-blue">{k}: </span>
-            {typeof v === 'object' && v !== null
-              ? renderObjectValue(v)
-              : String(v)}
-          </div>
-        ))}
-      </div>
-    );
+    // Handle object types (but not arrays, functions, dates, etc.)
+    if (typeof obj === 'object') {
+      try {
+        // Check if it's an object we can safely iterate over
+        if (!obj.constructor || obj.constructor === Object) {
+          const entries = Object.entries(obj);
+          if (entries.length === 0) {
+            return "{Empty Object}";
+          }
+          
+          return (
+            <div className="pl-2 mt-1">
+              {entries.map(([key, value], idx) => (
+                <div key={`obj-key-${key}-${idx}`} className="mb-1">
+                  <span className="font-medium text-blue">{key}: </span>
+                  {typeof value === 'object' && value !== null
+                    ? renderObjectValue(value)
+                    : String(value)}
+                </div>
+              ))}
+            </div>
+          );
+        } else {
+          // For other object types that are not plain objects (like Date)
+          return String(obj);
+        }
+      } catch (error) {
+        return `{Error rendering object: ${error.message}}`;
+      }
+    }
+    
+    // For everything else, convert to string
+    return String(obj);
   };
 
   useEffect(() => {
