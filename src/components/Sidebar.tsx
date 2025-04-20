@@ -103,14 +103,15 @@ export default function Sidebar({
 
     try {
       const token = await getToken();
-      const response = await fetch("http://localhost:8000/delete_workflow", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ workflow_id: workflowId }),
-      });
+      const response = await fetch(
+        `http://localhost:8000/delete_workflow/${workflowId}`,
+        {
+          method: "DELETE",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
 
       if (response.ok) {
         // If this was the currently selected workflow, clear it
