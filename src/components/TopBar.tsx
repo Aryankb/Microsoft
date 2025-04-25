@@ -104,16 +104,18 @@ export default function TopBar({
           {/* Creative Workflow Name Display */}
           {currentWorkflow && (
             <div className="mx-4 flex items-center">
-              <div
+              {/* <div
                 className={`workflow-badge ${
                   animateWorkflowName ? "workflow-badge-pulse" : ""
                 }`}
               >
                 <Activity size={16} className="workflow-icon" />
-                <span className="workflow-name">{currentWorkflow.name}</span>
-              </div>
+                
+              </div> */}
+              <span className="workflow-name">{currentWorkflow.name}</span>
             </div>
           )}
+          
         </div>
 
         <div className="flex items-center gap-2">
