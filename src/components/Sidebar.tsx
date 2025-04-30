@@ -31,6 +31,7 @@ interface Workflow {
   json: string;
   prompt: string;
   active?: boolean;
+  public?: boolean;  // Added this field
 }
 
 export default function Sidebar({

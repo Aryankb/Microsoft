@@ -7,6 +7,7 @@ import ChatInterface from "./ChatInterface";
 import QueryRefiner from "./QueryRefiner";
 import VanishingMessageInput from "./VanishingMessageInput";
 import { useWorkflowLogs, LogMessage } from "./FetchLogs";
+import PublicDialogue from "./PublicDialogue"; // Import the new component
 import "./ChatStyles.css";
 import "./WorkflowLoadingAnimation.css";
 
@@ -30,6 +31,7 @@ interface Workflow {
   json: string;
   prompt: string;
   active?: boolean;
+  public?: boolean; // Added public field
   unavailable: string;
 }
 
@@ -59,6 +61,7 @@ export default function MainLayout() {
   const [bootPhase, setBootPhase] = useState(0);
   const [bootComplete, setBootComplete] = useState(false);
   const [fullScreenWorkflow, setFullScreenWorkflow] = useState(false);
+  const [showPublicDialog, setShowPublicDialog] = useState(false);
 
   const bootSequence = [
     "Initializing workflow engine...",
@@ -587,6 +590,46 @@ export default function MainLayout() {
     return String(obj);
   };
 
+  // Handle making a workflow public
+  const handleMakePublic = async (publicWorkflow: any) => {
+    setShowPublicDialog(false);
+    
+    try {
+      console.log("Making workflow public:", publicWorkflow);
+      const token = await getToken();
+      const response = await fetch("http://localhost:8000/public_workflow", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ 
+          workflowjson: publicWorkflow,
+          refined_prompt: refinedQuery 
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to make workflow public");
+      }
+
+      const responseData = await response.json();
+      // // Update the workflows list
+      // setWorkflows(prevWorkflows => 
+      //   prevWorkflows.map(workflow => 
+      //     workflow.id === responseData.json.workflow_id 
+      //       ? { ...workflow, public: true } 
+      //       : workflow
+      //   )
+      // );
+      
+      alert("Workflow has been made public successfully!");
+    } catch (error) {
+      console.error("Error making workflow public:", error);
+      alert("Failed to make workflow public. Please try again.");
+    }
+  };
+
   useEffect(() => {
     fetchWorkflows();
   }, []);
@@ -634,13 +677,16 @@ export default function MainLayout() {
       <div className="fixed top-0 left-0 right-0 z-50 bg-black">
         <TopBar
           onMenuClick={() => setShowSidebar(true)}
+          onHomeClick={handleNewChatClick}
           onNewChatClick={handleNewChatClick}
+          onPublicClick={currentWorkflow ? () => setShowPublicDialog(true) : undefined}
           sidebarVisible={showSidebar}
           currentWorkflow={
             currentWorkflowObject
               ? {
                   name: currentWorkflowObject.name,
                   id: currentWorkflowObject.id,
+                  public: currentWorkflowObject.public || false,
                 }
               : null
           }
@@ -783,6 +829,16 @@ export default function MainLayout() {
             />
           </div>
         </div>
+      )}
+
+      {/* Public Workflow Dialog */}
+      {showPublicDialog && workflowJson && (
+        <PublicDialogue
+          isOpen={showPublicDialog}
+          onClose={() => setShowPublicDialog(false)}
+          workflowJson={workflowJson}
+          onConfirm={handleMakePublic}
+        />
       )}
     </div>
   );

@@ -44,6 +44,7 @@ interface WorkflowJson {
   workflow: WorkflowNode[];
   data_flow_notebook_keys?: string[];
   active: boolean;
+  public?: boolean; // Added public field
 }
 interface Workflow {
   id: string;
@@ -51,6 +52,7 @@ interface Workflow {
   json: string;
   prompt: string;
   active?: boolean;
+  public?: boolean; // Added public field
 }
 
 interface WorkflowGraphProps {

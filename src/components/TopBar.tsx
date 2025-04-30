@@ -13,17 +13,20 @@ import {
   Home,
   PlusCircle,
   Activity,
+  Globe, // Added Globe icon
 } from "lucide-react";
 
 interface TopBarProps {
   onMenuClick: () => void;
   onHomeClick?: () => void;
   onNewChatClick?: () => void;
+  onPublicClick?: () => void; // New prop
   sidebarVisible: boolean;
   hideNewChat?: boolean;
   currentWorkflow?: {
     name: string;
     id: string;
+    public?: boolean; // Added public field
   } | null;
 }
 
@@ -42,6 +45,7 @@ export default function TopBar({
   onMenuClick,
   onHomeClick,
   onNewChatClick,
+  onPublicClick,
   sidebarVisible,
   hideNewChat = false,
   currentWorkflow = null,
@@ -104,15 +108,25 @@ export default function TopBar({
           {/* Creative Workflow Name Display */}
           {currentWorkflow && (
             <div className="mx-4 flex items-center">
-              {/* <div
-                className={`workflow-badge ${
-                  animateWorkflowName ? "workflow-badge-pulse" : ""
-                }`}
+              <span 
+              className={`workflow-name ${animateWorkflowName ? 'animate-fade-in' : ''}`}
               >
-                <Activity size={16} className="workflow-icon" />
-                
-              </div> */}
-              <span className="workflow-name">{currentWorkflow.name}</span>
+              {currentWorkflow.name}
+              </span>
+              
+              {/* Public Status Indicator */}
+              {currentWorkflow && onPublicClick && (
+              <div 
+                onClick={!currentWorkflow.public ? onPublicClick : undefined}
+                className={`ml-2 ${!currentWorkflow.public ? "cursor-pointer" : "cursor-default"}`}
+                title={currentWorkflow.public ? "Public workflow" : "Make workflow public"}
+              >
+                <Globe 
+                size={18} 
+                className={currentWorkflow.public ? "text-green-500" : "text-gray-500"} 
+                />
+              </div>
+              )}
             </div>
           )}
           
