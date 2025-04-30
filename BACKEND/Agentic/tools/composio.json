@@ -1,0 +1,201 @@
+{
+    "NOTION": [
+        {
+            "action": "NOTION_CREATE_PAGE_IN_PAGE",
+            "description": "Create a new page within an existing Notion page.",
+            "output": ["new_page_url"]
+        },
+        {
+            "action": "NOTION_ADD_ONE_CONTENT_BLOCK_IN_PAGE",
+            "description": "Add a single content block to an existing Notion page.",
+            "output": ["status"]
+        },
+        {
+            "action": "NOTION_INSERT_ROW_DATABASE",
+            "description": "Insert a new row into a Notion database.",
+            "output": ["status"]
+        }
+    ],
+    "GMAIL": [
+        {
+            "action": "GMAIL_SEND_EMAIL",
+            "description": "Send an email using Gmail.",
+            "output": [""]
+        },
+        {
+            "action": "GMAIL_SEARCH_MAIL",
+            "description": "Search for emails in Gmail based on a query.",
+            "output": ["list_of_mail_contents each having respective mail_id, mail_subject, attachment link, mail_body"]
+        },
+        {
+            "action": "GMAIL_CREATE_EMAIL_DRAFT",
+            "description": "Create a draft email in Gmail.",
+            "output": [""]
+        },
+        {
+            "action": "GMAIL_CREATE_LABEL",
+            "description": "Create a new label in Gmail.",
+            "output": ["status (True/False)"]
+        },
+        {
+            "action": "GMAIL_REMOVE_LABEL",
+            "description": "Remove an existing label from Gmail.",
+            "output": ["status (True/False)"]
+        },
+        {
+            "action": "GMAIL_REPLY_TO_THREAD",
+            "description": "Reply to an email thread in Gmail.",
+            "output": ["status (True/False)"]
+        }
+    ],
+    "GOOGLESHEETS": [
+        {
+            "action": "GOOGLESHEETS_GET_SHEET_ROWS",
+            "description": "Retrieve rows from a Google Sheets spreadsheet.",
+            "output": ["list_of_row_contents (each row content is a list of cell values)"]
+        }
+    ],
+    "GOOGLEDRIVE": [
+        {
+            "action": "GOOGLEDRIVE_GET_FILE_CONTENT_FROM_URL",
+            "description": "Retrieve the content of a file from Google Drive using its URL.",
+            "output": ["file_content_text"]
+        }
+    ],
+    "GOOGLEMEET": [
+        {
+            "action": "GOOGLEMEET_CREATE_MEET",
+            "description": "Create a new Google Meet meeting.",
+            "output": ["google_meet_link"]
+        },
+        {
+            "action": "GOOGLEMEET_GET_CONFERENCE_RECORD_FOR_MEET",
+            "description": "Retrieve the conference record or meeting transcripts for a Google Meet.",
+            "output": ["meeting_transcripts"]
+        }
+    ],
+    "GOOGLEDOCS": [
+        {
+            "action": "GOOGLEDOCS_CREATE_DOCUMENT",
+            "description": "Create a new Google Docs document.",
+            "output": ["status (True/False)"]
+        },
+        {
+            "action": "GOOGLEDOCS_UPDATE_EXISTING_DOCUMENT",
+            "description": "Update an existing Google Docs document.",
+            "output": ["status (True/False)"]
+        },
+        {
+            "action": "GOOGLEDOCS_GET_DOCUMENT_BY_URL",
+            "description": "Retrieve the content of a Google Docs document using its URL.",
+            "output": ["doc_content"]
+        }
+    ],
+    "GOOGLECALENDAR": [
+        {
+            "action": "GOOGLECALENDAR_CREATE_EVENT",
+            "description": "Create a new event in Google Calendar.",
+            "output": ["status (True/False)"]
+        },
+        {
+            "action": "GOOGLECALENDAR_FIND_FREE_SLOTS",
+            "description": "Find free time slots in a given time range in Google Calendar.",
+            "output": ["free_slots (list of free slots in the given time range with each index containing start and end time of the free slots)"]
+        }
+    ],
+    "YOUTUBE": [
+        {
+            "action": "YOUTUBE_SEARCH",
+            "description": "Search for videos or playlists on YouTube using a query.",
+            "input": ["query", "maxResults", "type (video/playlist)"],
+            "output": ["list of outputs as a json"]
+        },
+        {
+            "action": "YOUTUBE_VIDEO_DETAILS",
+            "description": "Fetch detailed information about a YouTube video using its videoId.",
+            "input": ["videoId"],
+            "output": ["video details as json"]
+        },
+        {
+            "action": "YOUTUBE_LIST_CAPTIONS",
+            "description": "List available captions for a YouTube video using its videoId.",
+            "input": ["videoId"],
+            "output": ["list of caption tracks as json"]
+        },
+        {
+            "action": "YOUTUBE_LOAD_CAPTIONS",
+            "description": "Load captions for a YouTube video using its captionTrackId.",
+            "input": ["captionTrackId"],
+            "output": ["captions as text"]
+        },
+        {
+            "action": "YOUTUBE_LIST_CHANNEL_VIDEOS",
+            "description": "Fetch videos from a YouTube channel using its channelId. maxResults specifies the number of videos to fetch.",
+            "input": ["channelId", "maxResults"],
+            "output": ["list of videos from the channel as json"]
+        },
+        {
+            "action": "YOUTUBE_LIST_SUBSCRIBED_CHANNELS",
+            "description": "Fetch a list of channels subscribed to by the user. maxResults specifies the number of channels to fetch.",
+            "input": ["maxResults"],
+            "output": ["list of subscribed channels as json"]
+        },
+        {
+            "action": "YOUTUBE_LIST_USER_PLAYLISTS",
+            "description": "Fetch a list of playlists created by the user.",
+            "input": ["maxResults"],
+            "output": ["list of user playlists as json"]
+        },
+        {
+            "action": "YOUTUBE_SUBSCRIBE_A_CHANNEL",
+            "description": "Subscribe to a YouTube channel using its channelId.",
+            "input": ["channelId"],
+            "output": ["subscription status as json"]
+        }
+    ],
+    "LINKEDIN": [
+        {
+            "action": "LINKEDIN_GET_RECRUITER_EMAILS",
+            "description": "Fetch the email addresses of recruiters from LinkedIn posts using a search query.",
+            "output": ["list of hiring posts , which might contain recruiter emails"]
+        }
+
+    ],
+    "GITHUB": [
+        {
+            "action": "download_and_extract_repo",
+            "description": "Download and extract a GitHub repository using its URL.",
+            "output": ["repo_path"]
+        },
+        {
+            "action": "list_github_issues",
+            "description": "Fetch a list of issues from a GitHub repository using its repository URL.",
+            "output": ["list of issues as json"]
+        }
+    ],
+    "CODE_SUMMARY":[
+        {
+            "action": "summarise_codebase",
+            "description": "Iteratively traverse the entire given directory, parse the code and converts into chunks of code, and then summarize each chunk",
+            "output": ["output_path_of_summary_json"]
+        }
+    ],
+
+    "VECTORISER":
+    [
+        {
+            "action": "vectorise_codebase",
+            "description": "Iteratively traverse the given json file of summarized code of each chunk and convert it into a vector representation.",
+            "output": ["path_of_vector_file","path_of_metadata_file"]
+        }
+    ],
+    "VECTORQUERY": 
+    [
+        {
+            "action": "answer_question",
+            "description": "Query the vector database using the given query and return the best answer.",
+            "output": ["answer_for_the_query"]
+        }
+    ]
+
+}

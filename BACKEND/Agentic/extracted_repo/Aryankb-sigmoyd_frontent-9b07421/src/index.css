@@ -1,0 +1,336 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: dark;
+
+  /* Custom color variables - using !important to ensure they're applied */
+  --color-background: #121212 !important;
+  --color-card: #1e1e1e !important;
+  --color-navbar: #000000 !important; /* New color for navbar */
+  --color-text: #e0e0e0 !important;
+  --color-text-accent: #b3b3b3 !important;
+  --color-primary: #00adb5 !important;
+  --color-secondary: #ff6b6b !important;
+  --color-success: #22c55e !important;
+  --color-warning: #ffad46 !important;
+  --color-button-secondary: #333333 !important;
+}
+
+html,
+body {
+  background-color: var(--color-background);
+  color: var(--color-text);
+  font-family: "Inter", sans-serif;
+  min-height: 100vh;
+  width: 100%;
+}
+
+/* Override text color for elements with better specificity */
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  color: var(--color-text) !important;
+  font-weight: bold;
+}
+
+/* Allow p, span, div to inherit color when needed */
+p,
+span,
+div {
+  color: inherit;
+}
+
+/* Default text color for general elements */
+.text-default {
+  color: var(--color-text);
+}
+
+.text-accent {
+  color: var(--color-text-accent);
+}
+
+/* Custom button styles */
+.btn-primary {
+  background-color: var(--color-primary);
+  color: var(--color-background);
+  padding: 1rem 1rem;
+  border-radius: 0.5rem;
+  transition-property: all;
+  transition-duration: 300ms;
+}
+.btn-primary:hover {
+  box-shadow: 0px 0px 10px rgba(0, 173, 181, 0.6);
+}
+
+.btn-secondary {
+  background-color: var(--color-button-secondary);
+  color: var(--color-text);
+  padding: 1rem 1rem;
+  border-radius: 0.5rem;
+  transition-property: all;
+  transition-duration: 300ms;
+}
+.btn-secondary:hover {
+  box-shadow: 0px 0px 5px rgba(224, 224, 224, 0.3);
+}
+
+.btn-danger {
+  background-color: var(--color-secondary);
+  color: var(--color-background);
+  padding: 1rem 1rem;
+  border-radius: 0.5rem;
+  transition-property: all;
+  transition-duration: 300ms;
+}
+.btn-danger:hover {
+  box-shadow: 0px 0px 10px rgba(255, 107, 107, 0.6);
+}
+
+.btn-success {
+  background-color: var(--color-success);
+  color: var(--color-background);
+  padding: 1rem 1rem;
+  border-radius: 0.5rem;
+  transition-property: all;
+  transition-duration: 300ms;
+}
+.btn-success:hover {
+  box-shadow: 0px 0px 10px rgba(34, 197, 94, 0.6);
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background-color: var(--color-card);
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: var(--color-button-secondary);
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background-color: var(--color-primary);
+}
+
+/* Hide UI elements when loading a workflow */
+html.workflow-loading .sidebar-container,
+html.workflow-loading .fixed.top-0.left-0.right-0.z-50.bg-black,
+html.workflow-loading .message-input-container,
+html.workflow-loading .query-refiner,
+html.workflow-loading .chat-container,
+html.workflow-loading .my-4 {
+  display: none !important;
+}
+
+/* Sidebar Styles */
+.sidebar-container {
+  background-color: rgb(24, 24, 24); /* bg-gray-900 */
+  position: fixed;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  transform: translateX(0);
+  transition-property: all;
+  transition-duration: 300ms;
+  transition-timing-function: ease-in-out;
+  z-index: 50;
+  overflow: hidden;
+  box-shadow: 4px 0 15px rgba(0, 0, 0, 0.3);
+  border-right: 1px solid rgba(75, 85, 99, 0.4);
+  display: flex;
+  flex-direction: column;
+  height: 100vh; /* Full viewport height */
+}
+
+.sidebar-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+  padding-bottom: 12px;
+  border-bottom: 1px solid rgba(75, 85, 99, 0.4);
+  position: sticky;
+  top: 0;
+  background-color: rgb(24, 24, 24); /* Match sidebar background */
+  z-index: 5;
+}
+
+.sidebar-title {
+  font-size: 1.25rem;
+  line-height: 1.75rem;
+  font-weight: 600;
+  color: white;
+  letter-spacing: 0.5px;
+}
+
+.sidebar-close-btn {
+  padding: 0.5rem;
+  border-radius: 0.25rem;
+  transition-property: colors;
+  transition-duration: 200ms;
+}
+.sidebar-close-btn:hover {
+  background-color: rgb(31, 41, 55); /* bg-gray-800 */
+}
+
+.sidebar-new-chat {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding-left: 1rem;
+  padding-right: 1rem;
+  padding-top: 0.75rem;
+  padding-bottom: 0.75rem;
+  margin-bottom: 1rem;
+  background-color: #90d3fa; /* bg-blue-400 */
+  color: rgb(17, 24, 39); /* text-gray-900 */
+  border-radius: 0.375rem;
+  transition-property: all;
+  transition-duration: 200ms;
+  font-weight: 500;
+  cursor: pointer;
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.05), 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.sidebar-new-chat:hover {
+  box-shadow: 0px 0px 10px rgba(96, 165, 250, 0.7);
+  transform: scale(1.02);
+}
+
+.sidebar-new-chat:active {
+  transform: scale(0.98);
+}
+
+.sidebar-workflow-item {
+  position: relative;
+  display: flex;
+  align-items: center;
+  border-radius: 0.375rem;
+  overflow: hidden;
+  transition-property: all;
+  transition-duration: 200ms;
+  margin-bottom: 0.5rem;
+  background: #1b4965;
+  border: 1px solid rgba(75, 85, 99, 0.2);
+}
+
+.sidebar-workflow-active {
+  background-color: rgb(191, 219, 254); /* bg-blue-200 */
+  color: rgb(17, 24, 39); /* text-gray-900 */
+  font-weight: 500;
+}
+
+.sidebar-status-indicator {
+  width: 0.25rem;
+  height: 100%;
+  position: absolute;
+  left: 0;
+  top: 0;
+}
+
+.sidebar-workflow-content {
+  flex-grow: 1;
+  text-align: left;
+  padding-left: 0.75rem;
+  padding-right: 3rem;
+  padding-top: 0.5rem;
+  padding-bottom: 0.5rem;
+  cursor: pointer;
+}
+
+.sidebar-workflow-content:hover {
+  background: rgba(0, 0, 0, 0.1);
+}
+
+.sidebar-delete-btn {
+  position: absolute;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  width: 2.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 10;
+}
+
+.sidebar-delete-icon {
+  padding: 0.375rem;
+  border-radius: 9999px;
+  transition-property: colors;
+  transition-duration: 200ms;
+}
+
+/* Fix for the error - use separate CSS rule instead of @apply with hover */
+.group:hover .sidebar-delete-icon {
+  background-color: rgba(239, 68, 68, 0.2); /* bg-red-500/20 */
+}
+
+.sidebar-footer {
+  border-top: 1px solid rgb(55, 65, 81); /* border-gray-700 */
+  padding-top: 1rem;
+  margin-top: auto;
+}
+
+.sidebar-profile {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.sidebar-profile-info {
+  overflow: hidden;
+}
+
+.sidebar-profile-name {
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+  font-weight: 600;
+  color: white;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.sidebar-profile-email {
+  font-size: 0.75rem;
+  line-height: 1rem;
+  color: rgb(156, 163, 175); /* text-gray-400 */
+  text-overflow: ellipsis;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.sidebar-logout {
+  margin-top: 0.75rem;
+  width: 100%;
+  text-align: left;
+  padding-left: 1rem;
+  padding-right: 1rem;
+  padding-top: 0.5rem;
+  padding-bottom: 0.5rem;
+  background-color: rgb(248, 113, 113); /* bg-red-400 */
+  color: white;
+  border-radius: 0.25rem;
+  transition-property: all;
+  transition-duration: 300ms;
+  cursor: pointer;
+}
+
+.sidebar-logout:hover {
+  background-color: rgb(239, 68, 68); /* bg-red-500 */
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1),
+    0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}

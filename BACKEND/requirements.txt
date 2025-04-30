@@ -1,0 +1,20 @@
+langchain
+# langchain-cohere==0.1.5
+# langchain-community==0.0.38
+# langchain-core==0.3.29
+langchain-experimental==0.3.3
+langchain-google-genai==2.0.7
+langchain-huggingface==0.1.0
+# langchain-openai==0.1.7
+langchain-text-splitters==0.3.4
+composio-core
+python-jose
+clerk-backend-api
+groq
+chromadb
+composio-langchain
+pytz
+google-auth-oauthlib
+celery
+redis
+boto3
