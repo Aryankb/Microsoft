@@ -173,8 +173,8 @@ const generateNodesAndEdges = (workflowJson, handleValueChange) => {
       connectorName: node.to_execute
         ? node.to_execute[0]
           ? node.to_execute.length === 1
-            ? `${node.to_execute[0][0].replace("connector_", "")}`:
-            `${node.to_execute[0].replace("connector_", "")}`
+            ? `${node.to_execute[0][0].replace("validator_", "")}`:
+            `${node.to_execute[0].replace("validator_", "")}`
           : ""
         : "",
       description: node.description,
