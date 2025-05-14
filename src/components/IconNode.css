@@ -1,0 +1,104 @@
+.icon-node {
+  width: 60px;
+  height: 60px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.4);
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.icon-node:hover {
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.5);
+  transform: translateY(-2px);
+}
+
+.icon-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.4));
+}
+
+.handle-top, .handle-bottom {
+  background-color: var(--color-primary);
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, 0.6);
+  box-shadow: 0 0 5px rgba(0, 0, 0, 0.4);
+}
+
+.execution-mark-icon {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  font-size: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-weight: bold;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.5);
+}
+
+.node-dialog {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background-color: var(--color-card);
+  border-radius: 12px;
+  padding: 0;
+  max-width: 90vw;
+  max-height: 90vh;
+  overflow: auto;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+  border: 1px solid var(--color-primary);
+  z-index: 1000;
+}
+
+.node-dialog-content {
+  padding: 1.5rem;
+}
+
+.node-dialog-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  margin-bottom: 1rem;
+}
+
+.node-dialog-header h2 {
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: var(--color-text);
+}
+
+.close-button {
+  background: transparent;
+  border: none;
+  color: var(--color-text-accent);
+  cursor: pointer;
+  transition: color 0.2s;
+  padding: 5px;
+  border-radius: 50%;
+}
+
+.close-button:hover {
+  color: var(--color-text);
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.node-dialog-body {
+  max-height: 70vh;
+  overflow-y: auto;
+  padding-right: 0.5rem;
+}
