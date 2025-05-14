@@ -436,7 +436,7 @@ const CustomNode: React.FC<CustomNodeProps> = ({ data }) => {
           data.to_execute[1] === "Z" ? "chocolate" : "gray"
             }`}
           >
-            {data.connectorName}
+            Val {data.connectorName}
           </div>
         )}
 
