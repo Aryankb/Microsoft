@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { ArrowRight, Mic } from "lucide-react";
+import { ArrowRight, Mic, Send } from "lucide-react";
 import { cn } from "../lib/utils";
 
 const VanishingMessageInput = ({
@@ -380,11 +380,11 @@ const VanishingMessageInput = ({
     return (
         <div className="relative flex-1">
             <div
-                className={cn(
-                    "flex bg-[#333333] rounded-lg overflow-hidden transition-all duration-300 border border-gray-600",
-                    isFocused && "ring-2 ring-[#00ADB5]",
-                    isListening && "ring-2 ring-red-500"
-                )}
+                className={`flex items-center p-2 rounded-lg transition-all duration-300 ${
+                    isFocused
+                        ? "bg-gray-700 shadow-lg border border-gray-600"
+                        : "bg-gray-800 border border-gray-700"
+                }`}
             >
                 <canvas
                     className={cn(
@@ -420,59 +420,48 @@ const VanishingMessageInput = ({
                     onBlur={() => handleFocusChange(false)}
                     placeholder=""
                     disabled={isDisabled || animating}
-                    className={cn(
-                        "w-full px-6 py-4 bg-[#444444] focus:outline-none resize-none overflow-y-auto text-white",
-                        isDisabled && "opacity-50 cursor-not-allowed",
-                        animating && "text-transparent"
-                    )}
-                    style={{ minHeight: "56px", maxHeight: "150px" }}
+                    className="flex-grow bg-transparent outline-none resize-none min-h-[40px] max-h-[200px] px-2 py-1 text-[var(--color-text)]"
+                    style={{ minHeight: "40px", maxHeight: "200px" }}
                     rows={1}
                 />
 
-                <div className="flex items-center pr-3 bg-[#444444]">
-                    <button
-                        onClick={handleMicClick}
-                        className={cn(
-                            "relative transition-colors p-2 rounded-full mr-1",
-                            isListening
-                                ? "bg-red-500 text-white hover:bg-red-600"
-                                : "text-gray-300 hover:text-white hover:bg-[#555555]"
-                        )}
-                        aria-label={isListening ? "Stop listening" : "Voice input"}
-                        disabled={animating}
-                    >
-                        <Mic size={18} />
-                        {isListening && (
-                            <span className="absolute top-0 right-0 flex h-3 w-3">
-                                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
-                                <span className="relative inline-flex rounded-full h-3 w-3 bg-red-500"></span>
-                            </span>
-                        )}
-                    </button>
+                {/* Mic button */}
+                <button
+                    onClick={handleMicClick}
+                    className={cn(
+                        "p-2 rounded-full mr-1 transition-colors",
+                        isListening
+                            ? "bg-red-500 text-white hover:bg-red-600"
+                            : "text-gray-300 hover:text-white hover:bg-gray-700"
+                    )}
+                    aria-label={isListening ? "Stop listening" : "Voice input"}
+                    disabled={animating}
+                >
+                    <Mic size={18} />
+                    {isListening && (
+                        <span className="absolute top-0 right-0 flex h-3 w-3">
+                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                            <span className="relative inline-flex rounded-full h-3 w-3 bg-red-500"></span>
+                        </span>
+                    )}
+                </button>
 
-                    <button
-                        onClick={vanishAndSubmit}
-                        disabled={isDisabled || !message.trim() || animating}
-                        className={cn(
-                            "p-2 rounded-full transition-all duration-300",
-                            message.trim() && !animating
-                                ? "bg-[#00ADB5] text-white hover:shadow-[0px_0px_10px_rgba(0,173,181,0.6)]"
-                                : "bg-[#555555] text-gray-400 cursor-not-allowed"
-                        )}
-                    >
-                        <ArrowRight
-                            size={18}
-                            className={cn(
-                                "transition-transform duration-300",
-                                message.trim() && !animating ? "translate-x-0" : "-translate-x-1 opacity-50"
-                            )}
-                        />
-                    </button>
-                </div>
+                {/* Send button */}
+                <button
+                    onClick={vanishAndSubmit}
+                    disabled={isDisabled || !message.trim() || animating}
+                    className={`p-2 rounded-full transition-all ${
+                        !message.trim() || isDisabled || animating
+                            ? "bg-gray-700 text-gray-500 cursor-not-allowed"
+                            : "bg-[var(--color-primary)] text-black hover:shadow-md active:scale-95"
+                    }`}
+                >
+                    <Send size={20} />
+                </button>
             </div>
 
             {(!message || message.length <= 1) && !isListening && (
-                <div className="absolute inset-0 flex items-center pointer-events-none px-6">
+                <div className="absolute inset-0 flex items-center pointer-events-none pl-2 pr-64 align-left">
                     <div className="text-gray-300 truncate transition-all duration-300 w-full">
                         {!isFocused ? (
                             <div className="relative h-6 overflow-visible">

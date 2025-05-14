@@ -39,6 +39,7 @@ interface Trigger {
   description: string;
   config_inputs?: any;
   output?: string;
+  id?: string | number; // Added id field for trigger
 }
 
 interface WorkflowJson {
@@ -48,7 +49,7 @@ interface WorkflowJson {
   workflow: WorkflowNode[];
   data_flow_notebook_keys?: string[];
   active: boolean;
-  public?: boolean; // Added public field
+  public?: boolean;
   nodes_requiring_input?: Array<{
     id: string | number;
     type: string;
@@ -63,13 +64,15 @@ interface Workflow {
   json: string;
   prompt: string;
   active?: boolean;
-  public?: boolean; // Added public field
+  public?: boolean;
 }
 
 interface WorkflowGraphProps {
   workflowJson: WorkflowJson;
   workflows: Workflow[];
   setWorkflows: React.Dispatch<React.SetStateAction<Workflow[]>>;
+  currentWorkflow?: string;
+  setCurrentWorkflow?: (id: string) => void;
 }
 
 // Enhanced node arrangement function for better visualization

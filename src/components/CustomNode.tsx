@@ -23,7 +23,8 @@ import {
   CheckSquare,
   Send,
   Code,
-  Sparkles
+  Sparkles,
+  Square // Add Square icon for END node
 } from "lucide-react";
 
 interface CustomNodeData {
@@ -287,6 +288,13 @@ const CustomNode: React.FC<CustomNodeProps> = ({ data }) => {
           <span>Delegator</span>
         </div>
       );
+    } else if (label.includes("ITER_END")) {
+      return (
+        <div className="node-icon-wrapper">
+          <Square size={24} className="node-icon end" />
+          <span>Iterator End</span>
+        </div>
+      );
     } else if (label.includes("GEMINI")) {
       return (
         <div className="node-icon-wrapper">
@@ -299,6 +307,13 @@ const CustomNode: React.FC<CustomNodeProps> = ({ data }) => {
         <div className="node-icon-wrapper">
           <Code size={24} className="node-icon code" />
           <span>Code</span>
+        </div>
+      );
+    } else if (label.includes("END")) {
+      return (
+        <div className="node-icon-wrapper">
+          <Square size={24} className="node-icon end" />
+          <span>End</span>
         </div>
       );
     } else if (data.type === "llm") {
@@ -336,6 +351,10 @@ const CustomNode: React.FC<CustomNodeProps> = ({ data }) => {
         baseClass += " validator-node"; 
       } else if (label.includes("GEMINI")) {
         baseClass += " gemini-node";
+      } else if (label.includes("END")) {
+        baseClass += " end-node";
+      } else if (label.includes("ITER_END")) {
+        baseClass += " end-node";
       }
     }
     

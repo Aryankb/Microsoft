@@ -1,13 +1,15 @@
-import { ClerkProvider, SignedIn, SignedOut ,SignIn} from "@clerk/clerk-react";
-import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
+import { ClerkProvider, SignedIn, SignedOut, SignIn } from "@clerk/clerk-react";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import MainLayout from "../src/components/MainLayout";
 import CreateToolPage from "./components/CreateToolPage";
 import ApiKeyModal from "./components/ApiKeyModal";
 import ManageAuth from "./components/ManageAuth";
 import ShootingStarsAndStarsBackgroundDemo from "./components/ui/shooting-stars-and-stars-background-demo";
 import CustomSignInForm from "./components/ui/custom-signin-form";
-import PremadeWorkflows from "./components/PremadeWorkflows";
 import { useState } from "react";
+import Layout from './components/Layout';
+import WorkflowContainer from './components/WorkflowContainer';
+import Home from './components/Home'; // Import the Home component
 
 const CLERK_PUBLISHABLE_KEY =
   "pk_test_bWludC1kaW5vc2F1ci01NC5jbGVyay5hY2NvdW50cy5kZXYk";
@@ -18,7 +20,7 @@ function App() {
 
   return (
     <ClerkProvider publishableKey={CLERK_PUBLISHABLE_KEY}>
-      <Router>
+      <BrowserRouter>
         <SignedOut>
           <div className="min-h-screen flex items-center justify-center relative">
             <div className="absolute inset-0 bg-gradient-to-b from-black via-gray-900 to-black">
@@ -91,22 +93,27 @@ function App() {
             </div>
           </div>
         </SignedOut>
-
         <SignedIn>
           <Routes>
-            <Route path="/*" element={<MainLayoutWithAuthCheck />} />
-            <Route path="/create-tool" element={<CreateToolPage />} />
-            <Route path="/api-keys" element={<ManageAuth />} />
-            <Route path="/manage-auths" element={<ManageAuth />} />
-            <Route path="/premade" element={<PremadeWorkflows />} />
+            <Route path="/" element={<Layout />}>
+              {/* Make sure Home is the default index route */}
+              <Route index element={<Home />} />
+              <Route path="workflows" element={<WorkflowContainer />} />
+              <Route path="workflows/:workflowId" element={<WorkflowContainer />} />
+              
+              {/* Other routes */}
+              <Route path="/create-tool" element={<CreateToolPage />} />
+              <Route path="/api-keys" element={<ApiKeyModal />} />
+              <Route path="/manage-auths" element={<ManageAuth />} />
+            </Route>
           </Routes>
         </SignedIn>
-      </Router>
+      </BrowserRouter>
     </ClerkProvider>
   );
 }
 
-// ✅ Move useAuth inside a child component
+// Child component with auth check
 import { useEffect } from "react";
 import { useAuth } from "@clerk/clerk-react";
 function MainLayoutWithAuthCheck() {

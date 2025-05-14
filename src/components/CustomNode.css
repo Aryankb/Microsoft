@@ -64,6 +64,11 @@
   border-left: 3px solid rgba(108, 99, 255, 0.8); /* Gemini blue-purple */
 }
 
+.end-node {
+  border-left: 3px solid rgba(220, 38, 38, 0.8); /* End node red */
+  background: linear-gradient(145deg, rgba(80, 0, 0, 0.75), rgba(60, 0, 0, 0.75)); /* Darker red background */
+}
+
 /* Node Header Styling */
 .node-header {
   display: flex;
@@ -183,6 +188,10 @@
 
 .node-icon.code {
   color: #10b981; /* Green */
+}
+
+.node-icon.end {
+  color: #ef4444; /* Brighter red for better visibility */
 }
 
 .node-action {

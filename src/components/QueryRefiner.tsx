@@ -60,6 +60,22 @@ const QueryRefiner = ({
     setIsEditing(false);
   };
 
+  const handleStartGeneratingWorkflow = () => {
+    // Validate that there's content to generate from
+    if (!refinedQuery || refinedQuery.trim() === '') {
+      alert("Cannot generate workflow: No query content available.");
+      return;
+    }
+    
+    // If showing workflow already, confirm if user wants to update or create new
+    const userChoice = showWorkflow
+      ? window.confirm("Cancel → create new\nOK → update existing")
+      : false;
+    
+    // Call the parent's handleGenerateWorkflow with the user's choice
+    handleGenerateWorkflow(userChoice);
+  };
+
   if (!refinedQuery) {
     return null;
   }
@@ -114,12 +130,7 @@ const QueryRefiner = ({
 
       <div className="query-actions">
         <div
-          onClick={() => {
-            const userChoice = showWorkflow
-              ? window.confirm("Cancel → create new\nOK → update existing")
-              : false;
-            handleGenerateWorkflow(userChoice);
-          }}
+          onClick={handleStartGeneratingWorkflow}
           className="generate-button"
         >
           Generate Workflow

@@ -20,9 +20,10 @@ interface TopBarProps {
   onMenuClick: () => void;
   onHomeClick?: () => void;
   onNewChatClick?: () => void;
-  onPublicClick?: () => void; // New prop
+  onPublicClick?: () => void; 
   sidebarVisible: boolean;
   hideNewChat?: boolean;
+  isHomePage?: boolean; // New prop to indicate if we're on the home page
   currentWorkflow?: {
     name: string;
     id: string;
@@ -48,6 +49,7 @@ export default function TopBar({
   onPublicClick,
   sidebarVisible,
   hideNewChat = false,
+  isHomePage = false, // Default to false
   currentWorkflow = null,
 }: TopBarProps) {
   const navigate = useNavigate();
@@ -81,27 +83,15 @@ export default function TopBar({
             <Menu size={25} />
           </button>
 
-          {/* Home Button */}
-          {onHomeClick && (
+          {/* Home Button - Only show when not on home page */}
+          {!isHomePage && onHomeClick && (
             <div
               onClick={onHomeClick}
-              className="hidden sm:flex items-center gap-2 px-3 py-2 bg-blue-400 text-gray-900 hover:shadow-[0px_0px_10px_rgba(96,165,250,0.7)] rounded-md transition-colors duration-300 font-medium cursor-pointer"
+              className="flex items-center gap-2 px-3 py-2 bg-blue-400 text-gray-900 hover:shadow-[0px_0px_10px_rgba(96,165,250,0.7)] rounded-md transition-colors duration-300 font-medium cursor-pointer"
               title="Home"
             >
               <Home size={18} />
               <span className="hidden sm:inline">Home</span>
-            </div>
-          )}
-
-          {/* New Chat Button - Only show when sidebar is closed and not explicitly hidden */}
-          {!sidebarVisible && onNewChatClick && !hideNewChat && (
-            <div
-              onClick={onNewChatClick}
-              className="hidden sm:flex items-center gap-2 px-3 py-2 bg-blue-400 text-gray-900 hover:shadow-[0px_0px_10px_rgba(96,165,250,0.7)] rounded-md transition-colors duration-300 font-medium cursor-pointer"
-              title="Start a New Chat"
-            >
-              <PlusCircle size={18} />
-              <span className="hidden sm:inline">New Chat</span>
             </div>
           )}
 

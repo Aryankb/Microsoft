@@ -1,4 +1,5 @@
 import { useEffect, useState, useRef } from "react";
+import { Link, useParams, useNavigate } from "react-router-dom";
 import {
   X,
   Trash2,
@@ -12,12 +13,12 @@ import {
   SignOutButton,
   UserButton,
 } from "@clerk/clerk-react";
+
 interface SidebarProps {
   show: boolean;
   onClose: () => void;
-  onNewChatClick: () => void; // New prop for starting a new chat
-  setWorkflowJson: (json: any) => void; // Function to update workflowJson in Main Layout
-  setRefinedQuery: (query: string) => void; // Function to update refinedQuery in Main Layout
+  setWorkflowJson: (json: any) => void;
+  setRefinedQuery: (query: string) => void;
   setShowWorkflow: (show: boolean) => void;
   workflows: Workflow[];
   setWorkflows: React.Dispatch<React.SetStateAction<Workflow[]>>;
@@ -31,25 +32,28 @@ interface Workflow {
   json: string;
   prompt: string;
   active?: boolean;
-  public?: boolean;  // Added this field
+  public?: boolean;
 }
 
 export default function Sidebar({
   show,
   onClose,
-  onNewChatClick,
   setWorkflowJson,
   setRefinedQuery,
   setShowWorkflow,
-  workflows,
-  setWorkflows,
+  workflows = [],
+  setWorkflows = () => {},
   currentWorkflow,
   setCurrentWorkflow,
 }: SidebarProps) {
+  const { workflowId } = useParams();
+  const navigate = useNavigate();
   const { getToken } = useAuth();
   const { user } = useUser();
   const [isDeleting, setIsDeleting] = useState(false);
   const sidebarRef = useRef<HTMLDivElement>(null);
+
+  const [localWorkflows, setLocalWorkflows] = useState<Workflow[]>([]);
 
   const fetchWorkflows = async () => {
     try {
@@ -62,36 +66,62 @@ export default function Sidebar({
         throw new Error(`HTTP error! Status: ${response.status}`);
 
       const data = await response.json();
-      setWorkflows(data);
+
+      try {
+        setWorkflows(data);
+      } catch (error) {
+        console.warn("Using local workflow state as fallback");
+        setLocalWorkflows(data);
+      }
     } catch (error) {
       console.error("Error fetching workflows:", error);
     }
   };
-  // Fetch workflows on startup
+
   useEffect(() => {
     fetchWorkflows();
   }, [getToken]);
 
-  // Handle workflow selection
+  useEffect(() => {
+    if (workflowId && workflowId !== currentWorkflow) {
+      const selectedWorkflow = workflows.find((w) => w.id === workflowId);
+      if (selectedWorkflow) {
+        setCurrentWorkflow(workflowId);
+        try {
+          setWorkflowJson(JSON.parse(selectedWorkflow.json));
+        } catch (error) {
+          console.error("Error parsing workflow JSON:", error);
+        }
+        setRefinedQuery(selectedWorkflow.prompt);
+        setShowWorkflow(true);
+      }
+    }
+  }, [workflowId, workflows, currentWorkflow]);
+
   const handleWorkflowClick = (workflowId: string) => {
     const selectedWorkflow = workflows.find((w) => w.id === workflowId);
     if (!selectedWorkflow) return;
 
     setCurrentWorkflow(workflowId);
-    setWorkflowJson(JSON.parse(selectedWorkflow.json));
-    console.log(JSON.parse(selectedWorkflow.json));
+    try {
+      setWorkflowJson(JSON.parse(selectedWorkflow.json));
+    } catch (error) {
+      console.error("Error parsing workflow JSON:", error);
+    }
     setRefinedQuery(selectedWorkflow.prompt);
     setShowWorkflow(true);
+    onClose();
+
+    navigate(`/workflows/${workflowId}`, { replace: true });
   };
 
-  // Handle workflow deletion
   const handleDeleteWorkflow = async (
     workflowId: string,
     e: React.MouseEvent
   ) => {
-    e.stopPropagation(); // Prevent the workflow from being selected when clicking delete
+    e.stopPropagation();
+    e.preventDefault();
 
-    // Confirm deletion with the user
     if (
       !window.confirm(
         "Are you sure you want to delete this workflow? This action cannot be undone."
@@ -115,16 +145,24 @@ export default function Sidebar({
       );
 
       if (response.ok) {
-        // If this was the currently selected workflow, clear it
         if (currentWorkflow === workflowId) {
           setCurrentWorkflow(null);
           setWorkflowJson(null);
           setRefinedQuery("");
           setShowWorkflow(false);
+          navigate("/workflows");
         }
 
-        // Update local workflows list by removing the deleted one
-        setWorkflows(workflows.filter((w) => w.id !== workflowId));
+        try {
+          setWorkflows((prevWorkflows) =>
+            prevWorkflows.filter((w) => w.id !== workflowId)
+          );
+        } catch (error) {
+          console.warn("Using local workflow state as fallback for deletion");
+          setLocalWorkflows((prevLocalWorkflows) =>
+            prevLocalWorkflows.filter((w) => w.id !== workflowId)
+          );
+        }
       } else {
         console.error("Failed to delete workflow");
         alert("Failed to delete workflow. Please try again.");
@@ -137,7 +175,6 @@ export default function Sidebar({
     }
   };
 
-  // Handle clicks outside the sidebar to close it
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (
@@ -149,16 +186,16 @@ export default function Sidebar({
       }
     };
 
-    // Only add the event listener if the sidebar is shown
     if (show) {
       document.addEventListener("mousedown", handleClickOutside);
     }
 
-    // Cleanup function to remove event listener
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
-  }, [show, onClose]); // Re-run effect when show or onClose changes
+  }, [show, onClose]);
+
+  const displayWorkflows = workflows.length > 0 ? workflows : localWorkflows;
 
   return (
     <div
@@ -166,9 +203,9 @@ export default function Sidebar({
       className="sidebar-container"
       style={{
         width: show ? "300px" : "0px",
-        height: "100vh", // Ensure full height
-        top: 0, // Start from the very top
-        zIndex: 50, // Ensure it's above other content
+        height: "100vh",
+        top: 0,
+        zIndex: 50,
       }}
     >
       {isDeleting && (
@@ -178,7 +215,6 @@ export default function Sidebar({
       )}
 
       <div className="p-4 h-full flex flex-col justify-between">
-        {/* Fixed Header */}
         <div className="sidebar-header flex justify-between items-center mb-2">
           <h2 className="sidebar-title">Your Workflows</h2>
           <button onClick={onClose} className="sidebar-close-btn">
@@ -186,71 +222,58 @@ export default function Sidebar({
           </button>
         </div>
 
-        {/* Scrollable Workflow Section */}
         <div className="overflow-y-auto flex-grow">
-          {/* New Chat Button */}
-          <div
-            onClick={() => {
-              onNewChatClick();
-              onClose();
-            }}
-            className="sidebar-new-chat"
-          >
-            <PlusCircle size={18} />
-            <span>New Chat</span>
-          </div>
-
-          <div className="space-y-2 py-2 mt-4">
-            {workflows.map((workflow) => (
-              <div
-                key={workflow.id}
-                className={`sidebar-workflow-item ${
-                  currentWorkflow === workflow.id
-                    ? "sidebar-workflow-active"
-                    : ""
-                } group`}
-              >
-                {/* Status indicator */}
+          <div className="space-y-2  mt-4">
+            {displayWorkflows && displayWorkflows.length > 0 ? (
+              displayWorkflows.map((workflow) => (
                 <div
-                  className={`sidebar-status-indicator ${
-                    workflow.active ? "bg-green-500" : "bg-red-500"
-                  }`}
-                />
-
-                {/* Workflow button */}
-                <div
-                  onClick={() => handleWorkflowClick(workflow.id)}
-                  className={`sidebar-workflow-content ${
-                    currentWorkflow === workflow.id
-                      ? "bg-blue-200 text-gray-900"
+                  key={workflow.id}
+                  className={`sidebar-workflow-item ${
+                    workflow.id === currentWorkflow
+                      ? "sidebar-workflow-active"
                       : ""
-                  }`}
+                  } group cursor-pointer`}
+                  onClick={() => handleWorkflowClick(workflow.id)}
                 >
-                  <div className="flex items-center w-full justify-between">
-                    <span className="max-w-[210px]" title={workflow.name}>
-                      {workflow.name.length > 40
-                        ? workflow.name.substring(0, 20) + "..."
-                        : workflow.name}
-                    </span>
-                    <div
-                      className="sidebar-delete-btn"
-                      onClick={(e) => handleDeleteWorkflow(workflow.id, e)}
-                    >
-                      <div className="sidebar-delete-icon group-hover:bg-red-500/20">
-                        <Trash2
-                          size={16}
-                          className="group-hover:text-red-500 transition-colors"
-                        />
+                  <div
+                    className={`sidebar-status-indicator ${
+                      workflow.active ? "bg-green-500" : "bg-red-500"
+                    }`}
+                  />
+                  <div className="sidebar-workflow-content">
+                    <div className="flex items-center w-full justify-between">
+                      <span className="max-w-[210px]" title={workflow.name}>
+                        {workflow.name.length > 40
+                          ? workflow.name.substring(0, 20) + "..."
+                          : workflow.name}
+                      </span>
+                      <div
+                        className="sidebar-delete-btn"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleDeleteWorkflow(workflow.id, e);
+                        }}
+                      >
+                        <div className="sidebar-delete-icon group-hover:bg-red-500/20">
+                          <Trash2
+                            size={16}
+                            className="group-hover:text-red-500 transition-colors"
+                          />
+                        </div>
                       </div>
                     </div>
                   </div>
                 </div>
+              ))
+            ) : (
+              <div className="px-2 py-4 text-gray-400 text-center">
+                No workflows available
               </div>
-            ))}
+            )}
           </div>
         </div>
 
-        {/* Profile and Logout Section */}
+
         <div className="sidebar-footer mt-auto">
           <div className="sidebar-profile">
             <UserButton />
