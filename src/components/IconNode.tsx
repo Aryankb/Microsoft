@@ -29,7 +29,7 @@ import {
   Sparkles,
   Info,
 } from "lucide-react";
-import "./IconNode.css";
+import "../styles/IconNode.css";
 import CustomNode from "./CustomNode";
 
 interface IconNodeProps {

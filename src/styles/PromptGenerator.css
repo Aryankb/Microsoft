@@ -1,0 +1,165 @@
+.prompt-generator {
+  position: absolute;
+  left: 0;
+  top: 0;
+  height: 100%;
+  background: linear-gradient(145deg, rgba(18, 18, 18, 0.97), rgba(25, 25, 25, 0.97));
+  border-right: 1px solid rgba(255, 255, 255, 0.1);
+  z-index: 10;
+  transition: transform 0.3s ease-in-out;
+  display: flex;
+  flex-direction: column;
+  color: white;
+  box-shadow: 2px 0 10px rgba(0, 0, 0, 0.3);
+  backdrop-filter: blur(5px);
+}
+
+.prompt-generator.open {
+  transform: translateX(0);
+  width: 320px;
+}
+
+.prompt-generator.closed {
+  transform: translateX(-320px);
+  width: 320px;
+}
+
+.toggle-button {
+  position: absolute;
+  right: -30px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: linear-gradient(180deg, rgba(29, 78, 216, 0.8), rgba(30, 64, 175, 0.8));
+  color: white;
+  border: none;
+  border-radius: 0 4px 4px 0;
+  width: 30px;
+  height: 60px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 2px 0 5px rgba(0, 0, 0, 0.2);
+  z-index: 11;
+}
+
+.toggle-button:hover {
+  background: linear-gradient(180deg, rgba(37, 99, 235, 0.9), rgba(30, 64, 175, 0.9));
+}
+
+.prompt-generator-content {
+  padding: 16px;
+  overflow-y: auto;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.prompt-generator-title {
+  font-size: 18px;
+  font-weight: 600;
+  margin: 0 0 16px 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #f9fafb;
+}
+
+.sparkles-icon {
+  color: #eab308;
+}
+
+.prompt-type-selector, .context-input, .generated-prompt {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.prompt-type-selector label, .context-input label, .generated-prompt label {
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.8);
+  font-weight: 500;
+}
+
+.prompt-type-selector select {
+  padding: 8px 12px;
+  background-color: rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 6px;
+  color: white;
+  font-size: 14px;
+  outline: none;
+}
+
+.prompt-type-selector select:focus {
+  border-color: rgba(59, 130, 246, 0.5);
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.3);
+}
+
+.context-input textarea, .generated-prompt textarea {
+  padding: 10px 12px;
+  background-color: rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 6px;
+  color: white;
+  font-size: 14px;
+  line-height: 1.5;
+  resize: vertical;
+  min-height: 80px;
+  outline: none;
+  font-family: inherit;
+}
+
+.context-input textarea:focus, .generated-prompt textarea:focus {
+  border-color: rgba(59, 130, 246, 0.5);
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.3);
+}
+
+.generate-button, .apply-button {
+  padding: 10px 16px;
+  background: linear-gradient(90deg, rgba(59, 130, 246, 0.8), rgba(37, 99, 235, 0.8));
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-weight: 500;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  margin-top: 8px;
+}
+
+.generate-button:hover, .apply-button:hover {
+  background: linear-gradient(90deg, rgba(59, 130, 246, 0.9), rgba(37, 99, 235, 0.9));
+  transform: translateY(-1px);
+}
+
+.generate-button:disabled {
+  background: linear-gradient(90deg, rgba(100, 116, 139, 0.8), rgba(71, 85, 105, 0.8));
+  cursor: not-allowed;
+  transform: none;
+}
+
+.generated-prompt {
+  border-top: 1px dashed rgba(255, 255, 255, 0.1);
+  padding-top: 12px;
+  margin-top: 4px;
+}
+
+.apply-button {
+  background: linear-gradient(90deg, rgba(16, 185, 129, 0.8), rgba(5, 150, 105, 0.8));
+}
+
+.apply-button:hover {
+  background: linear-gradient(90deg, rgba(16, 185, 129, 0.9), rgba(5, 150, 105, 0.9));
+}
+
+/* Adjust React Flow container when prompt generator is open */
+.react-flow__renderer {
+  transition: margin-left 0.3s ease;
+}
+
+.prompt-generator.open ~ .react-flow__renderer {
+  margin-left: 320px;
+  width: calc(100% - 320px);
+}

@@ -7,8 +7,8 @@ import ChatInterface from "./ChatInterface";
 import QueryRefiner from "./QueryRefiner";
 import VanishingMessageInput from "./VanishingMessageInput";
 import { useWorkflowLogs, LogMessage } from "./FetchLogs";
-import "./ChatStyles.css";
-import "./WorkflowLoadingAnimation.css";
+import "../styles/ChatStyles.css";
+import "../styles/WorkflowLoadingAnimation.css";
 import { useParams } from "react-router-dom";
 import { useConversation } from "../contexts/ConversationContext";
 

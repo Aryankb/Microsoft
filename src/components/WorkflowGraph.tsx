@@ -13,12 +13,13 @@ import ReactFlow, {
 } from "reactflow";
 import CustomNode from "./CustomNode.tsx";
 import IconNode from "./IconNode";
+import PromptGenerator from "./PromptGenerator";
 import { ButtonEdge } from "./button-edge";
 import { MousePointerClick } from "lucide-react";
 import "reactflow/dist/style.css";
 import { FaPlay, FaCheckCircle, FaSave, FaBolt, FaStop } from "react-icons/fa";
 import { useAuth } from "@clerk/clerk-react";
-import "./WorkflowLoadingAnimation.css";
+import "../styles/WorkflowLoadingAnimation.css";
 
 interface WorkflowNode {
   id: string | number;
@@ -363,6 +364,9 @@ const WorkflowGraph: React.FC<WorkflowGraphProps> = ({
   // New state variables for tracking workflow freshness
   const [isNewWorkflow, setIsNewWorkflow] = useState(false);
   const [processingComplete, setProcessingComplete] = useState(false);
+
+  const [showPromptGenerator, setShowPromptGenerator] = useState(false);
+  const [selectedNode, setSelectedNode] = useState(null);
 
   const bootSequence = [
     "Initializing workflow engine...",
@@ -720,6 +724,28 @@ const WorkflowGraph: React.FC<WorkflowGraphProps> = ({
     }
   };
 
+  const handleNodeClick = (event, node) => {
+    setSelectedNode(node);
+  };
+
+  const handlePromptGenerated = (prompt) => {
+    if (!selectedNode) {
+      console.warn("No node selected to apply prompt");
+      return;
+    }
+
+    const nodeId = selectedNode.id;
+    const nodeData = selectedNode.data;
+
+    if (nodeData.type === "llm" || nodeData.llm_prompt !== undefined) {
+      handleValueChange(nodeId, "llm_prompt", prompt, "prompt");
+    } else if (nodeData.validation_prompt !== undefined) {
+      handleValueChange(nodeId, "validation_prompt", prompt, "prompt");
+    } else {
+      console.warn("Selected node doesn't support prompts");
+    }
+  };
+
   return (
     <div
       style={{
@@ -733,6 +759,14 @@ const WorkflowGraph: React.FC<WorkflowGraphProps> = ({
         overflow: "hidden",
       }}
     >
+      {/* Add the Prompt Generator component */}
+      <PromptGenerator
+        isOpen={showPromptGenerator}
+        onToggle={() => setShowPromptGenerator(!showPromptGenerator)}
+        onPromptGenerated={handlePromptGenerated}
+        currentWorkflowData={{ nodes, edges }}
+      />
+
       {/* Input Collection Modal */}
       {showInputModal && nodesToProcess.length > 0 && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
@@ -840,6 +874,7 @@ const WorkflowGraph: React.FC<WorkflowGraphProps> = ({
         edges={edges}
         onNodesChange={onNodesChange}
         onEdgesChange={onEdgesChange}
+        onNodeClick={handleNodeClick}
         nodeTypes={nodeTypes}
         edgeTypes={edgeTypes}
         fitView
@@ -960,6 +995,38 @@ const WorkflowGraph: React.FC<WorkflowGraphProps> = ({
             </div>
             )}
         </Panel>
+
+        {/* Add a floating button to toggle the prompt generator */}
+        <div 
+          style={{
+            position: 'absolute',
+            top: '10px',
+            left: '10px',
+            zIndex: 10
+          }}
+        >
+          <button
+            onClick={() => setShowPromptGenerator(!showPromptGenerator)}
+            className="prompt-button"
+            style={{
+              background: 'linear-gradient(90deg, rgba(124, 58, 237, 0.8), rgba(79, 70, 229, 0.8))',
+              border: 'none',
+              borderRadius: '4px',
+              color: 'white',
+              padding: '8px 12px',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px',
+              fontSize: '14px',
+              fontWeight: 500,
+              cursor: 'pointer',
+              boxShadow: '0 2px 5px rgba(0, 0, 0, 0.2)'
+            }}
+          >
+            <MousePointerClick size={16} />
+            {showPromptGenerator ? 'Hide Generator' : 'AI Prompt Generator'}
+          </button>
+        </div>
       </ReactFlow>
     </div>
   );

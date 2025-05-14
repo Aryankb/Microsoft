@@ -1,15 +1,15 @@
 import { ClerkProvider, SignedIn, SignedOut, SignIn } from "@clerk/clerk-react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import MainLayout from "../src/components/MainLayout";
-import CreateToolPage from "./components/CreateToolPage";
-import ApiKeyModal from "./components/ApiKeyModal";
-import ManageAuth from "./components/ManageAuth";
+import CreateToolPage from "./pages/CreateToolPage";
+import ApiKeyModal from "./pages/ApiKeyModal";
+import ManageAuth from "./pages/ManageAuth";
 import ShootingStarsAndStarsBackgroundDemo from "./components/ui/shooting-stars-and-stars-background-demo";
 import CustomSignInForm from "./components/ui/custom-signin-form";
 import { useState } from "react";
 import Layout from './components/Layout';
 import WorkflowContainer from './components/WorkflowContainer';
-import Home from './components/Home'; // Import the Home component
+import Home from './pages/Home'; // Updated import path
 
 const CLERK_PUBLISHABLE_KEY =
   "pk_test_bWludC1kaW5vc2F1ci01NC5jbGVyay5hY2NvdW50cy5kZXYk";

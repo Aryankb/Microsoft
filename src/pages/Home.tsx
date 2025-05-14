@@ -1,10 +1,11 @@
+// filepath: d:\Code\Startup\sigmoydfrontend\sigmoyd_frontent\src\pages\Home.tsx
 import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@clerk/clerk-react';
-import { Calendar, Mail, Users, ArrowUpRight, Zap, Database, ChevronRight } from 'lucide-react';
-import VanishingMessageInput from './VanishingMessageInput.jsx';
-import './ChatStyles.css';
-import './WorkflowLoadingAnimation.css';
+import { Calendar, Mail, Users, ArrowUpRight, Zap } from 'lucide-react';
+import VanishingMessageInput from '../components/VanishingMessageInput.jsx'; // Adjusted path
+import '../styles/components/ChatStyles.css'; // Adjusted path
+import '../styles/components/WorkflowLoadingAnimation.css'; // Adjusted path
 
 const EXAMPLE_PROMPTS = [
   "Create a workflow for social media post scheduling",
@@ -12,22 +13,32 @@ const EXAMPLE_PROMPTS = [
   "Design a customer onboarding workflow",
 ];
 
+// Define a more specific type for chat messages
+interface ChatMessage {
+  id: string;
+  message: React.ReactNode; // Using ReactNode to allow JSX
+  sender: string;
+}
+
+// Define a type for Q&A pairs
+interface QandAPair {
+  [key: string]: string;
+}
+
 const Home = () => {
   const navigate = useNavigate();
   const { getToken } = useAuth();
   const [message, setMessage] = useState("");
   const [refinedQuery, setRefinedQuery] = useState("");
-  const [chats, setChats] = useState<Array<{id: string, message: any, sender: string}>>([]);
-  const [qanda, setQanda] = useState<{ [key: string]: string }>({});
+  const [chats, setChats] = useState<ChatMessage[]>([]); // Use defined ChatMessage type
+  const [qanda, setQanda] = useState<QandAPair>({}); // Use defined QandAPair type
   const [questions, setQuestions] = useState<string[]>([]);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [isInputFocused, setIsInputFocused] = useState(false);
   const [isDropdownVisible, setIsDropdownVisible] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [loadingStep, setLoadingStep] = useState<string>("");
   const [loadingProgress, setLoadingProgress] = useState<number>(0);
   const [bootPhase, setBootPhase] = useState(0);
-  const [bootComplete, setBootComplete] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   const bootSequence = [
@@ -72,12 +83,12 @@ const Home = () => {
     }
   }, [isDropdownVisible]);
 
-  const getPromptIcon = (prompt: string) => {
-    if (prompt.toLowerCase().includes("social media") || prompt.toLowerCase().includes("post scheduling")) {
+  const getPromptIcon = (promptText: string) => {
+    if (promptText.toLowerCase().includes("social media") || promptText.toLowerCase().includes("post scheduling")) {
       return <Calendar className="w-5 h-5 text-blue-400" />;
-    } else if (prompt.toLowerCase().includes("email")) {
+    } else if (promptText.toLowerCase().includes("email")) {
       return <Mail className="w-5 h-5 text-green-400" />;
-    } else if (prompt.toLowerCase().includes("customer") || prompt.toLowerCase().includes("onboarding")) {
+    } else if (promptText.toLowerCase().includes("customer") || promptText.toLowerCase().includes("onboarding")) {
       return <Users className="w-5 h-5 text-purple-400" />;
     } else {
       return <ArrowUpRight className="w-5 h-5 text-gray-400" />;
@@ -115,7 +126,7 @@ const Home = () => {
     const userMessageId = Date.now().toString();
     const botMessageId = (Date.now() + 1).toString();
 
-    const updatedChats = [
+    const updatedChats: ChatMessage[] = [
       ...chats,
       { id: userMessageId, message: message.trim(), sender: "user" },
       {
@@ -134,7 +145,7 @@ const Home = () => {
     setChats(updatedChats);
     
     if (questions.length > 0 && currentQuestionIndex <= questions.length) {
-      const updatedQandA = {
+      const updatedQandA: QandAPair = {
         ...qanda,
         [questions[currentQuestionIndex - 1]]: message.trim(),
       };
@@ -193,6 +204,7 @@ const Home = () => {
           setChats(finalChats);
           setMessage("");
         } catch (error) {
+          console.error("Error in conversation flow:", error);
           const errorChats = updatedChats.map((chat) =>
             chat.id === botMessageId
               ? {
@@ -258,6 +270,7 @@ const Home = () => {
         setChats(finalChats);
       }
     } catch (error) {
+      console.error("Error fetching refine_query:", error);
       const errorChats = updatedChats.map((chat) =>
         chat.id === botMessageId
           ? {
@@ -274,9 +287,15 @@ const Home = () => {
     setMessage("");
   };
 
-  const sendRefinedQuery = async (updatedQandA: any) => {
+  const sendRefinedQuery = async (currentQandA: QandAPair) => {
     try {
       const token = await getToken();
+      let queryText = message.trim();
+      const firstUserMessage = chats.find(chat => chat.sender === 'user');
+      if (firstUserMessage && typeof firstUserMessage.message === 'string') {
+        queryText = firstUserMessage.message.trim();
+      }
+
       const response = await fetch("http://localhost:8000/refine_query", {
         method: "POST",
         headers: {
@@ -284,21 +303,20 @@ const Home = () => {
           Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
-          query: chats[0]?.message.toString().trim() || message.trim(),
+          query: queryText,
           flag: 1,
-          question: updatedQandA,
+          question: currentQandA,
         }),
       });
       const data = await response.json();
       setRefinedQuery(data.response);
     } catch (error) {
       console.error("Error sending refined query:", error);
-      setChats([
-        ...chats,
+      setChats(prevChats => [
+        ...prevChats,
         {
           id: Date.now().toString(),
-          message:
-            "I encountered an error refining your query. Please try again.",
+          message: `I encountered an error refining your query. Please try again.`,
           sender: "bot",
         }
       ]);
@@ -311,8 +329,8 @@ const Home = () => {
       
       if (!refinedQuery) {
         console.error("No refined query available for workflow generation");
-        setChats([
-          ...chats,
+        setChats(prevChats => [
+          ...prevChats,
           {
             id: Date.now().toString(),
             message: "Error: Cannot generate workflow without a refined query. Please try again.",
@@ -325,8 +343,6 @@ const Home = () => {
       const token = await getToken();
       setLoading(true);
       setBootPhase(0);
-      setBootComplete(false);
-      setLoadingStep(bootSequence[0]);
       setLoadingProgress(0);
 
       let currentPhase = 0;
@@ -335,15 +351,12 @@ const Home = () => {
         if (currentPhase < bootSequence.length - 1) {
           currentPhase++;
           setBootPhase(currentPhase);
-          setLoadingStep(bootSequence[currentPhase]);
           setLoadingProgress(
             Math.floor((currentPhase / (bootSequence.length - 1)) * 100)
           );
 
           const delay = Math.random() * 300 + 400;
           setTimeout(advancePhase, delay);
-        } else {
-          setBootComplete(true);
         }
       };
 
@@ -373,9 +386,7 @@ const Home = () => {
       if (!data.response || !data.response.workflow_id) {
         console.error("Invalid workflow generation response:", data);
         setLoading(false);
-        setLoadingStep("");
         setLoadingProgress(0);
-        setBootComplete(true);
         
         throw new Error("Received invalid workflow data from server");
       }
@@ -392,18 +403,16 @@ const Home = () => {
         });
       }, Math.max(1000, (bootSequence.length - bootPhase) * 500));
       
-    } catch (error) {
+    } catch (error: unknown) {
       console.error("Error generating workflow:", error);
       setLoading(false);
-      setLoadingStep("");
       setLoadingProgress(0);
-      setBootComplete(true);
       
-      setChats([
-        ...chats,
+      setChats(prevChats => [
+        ...prevChats,
         {
           id: Date.now().toString(),
-          message: `Error generating workflow: ${error.message || "Unknown error"}. Please try again.`,
+          message: `Error generating workflow: ${error instanceof Error ? error.message : "Unknown error"}. Please try again.`,
           sender: "bot",
         }
       ]);
@@ -493,7 +502,7 @@ const Home = () => {
                       transform: isInputFocused ? 'scaleY(1)' : 'scaleY(0.95)',
                     }}
                   >
-                    {EXAMPLE_PROMPTS.length > 0 && isDropdownVisible && EXAMPLE_PROMPTS.map((prompt, index) => (
+                    {EXAMPLE_PROMPTS.length > 0 && isDropdownVisible && EXAMPLE_PROMPTS.map((promptText, index) => (
                       <div
                         key={index}
                         className="dropdown-item px-4 py-3 hover:bg-gray-700 cursor-pointer text-gray-200 flex items-center gap-3 transition-all duration-200 ease-out opacity-0"
@@ -502,14 +511,14 @@ const Home = () => {
                           transitionProperty: 'background-color, opacity, transform',
                         }}
                         onClick={() => {
-                          setMessage(prompt);
+                          setMessage(promptText);
                           setTimeout(() => handleSend(), 100);
                         }}
                       >
                         <div className="flex-shrink-0 bg-gray-700 p-2 rounded-full transition-transform duration-200 ease-out hover:scale-110">
-                          {getPromptIcon(prompt)}
+                          {getPromptIcon(promptText)}
                         </div>
-                        <span className="transition-colors duration-200">{prompt}</span>
+                        <span className="transition-colors duration-200">{promptText}</span>
                       </div>
                     ))}
                   </div>
@@ -545,7 +554,7 @@ const Home = () => {
                     }}
                   >
                     {typeof chat.message === 'string' && chat.message.includes('*') && chat.sender !== 'user' 
-                      ? formatQuestionWithOptions(chat.message)
+                      ? formatQuestionWithOptions(chat.message as string)
                       : <div>{chat.message}</div>
                     }
                   </div>

@@ -15,8 +15,8 @@ import {
 } from "lucide-react";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import TopBar from "./TopBar";
-import "./ManageAuth.css";
+import TopBar from "../components/TopBar";
+import "../styles/ManageAuth.css";
 
 const AUTH_SERVICES = [
   "Gmail Trigger",

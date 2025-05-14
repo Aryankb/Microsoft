@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Handle } from "reactflow";
 import { Tooltip } from "react-tooltip";
-import "./CustomNode.css";
+import "../styles/CustomNode.css";
 import { useAuth } from "@clerk/clerk-react";
 import TextAreaModal from "./TextAreaModal";
 // Import necessary icons
