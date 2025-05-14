@@ -159,13 +159,13 @@ export default function MainLayout() {
             if (index === 0) return part;
             return (
               <span key={index}>
-                <br />*{" "}
-                <span
+                <br />
+                <button
                   onClick={() => setMessage(part.trim())}
-                  className="cursor-pointer text-blue-500"
+                  className="message-list-button"
                 >
                   {part.trim()}
-                </span>
+                </button>
               </span>
             );
           });
@@ -251,16 +251,28 @@ export default function MainLayout() {
             if (index === 0) return part;
             return (
               <span key={index}>
-                <br />*{" "}
-                <span
+                <button
                   onClick={() => setMessage(part.trim())}
-                  className="cursor-pointer text-blue-500"
+                  className="message-list-button"
                 >
                   {part.trim()}
-                </span>
+                </button>
               </span>
             );
           });
+          
+          // <div>{mainText}</div>
+          // <div className="option-buttons">
+          //   {options.map((option, index) => (
+          //     <button 
+          //       key={index}
+          //       className="message-list-button"
+          //       onClick={() => setMessage(option.trim())}
+          //     >
+          //       {option.trim()}
+          //     </button>
+          //   ))}
+          // </div>
         setQuestions(data.response);
         setCurrentQuestionIndex(1);
 
@@ -431,6 +443,7 @@ export default function MainLayout() {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
+        mode: "cors",
         body: JSON.stringify({
           query: refinedQuery,
           flag: type ? 1 : 0,
@@ -444,7 +457,7 @@ export default function MainLayout() {
       setBootComplete(true);
 
       const data = await response.json();
-      setWorkflowJson(data.response);
+      setWorkflowJson(data.response); // This now includes nodes_requiring_input
       fetchWorkflows();
       setCurrentWorkflow(data.response.workflow_id);
       setShowWorkflow(true);
@@ -630,6 +643,46 @@ export default function MainLayout() {
     }
   };
 
+  // Utility function to transform messages with bullet points into interactive buttons
+  const transformMessageWithButtons = (message: string | JSX.Element): React.ReactNode => {
+    // If message is already a JSX element, return it as is
+    if (typeof message !== 'string') {
+      return message;
+    }
+    
+    // Check if the message contains bullet points (asterisks)
+    if (message.includes('* ')) {
+      // Split the message into parts based on asterisks
+      const parts = message.split('* ');
+      
+      // The first part is the main message text
+      const mainText = parts[0];
+      
+      // The rest are options that should be buttons
+      const options = parts.slice(1);
+      
+      return (
+        <>
+          <div>{mainText}</div>
+          <div className="option-buttons">
+            {options.map((option, index) => (
+              <button 
+                key={index}
+                className="message-list-button"
+                onClick={() => setMessage(option.trim())}
+              >
+                {option.trim()}
+              </button>
+            ))}
+          </div>
+        </>
+      );
+    }
+    
+    // Return the original message if no bullet points
+    return message;
+  };
+
   useEffect(() => {
     fetchWorkflows();
   }, []);
@@ -737,7 +790,7 @@ export default function MainLayout() {
                     chat.sender === "user" ? "user-message" : chat.isLog ? "bot-message" : "bot-message"
                   }`}
                 >
-                 { ((workflowJson && workflowJson.workflow_id===chat.log_id) || (!workflowJson)) && <div className="message-content">{chat.message}</div>}
+                 { ((workflowJson && workflowJson.workflow_id===chat.log_id) || (!workflowJson)) && <div className="message-content">{transformMessageWithButtons(chat.message)}</div>}
                   { chat.timestamp && (
                     <div className="message-timestamp">
                       {new Date(chat.timestamp).toLocaleTimeString()}
@@ -807,7 +860,8 @@ export default function MainLayout() {
         )}
       </main>
 
-      <div className="input-spacer"></div>
+      {/* Increase the size of the input spacer to provide more room */}
+      <div className="input-spacer" style={{ height: "80px" }}></div>
 
       {chats.length > 0 && !showWorkflow && (
         <div className="message-input-container">

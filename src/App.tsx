@@ -6,6 +6,7 @@ import ApiKeyModal from "./components/ApiKeyModal";
 import ManageAuth from "./components/ManageAuth";
 import ShootingStarsAndStarsBackgroundDemo from "./components/ui/shooting-stars-and-stars-background-demo";
 import CustomSignInForm from "./components/ui/custom-signin-form";
+import PremadeWorkflows from "./components/PremadeWorkflows";
 import { useState } from "react";
 
 const CLERK_PUBLISHABLE_KEY =
@@ -97,6 +98,7 @@ function App() {
             <Route path="/create-tool" element={<CreateToolPage />} />
             <Route path="/api-keys" element={<ManageAuth />} />
             <Route path="/manage-auths" element={<ManageAuth />} />
+            <Route path="/premade" element={<PremadeWorkflows />} />
           </Routes>
         </SignedIn>
       </Router>

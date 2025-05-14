@@ -11,6 +11,8 @@ const VanishingMessageInput = ({
     showWorkflow = false,
     handleQueryUpdate,
     isDisabled = false,
+    onFocus,
+    onBlur,
 }) => {
     const [currentPlaceholder, setCurrentPlaceholder] = useState(0);
     const inputRef = useRef(null);
@@ -364,6 +366,17 @@ const VanishingMessageInput = ({
         }
     };
 
+    const handleFocusChange = (focused) => {
+        setIsFocused(focused);
+        
+        // Call the passed focus/blur handlers if provided
+        if (focused && onFocus) {
+            onFocus();
+        } else if (!focused && onBlur) {
+            onBlur();
+        }
+    };
+
     return (
         <div className="relative flex-1">
             <div
@@ -403,8 +416,8 @@ const VanishingMessageInput = ({
                             setCurrentCursorPosition(target.selectionEnd || target.value.length);
                         }
                     }}
-                    onFocus={() => setIsFocused(true)}
-                    onBlur={() => setIsFocused(false)}
+                    onFocus={() => handleFocusChange(true)}
+                    onBlur={() => handleFocusChange(false)}
                     placeholder=""
                     disabled={isDisabled || animating}
                     className={cn(

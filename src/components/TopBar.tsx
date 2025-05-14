@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import {
   Menu,
   Settings,
@@ -149,6 +149,9 @@ export default function TopBar({
               <item.icon size={20} />
             </button>
           ))}
+          <Link to="/premade" className="nav-link">
+            Pre-made Workflows
+          </Link>
         </div>
       </div>
     </div>

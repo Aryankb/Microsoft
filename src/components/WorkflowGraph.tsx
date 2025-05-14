@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useMemo } from "react";
+import React, { useState, useEffect, useCallback, useMemo, memo } from "react";
 import ReactFlow, {
   MiniMap,
   Controls,
@@ -9,8 +9,12 @@ import ReactFlow, {
   Node,
   Edge,
   Panel,
+  EdgeProps,
 } from "reactflow";
 import CustomNode from "./CustomNode.tsx";
+import IconNode from "./IconNode";
+import { ButtonEdge } from "./button-edge";
+import { MousePointerClick } from "lucide-react";
 import "reactflow/dist/style.css";
 import { FaPlay, FaCheckCircle, FaSave, FaBolt, FaStop } from "react-icons/fa";
 import { useAuth } from "@clerk/clerk-react";
@@ -45,7 +49,14 @@ interface WorkflowJson {
   data_flow_notebook_keys?: string[];
   active: boolean;
   public?: boolean; // Added public field
+  nodes_requiring_input?: Array<{
+    id: string | number;
+    type: string;
+    name: string;
+    config_inputs: Record<string, any>;
+  }>;
 }
+
 interface Workflow {
   id: string;
   name: string;
@@ -158,43 +169,54 @@ const generateNodesAndEdges = (workflowJson, handleValueChange) => {
   const { workflow, trigger, data_flow_notebook_keys } = workflowJson;
   const positions = arrangeNodes(workflow, trigger);
   
-  const nodes = workflow.map((node) => ({
-    // if (node.to_execute && node.to_execute.length === 1) {
-    //   node.to_execute = node.to_execute[0];
-    // }
-    id: node.id.toString(),
-    type: "customNode",
-    position: positions.get(node.id) || { x: 0, y: 0 },
-    data: {
-      handleValueChange,
-      label: node.name,
-      tool_action: node.tool_action || null,
-      to_execute: node.to_execute,
-      connectorName: node.to_execute
-        ? node.to_execute[0]
-          ? node.to_execute.length === 1
-            ? `${node.to_execute[0][0].replace("validator_", "")}`:
-            `${node.to_execute[0].replace("validator_", "")}`
-          : ""
-        : "",
-      description: node.description,
-      id: node.id,
-      type: node.type,
-      config_inputs: node.config_inputs,
-      llm_prompt: node.llm_prompt,
-      validation_prompt: node.validation_prompt,
-    },
-    style: {
-      boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
-      border: "1px solid #ddd",
-      borderRadius: "8px",
-    },
-  }));
+  const nodes = workflow.map((node) => {
+    // Determine if this node should use the icon view
+    const shouldUseIconView = node.type === "tool" || 
+                             (node.type === "connector" && 
+                              (node.name.includes("ITERATOR") || 
+                               node.name.includes("VALIDATOR") || 
+                               node.name.includes("DELEGATOR")));
+    
+    return {
+      id: node.id.toString(),
+      type: shouldUseIconView ? "iconNode" : "customNode",
+      position: positions.get(node.id) || { x: 0, y: 0 },
+      data: {
+        handleValueChange,
+        label: node.name,
+        tool_action: node.tool_action || null,
+        to_execute: node.to_execute,
+        connectorName: node.to_execute
+          ? node.to_execute[0]
+            ? node.to_execute.length === 1
+              ? `${node.to_execute[0][0].replace("validator_", "")}`:
+              `${node.to_execute[0].replace("validator_", "")}`
+            : ""
+          : "",
+        description: node.description,
+        id: node.id,
+        type: node.type,
+        config_inputs: node.config_inputs,
+        llm_prompt: node.llm_prompt,
+        validation_prompt: node.validation_prompt,
+      },
+      style: shouldUseIconView ? {
+        width: 40,
+        height: 40,
+        padding: 0,
+        borderRadius: '50%'
+      } : {
+        boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
+        border: "1px solid #ddd",
+        borderRadius: "8px",
+      },
+    };
+  });
 
   if (trigger.name !== "TRIGGER_MANUAL") {
     nodes.push({
       id: trigger.id.toString(),
-      type: "customNode",
+      type: "customNode", // Triggers always use the full view
       position: positions.get("trigger") || { x: 0, y: 0 },
       data: {
         handleValueChange,
@@ -286,6 +308,26 @@ const generateNodesAndEdges = (workflowJson, handleValueChange) => {
 
 const nodeTypes = {
   customNode: CustomNode,
+  iconNode: IconNode,
+};
+
+const ButtonEdgeDemo = memo((props: EdgeProps) => {
+  const onEdgeClick = () => {
+    console.log(`Edge ${props.id} clicked!`);
+    // Add your edge click handler logic here
+  };
+
+  return (
+    <ButtonEdge {...props}>
+      <Button onClick={onEdgeClick} size="icon" variant="secondary">
+        <MousePointerClick size={16} />
+      </Button>
+    </ButtonEdge>
+  );
+});
+
+const edgeTypes = {
+  buttonedge: ButtonEdgeDemo,
 };
 
 const WorkflowGraph: React.FC<WorkflowGraphProps> = ({
@@ -301,6 +343,21 @@ const WorkflowGraph: React.FC<WorkflowGraphProps> = ({
   const [loadingProgress, setLoadingProgress] = useState<number>(0);
   const [bootPhase, setBootPhase] = useState(0);
   const [bootComplete, setBootComplete] = useState(false);
+  
+  // New state for input collection modal
+  const [showInputModal, setShowInputModal] = useState(false);
+  const [currentInputNodeIndex, setCurrentInputNodeIndex] = useState(0);
+  const [nodesToProcess, setNodesToProcess] = useState<Array<{
+    id: string | number;
+    type: string;
+    name: string;
+    config_inputs: Record<string, any>;
+  }>>([]);
+  const [currentInputValues, setCurrentInputValues] = useState<Record<string, string>>({});
+
+  // New state variables for tracking workflow freshness
+  const [isNewWorkflow, setIsNewWorkflow] = useState(false);
+  const [processingComplete, setProcessingComplete] = useState(false);
 
   const bootSequence = [
     "Initializing workflow engine...",
@@ -320,8 +377,14 @@ const WorkflowGraph: React.FC<WorkflowGraphProps> = ({
 
   useEffect(() => {
     setWorkflowData(workflowJson);
+    
+    // Check if this is a new workflow based on whether it appears in the workflows list
+    const isNew = !workflows.some(w => w.id === workflowJson?.workflow_id);
+    setIsNewWorkflow(isNew);
+    setProcessingComplete(false);
+    
     console.log("changed flow");
-  }, [workflowJson]);
+  }, [workflowJson, workflows]);
 
   useEffect(() => {
     const { nodes: newNodes, edges: newEdges } = generateNodesAndEdges(
@@ -333,6 +396,55 @@ const WorkflowGraph: React.FC<WorkflowGraphProps> = ({
 
     console.log("updated useeffect :", workflowData);
   }, [workflowData]);
+
+  // Detect nodes with config inputs and show the modal
+  useEffect(() => {
+    // Only show the input modal for new workflows and when not already processed
+    if (isNewWorkflow && !processingComplete && workflowJson) {
+      const nodesWithConfigInputs = [];
+      
+      // Check trigger for config inputs
+      if (workflowJson.trigger && workflowJson.trigger.config_inputs && 
+          Object.keys(workflowJson.trigger.config_inputs).length > 0) {
+        nodesWithConfigInputs.push({
+          id: "trigger",
+          type: "trigger",
+          name: workflowJson.trigger.name,
+          config_inputs: workflowJson.trigger.config_inputs
+        });
+      }
+      
+      // Check all workflow nodes for config inputs
+      workflowJson.workflow.forEach(node => {
+        if (node.config_inputs && Object.keys(node.config_inputs).length > 0) {
+          nodesWithConfigInputs.push({
+            id: node.id,
+            type: node.type,
+            name: node.name,
+            config_inputs: node.config_inputs
+          });
+        }
+      });
+      
+      if (nodesWithConfigInputs.length > 0) {
+        setNodesToProcess(nodesWithConfigInputs);
+        setCurrentInputNodeIndex(0);
+        
+        // Pre-populate current input values with existing values from the first node
+        const firstNode = nodesWithConfigInputs[0];
+        const initialValues: Record<string, string> = {};
+        
+        Object.entries(firstNode.config_inputs).forEach(([key, value]) => {
+          initialValues[key] = value as string || '';
+        });
+        
+        setCurrentInputValues(initialValues);
+        setShowInputModal(true);
+      } else {
+        setProcessingComplete(true);
+      }
+    }
+  }, [isNewWorkflow, processingComplete, workflowJson]);
 
   const handleValueChange = (nodeId, field, value, type) => {
     setWorkflowData((prevData) => {
@@ -384,6 +496,94 @@ const WorkflowGraph: React.FC<WorkflowGraphProps> = ({
     });
   };
 
+  // Handle input value changes in the modal
+  const handleInputChange = (field: string, value: string) => {
+    setCurrentInputValues(prev => ({
+      ...prev,
+      [field]: value
+    }));
+  };
+
+  // Handle proceeding to the next node or completing the input collection
+  const handleNextNode = () => {
+    // Apply current input values to the workflow
+    const currentNode = nodesToProcess[currentInputNodeIndex];
+    
+    // Update the workflow data with current input values
+    setWorkflowData(prevData => {
+      const newData = JSON.parse(JSON.stringify(prevData));
+      
+      if (currentNode.type === "trigger") {
+        // Update trigger inputs
+        newData.trigger.config_inputs = {
+          ...newData.trigger.config_inputs,
+          ...currentInputValues
+        };
+      } else {
+        // Update regular node inputs
+        newData.workflow = newData.workflow.map(node =>
+          node.id === currentNode.id
+            ? {
+                ...node,
+                config_inputs: {
+                  ...node.config_inputs,
+                  ...currentInputValues
+                }
+              }
+            : node
+        );
+      }
+      
+      return newData;
+    });
+    
+    // Move to next node or close modal if done
+    if (currentInputNodeIndex < nodesToProcess.length - 1) {
+      // Pre-populate values for the next node
+      const nextNode = nodesToProcess[currentInputNodeIndex + 1];
+      const nextValues: Record<string, string> = {};
+      
+      Object.entries(nextNode.config_inputs).forEach(([key, value]) => {
+        nextValues[key] = value as string || '';
+      });
+      
+      setCurrentInputValues(nextValues);
+      setCurrentInputNodeIndex(index => index + 1);
+    } else {
+      // Save the workflow with all inputs
+      saveWorkflowWithInputs();
+      setShowInputModal(false);
+      setProcessingComplete(true);
+    }
+  };
+  
+  // Save workflow after all inputs have been collected
+  const saveWorkflowWithInputs = async () => {
+    const token = await getToken();
+    try {
+      const response = await fetch("http://localhost:8000/save_workflow", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        mode: "cors",
+        body: JSON.stringify({ workflowjson: workflowData }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to save workflow");
+      }
+
+      const responseData = await response.json();
+      setWorkflowData(responseData.json);
+      fetchWorkflows();
+      console.log("Workflow with inputs saved successfully", responseData);
+    } catch (error) {
+      console.error("Error saving workflow with inputs:", error);
+    }
+  };
+
   const saveWorkflow = async () => {
     const token = await getToken();
     try {
@@ -393,6 +593,7 @@ const WorkflowGraph: React.FC<WorkflowGraphProps> = ({
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
+        mode: "cors", // Explicitly set CORS mode
         body: JSON.stringify({ workflowjson: workflowData }),
       });
 
@@ -443,9 +644,6 @@ const WorkflowGraph: React.FC<WorkflowGraphProps> = ({
     setLoadingStep(bootSequence[0]);
     setLoadingProgress(0);
 
-    // Don't modify document classes anymore - this was causing the issue
-    // Instead, we'll use component-level state to control the loading overlay
-
     let currentPhase = 0;
 
     const advancePhase = () => {
@@ -482,10 +680,10 @@ const WorkflowGraph: React.FC<WorkflowGraphProps> = ({
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
+        mode: "cors", // Explicitly set CORS mode
         body: JSON.stringify({ workflowjson: workflowData }),
       });
 
-      // Immediately reset loading state
       setLoading(false);
       setLoadingStep("");
       setLoadingProgress(0);
@@ -506,12 +704,10 @@ const WorkflowGraph: React.FC<WorkflowGraphProps> = ({
         const responseData = await response.json();
         console.log("🚀 Workflow activated:", responseData);
         setWorkflowData(responseData.json);
-        // fetchWorkflows();
       }
     } catch (error) {
       console.error("Error activating workflow:", error);
 
-      // Ensure loading state is cleared on error
       setLoading(false);
       setLoadingStep("");
       setLoadingProgress(0);
@@ -532,6 +728,64 @@ const WorkflowGraph: React.FC<WorkflowGraphProps> = ({
         overflow: "hidden",
       }}
     >
+      {/* Input Collection Modal */}
+      {showInputModal && nodesToProcess.length > 0 && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+          <div className="bg-gray-800 rounded-lg p-6 max-w-md w-full max-h-[80vh] overflow-y-auto">
+            <h2 className="text-xl font-bold mb-4 text-white">
+              Configure {nodesToProcess[currentInputNodeIndex].name}
+            </h2>
+            <p className="text-gray-300 mb-4">
+              Please provide the following information for this node:
+            </p>
+            
+            <div className="space-y-4">
+              {Object.entries(nodesToProcess[currentInputNodeIndex].config_inputs).map(([key, value]) => {
+                const isMultiline = 
+                  typeof value === 'string' && 
+                  (value.length > 50 || value.includes('\n') || key.toLowerCase().includes('prompt'));
+                
+                return (
+                  <div key={key} className="mb-4">
+                    <label className="block text-white mb-2">{key}:</label>
+                    {isMultiline ? (
+                      <textarea
+                        value={currentInputValues[key] || ''}
+                        onChange={(e) => handleInputChange(key, e.target.value)}
+                        className="w-full px-3 py-2 bg-gray-700 text-white rounded border border-gray-500 focus:outline-none focus:border-blue-500"
+                        placeholder={`Enter ${key}`}
+                        rows={5}
+                      />
+                    ) : (
+                      <input
+                        type="text"
+                        value={currentInputValues[key] || ''}
+                        onChange={(e) => handleInputChange(key, e.target.value)}
+                        className="w-full px-3 py-2 bg-gray-700 text-white rounded border border-gray-500 focus:outline-none focus:border-blue-500"
+                        placeholder={`Enter ${key}`}
+                      />
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+            
+            <div className="flex justify-end mt-6">
+              <button
+                onClick={handleNextNode}
+                className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"
+              >
+                {currentInputNodeIndex < nodesToProcess.length - 1 ? "Next" : "Finish"}
+              </button>
+            </div>
+            
+            <div className="mt-4 text-gray-400 text-sm">
+              Step {currentInputNodeIndex + 1} of {nodesToProcess.length}
+            </div>
+          </div>
+        </div>
+      )}
+
       {loading && (
         <div className="workflow-loading-overlay">
           <div className="boot-container">
@@ -582,6 +836,7 @@ const WorkflowGraph: React.FC<WorkflowGraphProps> = ({
         onNodesChange={onNodesChange}
         onEdgesChange={onEdgesChange}
         nodeTypes={nodeTypes}
+        edgeTypes={edgeTypes}
         fitView
         fitViewOptions={{ padding: 0.2 }}
         style={{ background: "var(--color-background)" }}
@@ -590,7 +845,6 @@ const WorkflowGraph: React.FC<WorkflowGraphProps> = ({
         maxZoom={1.5}
         defaultEdgeOptions={{
           animated: true,
-          // type: "smoothstep",
         }}
       >
         <MiniMap
