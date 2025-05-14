@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { Handle } from "reactflow";
 import { Dialog } from "./ui/dialog";
+import { Tooltip } from "react-tooltip";
 import {
   FileSpreadsheet,
   Mail,
@@ -25,6 +26,8 @@ import {
   Database,
   Cloud,
   Code,
+  Sparkles,
+  Info,
 } from "lucide-react";
 import "./IconNode.css";
 import CustomNode from "./CustomNode";
@@ -77,6 +80,8 @@ const IconNode: React.FC<IconNodeProps> = ({ data }) => {
       return <CheckSquare size={32} className="text-purple-400" />;
     } else if (label.includes("DELEGATOR")) {
       return <Send size={32} className="text-blue-300" />;
+    } else if (label.includes("GEMINI")) {
+      return <Sparkles size={32} className="text-yellow-200" />;
     } else if (label.includes("API") || label.includes("CODE")) {
       return <Code size={32} className="text-green-300" />;
     } else if (data.type === "llm") {
@@ -117,6 +122,8 @@ const IconNode: React.FC<IconNodeProps> = ({ data }) => {
       return "bg-gradient-to-r from-yellow-900 to-amber-800";
     } else if (label.includes("DELEGATOR")) {
       return "bg-gradient-to-r from-blue-900 to-sky-800";
+    } else if (label.includes("GEMINI")) {
+      return "bg-gradient-to-r from-purple-800 to-blue-900";
     } else if (label.includes("API") || label.includes("CODE")) {
       return "bg-gradient-to-r from-emerald-900 to-green-800";
     } else {
@@ -124,16 +131,55 @@ const IconNode: React.FC<IconNodeProps> = ({ data }) => {
     }
   };
 
+  // Add this function to check if the node is a trigger
+  const isTrigger = () => {
+    return data.type === "trigger" || (data.id !== undefined && data.id === 0);
+  };
+
   return (
     <>
       <div 
-        className={`icon-node ${getIconBackgroundColor()} rounded-full shadow-lg cursor-pointer transition-all hover:scale-110 flex items-center justify-center border border-opacity-50 border-white`}
-        onClick={() => setOpen(true)}
+        className={`icon-node ${getIconBackgroundColor()} rounded-full shadow-lg cursor-pointer transition-all hover:scale-110 flex items-center justify-center border border-opacity-50 border-white relative`}
       >
-        <div className="icon-wrapper">{getIconForService()}</div>
+        {/* Info icon with tooltip */}
+        <div className="icon-info-tooltip" data-tooltip-id={`icon-tooltip-${data.id}`}>
+          <Info size={10} className="icon-info-icon" />
+        </div>
+        <Tooltip id={`icon-tooltip-${data.id}`} place="top" effect="solid" className="icon-tooltip">
+          <div className="icon-tooltip-content">
+            <div className="tooltip-header">{data.label}</div>
+            <div><strong>ID:</strong> {data.id}</div>
+            <div><strong>Type:</strong> {data.type}</div>
+            {data.description && <div><strong>Description:</strong> {data.description}</div>}
+          </div>
+        </Tooltip>
+
+        <div className="icon-wrapper" onClick={() => setOpen(true)}>
+          {getIconForService()}
+        </div>
+        
+        {/* Add trigger indicator */}
+        {isTrigger() && (
+          <div className="trigger-indicator">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="absolute -top-1 -right-1">
+              <circle cx="12" cy="12" r="10" fill="#3b82f6" />
+              <path d="M12 6v8M8 10l4 4 4-4" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          </div>
+        )}
+        
+        {/* LLM indicator */}
+        {data.type === "llm" && (
+          <div className="llm-indicator">
+            <div className="absolute -top-1 -left-1 bg-cyan-500 rounded-full w-4 h-4 flex items-center justify-center">
+              <Sparkles size={12} className="text-white" />
+            </div>
+          </div>
+        )}
+
         {data.to_execute && (
           <div className={`execution-mark-icon ${data.to_execute[1] === "Y" ? "bg-green-500" : "bg-red-500"}`}>
-            {data.to_execute[1]}
+            {data.to_execute[1] === "Y" ? "1" : "2"}
           </div>
         )}
         <Handle type="target" position="top" className="handle-top" />

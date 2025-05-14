@@ -32,19 +32,19 @@
 
 .execution-mark-icon {
   position: absolute;
-  top: -6px;
-  right: -6px;
-  width: 20px;
-  height: 20px;
+  right: -5px;
+  bottom: -5px;
+  width: 16px;
+  height: 16px;
   border-radius: 50%;
-  font-size: 12px;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: white;
+  font-size: 10px;
   font-weight: bold;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
-  border: 1px solid rgba(255, 255, 255, 0.5);
+  color: white;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.25);
+  border: 1px solid rgba(255, 255, 255, 0.3);
 }
 
 .node-dialog {
@@ -101,4 +101,125 @@
   max-height: 70vh;
   overflow-y: auto;
   padding-right: 0.5rem;
+}
+
+/* Trigger and LLM indicator styling */
+.icon-node {
+  position: relative;
+}
+
+.trigger-indicator,
+.llm-indicator {
+  position: absolute;
+  z-index: 5;
+}
+
+.trigger-indicator svg {
+  filter: drop-shadow(0px 2px 3px rgba(0, 0, 0, 0.3));
+}
+
+.llm-indicator div {
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+/* Info icon and tooltip styling */
+.icon-info-tooltip {
+  position: absolute;
+  top: -8px;
+  left: -8px;
+  background-color: rgba(0, 0, 0, 0.4);
+  border-radius: 50%;
+  width: 16px;
+  height: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  cursor: pointer;
+  z-index: 10;
+  opacity: 0.7;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.icon-info-tooltip:hover {
+  opacity: 1;
+  transform: scale(1.2);
+}
+
+.icon-info-icon {
+  color: white;
+}
+
+/* Custom tooltip styling */
+:root {
+  --rt-color-white: #fff;
+  --rt-color-dark: #222;
+  --rt-color-info: #272727;
+  --rt-opacity: 0.95;
+}
+
+.icon-tooltip {
+  border-radius: 8px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.25);
+  max-width: 250px;
+  padding: 0 !important;
+  opacity: var(--rt-opacity) !important;
+  backdrop-filter: blur(10px);
+}
+
+.icon-tooltip-content {
+  padding: 8px 10px;
+}
+
+.tooltip-header {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  padding-bottom: 4px;
+  margin-bottom: 6px;
+  font-weight: 600;
+  color: var(--rt-color-white);
+}
+
+.icon-tooltip-content div {
+  font-size: 12px;
+  line-height: 1.4;
+  margin-bottom: 4px;
+  color: var(--rt-color-white);
+}
+
+.icon-tooltip-content div:last-child {
+  margin-bottom: 0;
+}
+
+.icon-tooltip-content strong {
+  font-weight: 600;
+  margin-right: 4px;
+}
+
+/* Tooltip styling for IconNode */
+[id^="icon-tooltip-"] {
+  border-radius: 8px !important;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.25) !important;
+  max-width: 250px !important;
+  padding: 8px 10px !important;
+  opacity: var(--rt-opacity) !important;
+  backdrop-filter: blur(10px) !important;
+  background-color: var(--rt-color-info) !important;
+}
+
+[id^="icon-tooltip-"] div {
+  font-size: 12px !important;
+  line-height: 1.4 !important;
+  margin-bottom: 4px !important;
+  color: var(--rt-color-white) !important;
+}
+
+[id^="icon-tooltip-"] div:first-child {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
+  padding-bottom: 4px !important;
+  margin-bottom: 6px !important;
+}
+
+[id^="icon-tooltip-"] strong {
+  font-weight: 600 !important;
+  margin-right: 4px !important;
 }

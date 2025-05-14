@@ -172,6 +172,7 @@ const generateNodesAndEdges = (workflowJson, handleValueChange) => {
   const nodes = workflow.map((node) => {
     // Determine if this node should use the icon view
     const shouldUseIconView = node.type === "tool" || 
+                             node.type === "llm" ||  // Added LLM support for icon view
                              (node.type === "connector" && 
                               (node.name.includes("ITERATOR") || 
                                node.name.includes("VALIDATOR") || 
@@ -216,7 +217,7 @@ const generateNodesAndEdges = (workflowJson, handleValueChange) => {
   if (trigger.name !== "TRIGGER_MANUAL") {
     nodes.push({
       id: trigger.id.toString(),
-      type: "customNode", // Triggers always use the full view
+      type: "iconNode", // Changed to iconNode for triggers
       position: positions.get("trigger") || { x: 0, y: 0 },
       data: {
         handleValueChange,
@@ -225,12 +226,13 @@ const generateNodesAndEdges = (workflowJson, handleValueChange) => {
         config_inputs: trigger.config_inputs,
         isTrigger: true,
         id: trigger.id,
-        type: "TRIGGER",
+        type: "trigger",
       },
       style: {
-        boxShadow: "0 4px 6px rgba(0, 0, 0, 0.2)",
-        border: "2px solid var(--color-primary)",
-        borderRadius: "8px",
+        width: 40,
+        height: 40,
+        padding: 0,
+        borderRadius: '50%'
       },
     });
   }
