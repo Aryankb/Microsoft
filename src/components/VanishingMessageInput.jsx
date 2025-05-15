@@ -7,6 +7,7 @@ const VanishingMessageInput = ({
     setMessage,
     handleSend,
     placeholder = "Send a message...",
+    priorityPlaceholder = "",
     onMicClick,
     showWorkflow = false,
     handleQueryUpdate,
@@ -14,28 +15,16 @@ const VanishingMessageInput = ({
     onFocus,
     onBlur,
 }) => {
-    const [currentPlaceholder, setCurrentPlaceholder] = useState(0);
     const inputRef = useRef(null);
     const canvasRef = useRef(null);
     const newDataRef = useRef([]);
-    const intervalRef = useRef(null);
     const [isFocused, setIsFocused] = useState(false);
     const [animating, setAnimating] = useState(false);
     const [isListening, setIsListening] = useState(false);
     const recognitionRef = useRef(null);
     const [currentCursorPosition, setCurrentCursorPosition] = useState(0);
-    const activePlaceholderRef = useRef("");
     const [transcript, setTranscript] = useState('');
     const lastProcessedIndex = useRef(0);
-
-    // Example placeholders that rotate
-    const placeholders = [
-        "Create a workflow for social media post scheduling...",
-        "Build an email automation workflow...",
-        "Design a customer onboarding workflow...",
-        "Set up a Gmail integration workflow...",
-        "Create a data analysis pipeline workflow...",
-    ];
 
     // Auto-resize textarea based on content
     const autoResizeMessageInput = (element) => {
@@ -44,50 +33,6 @@ const VanishingMessageInput = ({
         const newHeight = Math.min(element.scrollHeight, 200); // Max height of 200px
         element.style.height = `${newHeight}px`;
     };
-
-    // Rotating placeholders animation
-    const startAnimation = useCallback(() => {
-        if (intervalRef.current) {
-            clearInterval(intervalRef.current);
-        }
-
-        intervalRef.current = setInterval(() => {
-            setCurrentPlaceholder((prev) => (prev + 1) % placeholders.length);
-        }, 3000);
-    }, [placeholders.length]);
-
-    // Handle visibility change (tab switching)
-    const handleVisibilityChange = useCallback(() => {
-        if (document.visibilityState !== "visible" && intervalRef.current) {
-            clearInterval(intervalRef.current);
-            intervalRef.current = null;
-        } else if (document.visibilityState === "visible" && !message) {
-            startAnimation();
-        }
-    }, [message, startAnimation]);
-
-    // Setup placeholder rotation - Start animation immediately on component mount
-    useEffect(() => {
-        // Start animation immediately when component loads
-        startAnimation();
-        document.addEventListener("visibilitychange", handleVisibilityChange);
-
-        return () => {
-            if (intervalRef.current) {
-                clearInterval(intervalRef.current);
-            }
-            document.removeEventListener("visibilitychange", handleVisibilityChange);
-        };
-    }, [startAnimation, handleVisibilityChange]);
-
-    // Additional effect to handle changes to message
-    useEffect(() => {
-        if (message && intervalRef.current) {
-            clearInterval(intervalRef.current);
-        } else if (!message && !intervalRef.current) {
-            startAnimation();
-        }
-    }, [message, startAnimation]);
 
     // Canvas drawing for vanishing effect
     const draw = useCallback(() => {
@@ -147,6 +92,13 @@ const VanishingMessageInput = ({
             draw();
         }
     }, [message, draw]);
+
+    // Log when priority placeholder changes
+    useEffect(() => {
+        if (priorityPlaceholder) {
+            console.log("Priority placeholder set to:", priorityPlaceholder);
+        }
+    }, [priorityPlaceholder]);
 
     // Animation for text vanishing effect
     const animate = (start) => {
@@ -460,29 +412,11 @@ const VanishingMessageInput = ({
                 </button>
             </div>
 
-            {(!message || message.length <= 1) && !isListening && (
+            {/* Ensure placeholder is shown whenever message is empty */}
+            {(message === "" || message.trim().length === 0) && !isListening && (
                 <div className="absolute inset-0 flex items-center pointer-events-none pl-2 pr-64 align-left">
                     <div className="text-gray-300 truncate transition-all duration-300 w-full">
-                        {!isFocused ? (
-                            <div className="relative h-6 overflow-visible">
-                                {placeholders.map((p, i) => (
-                                    <div
-                                        key={i}
-                                        style={{ position: "absolute", width: "100%" }}
-                                        className={cn(
-                                            "transition-all duration-700 ease-in-out",
-                                            i === currentPlaceholder
-                                                ? "opacity-100 translate-y-0"
-                                                : "opacity-0 translate-y-8 pointer-events-none"
-                                        )}
-                                    >
-                                        {p}
-                                    </div>
-                                ))}
-                            </div>
-                        ) : (
-                            <div>{placeholder}</div>
-                        )}
+                        {priorityPlaceholder || placeholder}
                     </div>
                 </div>
             )}

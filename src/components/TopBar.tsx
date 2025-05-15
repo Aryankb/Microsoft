@@ -21,6 +21,7 @@ interface TopBarProps {
   onHomeClick?: () => void;
   onNewChatClick?: () => void;
   onPublicClick?: () => void; 
+  onWorkflowsClick?: () => void; // Add this prop
   sidebarVisible: boolean;
   hideNewChat?: boolean;
   isHomePage?: boolean; // New prop to indicate if we're on the home page
@@ -47,6 +48,7 @@ export default function TopBar({
   onHomeClick,
   onNewChatClick,
   onPublicClick,
+  onWorkflowsClick, // Add this prop
   sidebarVisible,
   hideNewChat = false,
   isHomePage = false, // Default to false
@@ -122,7 +124,21 @@ export default function TopBar({
           
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center space-x-3 ml-auto">
+          {/* Add Workflows button */}
+          <button
+            onClick={onWorkflowsClick}
+            className="p-2 text-white bg-transparent hover:bg-gray-800 rounded-md transition-colors"
+            title="View All Workflows"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5">
+              <rect x="2" y="2" width="20" height="8" rx="2" ry="2"></rect>
+              <rect x="2" y="14" width="20" height="8" rx="2" ry="2"></rect>
+              <line x1="6" y1="6" x2="6.01" y2="6"></line>
+              <line x1="6" y1="18" x2="6.01" y2="18"></line>
+            </svg>
+          </button>
+
           {menuItems.map((item, index) => (
             <button
               key={index}

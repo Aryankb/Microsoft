@@ -273,6 +273,30 @@ export default function Sidebar({
           </div>
         </div>
 
+        <nav className="sidebar-nav">
+          <Link to="/workflows" className="sidebar-nav-item" onClick={onClose}>
+            <div className="sidebar-nav-icon">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                className="w-5 h-5"
+              >
+                <path d="M2 5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5z"></path>
+                <line x1="8" y1="2" x2="8" y2="22"></line>
+                <path d="M14 12h.01"></path>
+                <path d="M17 12h.01"></path>
+                <path d="M14 16h.01"></path>
+                <path d="M17 16h.01"></path>
+              </svg>
+            </div>
+            <span>All Workflows</span>
+          </Link>
+        </nav>
 
         <div className="sidebar-footer mt-auto">
           <div className="sidebar-profile">

@@ -5,12 +5,12 @@ import { useAuth } from "@clerk/clerk-react";
 import WorkflowGraph from "./WorkflowGraph.tsx";
 import ChatInterface from "./ChatInterface";
 import QueryRefiner from "./QueryRefiner";
-import VanishingMessageInput from "./VanishingMessageInput";
+import VanishingMessageInput from "./VanishingMessageInput.jsx";
 import { useWorkflowLogs, LogMessage } from "./FetchLogs";
 import "../styles/ChatStyles.css";
 import "../styles/WorkflowLoadingAnimation.css";
-import { useParams } from "react-router-dom";
 import { useConversation } from "../contexts/ConversationContext";
+import { useNavigate } from "react-router-dom";
 
 const EXAMPLE_PROMPTS = [
   "Create a workflow for social media post scheduling",
@@ -33,6 +33,7 @@ export default function MainLayout() {
   const [bootPhase, setBootPhase] = useState(0);
   const [bootComplete, setBootComplete] = useState(false);
   const [fullScreenWorkflow, setFullScreenWorkflow] = useState(false);
+  const navigate = useNavigate();
   
   // Use the conversation context for URL-based conversation state
   const { 
@@ -575,7 +576,6 @@ export default function MainLayout() {
   };
 
   // Rest of the component remains the same, just using the context values
-  // ...existing code...
 
   return (
     <div className="min-h-screen flex flex-col bg-[var(--color-background)] text-[var(--color-text)] relative">
@@ -598,6 +598,7 @@ export default function MainLayout() {
                 }
               : null
           }
+          onWorkflowsClick={() => navigate('/workflows')} // Add this prop
         />
       </div>
 

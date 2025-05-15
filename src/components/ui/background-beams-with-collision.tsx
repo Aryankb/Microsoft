@@ -13,20 +13,15 @@ export const BackgroundBeamsWithCollision = ({
   const containerRef = useRef<HTMLDivElement>(null);
   const parentRef = useRef<HTMLDivElement>(null);
 
+  // Increased number of beams and distributed them across the viewport
   const beams = [
+    // Left side beams
     {
       initialX: 10,
       translateX: 10,
       duration: 7,
       repeatDelay: 3,
       delay: 2,
-    },
-    {
-      initialX: 600,
-      translateX: 600,
-      duration: 3,
-      repeatDelay: 3,
-      delay: 4,
     },
     {
       initialX: 100,
@@ -36,12 +31,36 @@ export const BackgroundBeamsWithCollision = ({
       className: "h-6",
     },
     {
+      initialX: 250,
+      translateX: 250,
+      duration: 6,
+      repeatDelay: 4,
+      delay: 1,
+    },
+    // Middle beams
+    {
       initialX: 400,
       translateX: 400,
       duration: 5,
       repeatDelay: 14,
       delay: 4,
     },
+    {
+      initialX: 600,
+      translateX: 600,
+      duration: 3,
+      repeatDelay: 3,
+      delay: 4,
+    },
+    {
+      initialX: 700,
+      translateX: 700,
+      duration: 8,
+      repeatDelay: 5,
+      delay: 2,
+      className: "h-10",
+    },
+    // Right side beams
     {
       initialX: 800,
       translateX: 800,
@@ -64,15 +83,68 @@ export const BackgroundBeamsWithCollision = ({
       delay: 2,
       className: "h-6",
     },
+    {
+      initialX: 1400,
+      translateX: 1400,
+      duration: 9,
+      repeatDelay: 6,
+      className: "h-8",
+    },
+    // Added extra beams to fill more space
+    {
+      initialX: 300,
+      translateX: 300,
+      duration: 6.5,
+      repeatDelay: 3.5,
+      delay: 3,
+      className: "h-8",
+    },
+    {
+      initialX: 500,
+      translateX: 500,
+      duration: 7.5,
+      repeatDelay: 4.5,
+      delay: 1,
+      className: "h-9",
+    },
+    {
+      initialX: 900,
+      translateX: 900,
+      duration: 5.5,
+      repeatDelay: 2.5,
+      delay: 2,
+      className: "h-14",
+    },
+    {
+      initialX: 1100,
+      translateX: 1100,
+      duration: 4.5,
+      repeatDelay: 3.5,
+      delay: 0.5,
+      className: "h-16",
+    },
+    {
+      initialX: 1300,
+      translateX: 1300,
+      duration: 8.5,
+      repeatDelay: 1.5,
+      delay: 1.5,
+      className: "h-7",
+    },
   ];
 
   return (
     <div
       ref={parentRef}
       className={cn(
-        "bg-gradient-to-b from-[var(--color-background)] to-[var(--color-card)] relative flex items-center justify-center overflow-hidden",
+        "bg-gradient-to-b from-[var(--color-background)] to-[var(--color-card)] relative flex items-center justify-center overflow-hidden w-screen h-screen fixed inset-0 z-0",
         className
       )}
+      style={{
+        position: "fixed",
+        width: "100vw",
+        height: "125vh"
+      }}
     >
       {beams.map((beam) => (
         <CollisionMechanism
@@ -86,7 +158,7 @@ export const BackgroundBeamsWithCollision = ({
       {children}
       <div
         ref={containerRef}
-        className="absolute bottom-0 bg-[var(--color-card)] h-20 w-full inset-x-0 pointer-events-none"
+        className="absolute bottom-0 bg-[var(--color-card)] w-full inset-x-0 pointer-events-none"
         style={{
           height: "20%",
           boxShadow:

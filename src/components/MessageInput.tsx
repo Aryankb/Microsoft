@@ -1,4 +1,4 @@
-import { KeyboardEvent, useCallback, useEffect, useRef, useState } from "react";
+import { KeyboardEvent, useRef } from "react";
 import { Mic, Send } from "lucide-react";
 
 interface MessageInputProps {
@@ -20,18 +20,7 @@ const MessageInput = ({
   showWorkflow = false,
   handleQueryUpdate,
 }: MessageInputProps) => {
-  const [currentPlaceholder, setCurrentPlaceholder] = useState(0);
   const inputRef = useRef<HTMLTextAreaElement>(null);
-  const intervalRef = useRef<NodeJS.Timeout | null>(null);
-
-  // Example placeholders that rotate
-  const placeholders = [
-    "Create a workflow for social media post scheduling...",
-    "Build an email automation workflow...",
-    "Design a customer onboarding workflow...",
-    "Set up a Gmail integration workflow...",
-    "Create a data analysis pipeline workflow...",
-  ];
 
   // Auto-resize textarea based on content
   const autoResizeMessageInput = (element: HTMLTextAreaElement) => {
@@ -40,44 +29,6 @@ const MessageInput = ({
     const newHeight = Math.min(element.scrollHeight, 200); // Max height of 200px
     element.style.height = `${newHeight}px`;
   };
-
-  // Rotating placeholders animation
-  const startAnimation = useCallback(() => {
-    if (intervalRef.current) {
-      clearInterval(intervalRef.current);
-    }
-
-    intervalRef.current = setInterval(() => {
-      setCurrentPlaceholder((prev) => (prev + 1) % placeholders.length);
-    }, 3000);
-  }, [placeholders.length]);
-
-  // Handle visibility change (tab switching)
-  const handleVisibilityChange = useCallback(() => {
-    if (document.visibilityState !== "visible" && intervalRef.current) {
-      clearInterval(intervalRef.current);
-      intervalRef.current = null;
-    } else if (document.visibilityState === "visible" && !message) {
-      startAnimation();
-    }
-  }, [message, startAnimation]);
-
-  // Setup placeholder rotation
-  useEffect(() => {
-    if (!message) {
-      startAnimation();
-      document.addEventListener("visibilitychange", handleVisibilityChange);
-    } else if (intervalRef.current) {
-      clearInterval(intervalRef.current);
-    }
-
-    return () => {
-      if (intervalRef.current) {
-        clearInterval(intervalRef.current);
-      }
-      document.removeEventListener("visibilitychange", handleVisibilityChange);
-    };
-  }, [message, startAnimation, handleVisibilityChange]);
 
   const handleKeyPress = (e: KeyboardEvent) => {
     if (e.key === "Enter" && !e.shiftKey) {
@@ -107,7 +58,7 @@ const MessageInput = ({
           autoResizeMessageInput(e.target);
         }}
         onKeyDown={handleKeyPress}
-        placeholder={message ? "" : placeholders[currentPlaceholder]}
+        placeholder={message ? "" : placeholder}
         className="w-full bg-[#444444] rounded-lg px-6 py-4 focus:outline-none focus:ring-2 focus:ring-[#00ADB5] resize-none overflow-y-auto pr-14 transition-all duration-200 text-white border border-gray-600"
         style={{ minHeight: "56px", maxHeight: "150px" }}
         rows={1}

@@ -1,66 +1,54 @@
 import React, { useState, useEffect } from 'react';
-import { ChevronLeft, ChevronRight, Sparkles } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Sparkles, RefreshCw, AlertTriangle, Copy } from 'lucide-react';
 import '../styles/PromptGenerator.css';
 
 interface PromptGeneratorProps {
   isOpen: boolean;
   onToggle: () => void;
   onPromptGenerated: (prompt: string) => void;
+  onRegenerateWorkflow?: (prompt: string, type?: boolean) => void;
   currentWorkflowData?: any;
+  originalPrompt?: string;
+  workflowUnavailable?: string;
+  showWorkflow?: boolean;
 }
 
 const PromptGenerator: React.FC<PromptGeneratorProps> = ({ 
   isOpen, 
   onToggle, 
   onPromptGenerated,
-  currentWorkflowData
+  onRegenerateWorkflow,
+  currentWorkflowData,
+  originalPrompt = '',
+  workflowUnavailable,
+  showWorkflow = false
 }) => {
-  const [promptType, setPromptType] = useState<string>('general');
-  const [context, setContext] = useState<string>('');
-  const [generatedPrompt, setGeneratedPrompt] = useState<string>('');
-  const [isGenerating, setIsGenerating] = useState<boolean>(false);
+  const [editedPrompt, setEditedPrompt] = useState<string>('');
+  const [isEditing, setIsEditing] = useState<boolean>(false);
 
-  // Extract workflow information if available
+  // Update the edited prompt when originalPrompt changes
   useEffect(() => {
-    if (currentWorkflowData) {
-      // Extract relevant workflow information to populate context
-      const nodesInfo = currentWorkflowData.nodes?.map(node => 
-        `${node.type}: ${node.data?.label || 'Unnamed'}`
-      ).join('\n') || '';
-      
-      setContext(`Workflow contains:\n${nodesInfo}`);
+    if (originalPrompt) {
+      setEditedPrompt(originalPrompt);
+    } else if (currentWorkflowData?.refinedQuery) {
+      setEditedPrompt(currentWorkflowData.refinedQuery);
     }
-  }, [currentWorkflowData]);
+  }, [originalPrompt, currentWorkflowData]);
 
-  const promptTemplates = {
-    general: "Generate a prompt that accomplishes the following task:\n\n[CONTEXT]\n\nThe prompt should be clear, concise, and provide specific instructions.",
-    llm: "Create an LLM prompt that processes [INPUT] and produces [OUTPUT]. Include specific instructions on formatting, reasoning steps, and error handling.",
-    validator: "Create a validation prompt that checks if [INPUT] meets the following criteria: [CRITERIA]. The prompt should instruct the LLM to return only 'VALID' or 'INVALID' with a brief explanation.",
-    iterator: "Create an iterator prompt that processes a collection of [ITEMS] and applies the following operation to each: [OPERATION]. Ensure the prompt handles edge cases and maintains context between iterations."
-  };
-
-  const generatePrompt = async () => {
-    setIsGenerating(true);
-    try {
-      // Here you would typically call your AI service
-      // For now, we'll simulate a response with the template
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      const template = promptTemplates[promptType as keyof typeof promptTemplates];
-      const generated = template.replace('[CONTEXT]', context);
-      
-      setGeneratedPrompt(generated);
-    } catch (error) {
-      console.error("Error generating prompt:", error);
-    } finally {
-      setIsGenerating(false);
+  const handleGenerateClick = () => {
+    if (onRegenerateWorkflow && editedPrompt.trim()) {
+      onRegenerateWorkflow(editedPrompt.trim(), false);
     }
   };
 
-  const applyPrompt = () => {
-    if (generatedPrompt) {
-      onPromptGenerated(generatedPrompt);
-    }
+  const toggleEditing = () => {
+    setIsEditing(!isEditing);
+  };
+
+  const handleCopyPrompt = () => {
+    navigator.clipboard.writeText(editedPrompt);
+    // You could add a toast notification here
+    alert('Prompt copied to clipboard');
   };
   
   return (
@@ -73,51 +61,83 @@ const PromptGenerator: React.FC<PromptGeneratorProps> = ({
         <div className="prompt-generator-content">
           <h3 className="prompt-generator-title">
             <Sparkles size={16} className="sparkles-icon" />
-            Prompt Generator
+            Workflow Prompt
           </h3>
           
-          <div className="prompt-type-selector">
-            <label>Prompt Type:</label>
-            <select value={promptType} onChange={(e) => setPromptType(e.target.value)}>
-              <option value="general">General</option>
-              <option value="llm">LLM Node</option>
-              <option value="validator">Validator Node</option>
-              <option value="iterator">Iterator Node</option>
-            </select>
-          </div>
-          
-          <div className="context-input">
-            <label>Context/Requirements:</label>
-            <textarea 
-              value={context} 
-              onChange={(e) => setContext(e.target.value)}
-              placeholder="Describe what you want the prompt to accomplish..."
-              rows={5}
-            />
-          </div>
-          
-          <button 
-            className="generate-button" 
-            onClick={generatePrompt} 
-            disabled={isGenerating || !context.trim()}
-          >
-            {isGenerating ? 'Generating...' : 'Generate Prompt'}
-          </button>
-          
-          {generatedPrompt && (
-            <div className="generated-prompt">
-              <label>Generated Prompt:</label>
-              <textarea 
-                value={generatedPrompt}
-                onChange={(e) => setGeneratedPrompt(e.target.value)}
-                rows={8}
-                readOnly={false}
-              />
-              <button className="apply-button" onClick={applyPrompt}>
-                Apply to Selected Node
-              </button>
+          <div className="refined-query-display">
+            <div className="refined-query-header">
+              <div className="flex items-center">
+                <div className="h-2 w-2 rounded-full bg-blue-400 mr-2"></div>
+                <label className="font-medium">Workflow Generated From:</label>
+              </div>
+              
+              <div className="refined-query-actions">
+                <button 
+                  onClick={toggleEditing} 
+                  className="action-button"
+                >
+                  {isEditing ? "Cancel" : "Edit"}
+                </button>
+                
+                <button 
+                  onClick={handleCopyPrompt}
+                  className="action-button"
+                >
+                  <Copy size={14} className="mr-1" />
+                  Copy
+                </button>
+              </div>
             </div>
-          )}
+            
+            {isEditing ? (
+              <div className="refined-query-editor">
+                <textarea 
+                  value={editedPrompt}
+                  onChange={(e) => setEditedPrompt(e.target.value)}
+                  rows={6}
+                  className="refined-query-textarea"
+                  placeholder="Enter your workflow prompt here..."
+                />
+                
+                <button 
+                  className="generate-workflow-button" 
+                  onClick={handleGenerateClick}
+                  disabled={!editedPrompt.trim() || !onRegenerateWorkflow}
+                >
+                  <RefreshCw size={16} className="mr-2" />
+                  Generate New Workflow
+                </button>
+              </div>
+            ) : (
+              <div className="refined-query-view">
+                <div className="refined-query-display-box">
+                  {editedPrompt || "No prompt data available"}
+                </div>
+                
+                <button 
+                  className="generate-workflow-button" 
+                  onClick={toggleEditing}
+                >
+                  <RefreshCw size={16} className="mr-2" />
+                  Modify and Generate New Workflow
+                </button>
+              </div>
+            )}
+            
+            {/* Display unavailability warning if present */}
+            {workflowUnavailable && (
+              <div className="workflow-warning my-4">
+                <div className="flex items-center mb-2">
+                  <AlertTriangle size={16} className="mr-2" />
+                  <span className="font-medium">Availability Warning</span>
+                </div>
+                <p className="text-sm">{workflowUnavailable}</p>
+                <p className="text-sm font-medium mt-2">
+                  THE GENERATED WORKFLOW MIGHT NOT WORK BECAUSE OF UNAVAILABILITY
+                </p>
+              </div>
+            )}
+          </div>
         </div>
       )}
     </div>

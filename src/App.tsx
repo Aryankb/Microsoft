@@ -10,6 +10,7 @@ import { useState } from "react";
 import Layout from './components/Layout';
 import WorkflowContainer from './components/WorkflowContainer';
 import Home from './pages/Home'; // Updated import path
+import Workflows from './pages/Workflows';
 
 const CLERK_PUBLISHABLE_KEY =
   "pk_test_bWludC1kaW5vc2F1ci01NC5jbGVyay5hY2NvdW50cy5kZXYk";

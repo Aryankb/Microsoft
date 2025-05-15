@@ -163,3 +163,265 @@
   margin-left: 320px;
   width: calc(100% - 320px);
 }
+
+/* Add these styles to your existing PromptGenerator.css file */
+
+.tab-navigation {
+  display: flex;
+  border-bottom: 1px solid var(--color-border);
+  margin-bottom: 15px;
+}
+
+.tab-button {
+  padding: 8px 16px;
+  background: none;
+  border: none;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border-bottom: 2px solid transparent;
+}
+
+.tab-button.active {
+  color: var(--color-primary);
+  border-bottom: 2px solid var(--color-primary);
+  font-weight: 500;
+}
+
+.original-prompt-section {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.original-prompt-textarea {
+  background-color: var(--color-card);
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  padding: 12px;
+  color: var(--color-text);
+  resize: vertical;
+  font-family: monospace;
+  line-height: 1.5;
+}
+
+.original-prompt-textarea:focus {
+  border-color: var(--color-primary, #00ADB5);
+  box-shadow: 0 0 0 2px rgba(0, 173, 181, 0.2);
+}
+
+.regenerate-workflow-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--color-primary);
+  color: var(--color-text-on-primary);
+  border: none;
+  border-radius: 6px;
+  padding: 10px 16px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  margin-top: 5px;
+}
+
+.regenerate-workflow-button:hover {
+  background-color: var(--color-primary-dark);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.regenerate-workflow-button:disabled {
+  background-color: var(--color-disabled);
+  color: var(--color-text-disabled);
+  cursor: not-allowed;
+}
+
+.prompt-info {
+  font-size: 0.85rem;
+  color: var(--color-text-secondary);
+  margin-top: 8px;
+  padding: 8px;
+  background-color: rgba(var(--color-info-rgb), 0.1);
+  border-radius: 6px;
+}
+
+/* Add these styles for the warning message and updated generate button */
+
+.workflow-warning {
+  margin: 1rem 0;
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(217, 119, 6, 0.2);
+  }
+  70% {
+    box-shadow: 0 0 0 5px rgba(217, 119, 6, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(217, 119, 6, 0);
+  }
+}
+
+.generate-workflow-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  padding: 12px;
+  margin-top: 1rem;
+  background-color: var(--color-primary, #00ADB5);
+  color: white;
+  font-weight: 500;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.generate-workflow-button:hover:not(:disabled) {
+  background-color: var(--color-primary-dark, #009199);
+  transform: translateY(-2px);
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.15);
+}
+
+.generate-workflow-button:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.generate-workflow-button:disabled {
+  background-color: var(--color-disabled, #555555);
+  color: var(--color-text-disabled, #777777);
+  cursor: not-allowed;
+}
+
+.my-4 {
+  margin-top: 1rem;
+  margin-bottom: 1rem;
+}
+
+/* Add these new styles for the refined query display */
+
+.refined-query-display {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 100%;
+}
+
+.refined-query-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--color-border, #333);
+}
+
+.refined-query-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.action-button {
+  display: flex;
+  align-items: center;
+  background: none;
+  border: none;
+  color: var(--color-text-secondary, #aaa);
+  font-size: 0.75rem;
+  cursor: pointer;
+  padding: 2px 4px;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+}
+
+.action-button:hover {
+  color: var(--color-text, #fff);
+  background-color: var(--color-background-hover, #444);
+}
+
+.refined-query-textarea {
+  width: 100%;
+  font-family: var(--font-mono, monospace);
+  background-color: var(--color-card, #222);
+  color: var(--color-text, #fff);
+  border: 1px solid var(--color-border, #333);
+  border-radius: 6px;
+  padding: 12px;
+  resize: vertical;
+  min-height: 120px;
+  line-height: 1.5;
+}
+
+.refined-query-textarea:focus {
+  outline: none;
+  border-color: var(--color-primary, #00ADB5);
+  box-shadow: 0 0 0 2px rgba(0, 173, 181, 0.2);
+}
+
+.refined-query-view {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.refined-query-display-box {
+  font-family: var(--font-mono, monospace);
+  background-color: var(--color-card, #222);
+  color: var(--color-text, #fff);
+  border: 1px solid var(--color-border, #333);
+  border-radius: 6px;
+  padding: 12px;
+  min-height: 100px;
+  max-height: 200px;
+  overflow-y: auto;
+  white-space: pre-wrap;
+  line-height: 1.5;
+}
+
+.generate-workflow-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  padding: 12px;
+  margin-top: 8px;
+  background-color: var(--color-primary, #00ADB5);
+  color: white;
+  font-weight: 500;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.generate-workflow-button:hover:not(:disabled) {
+  background-color: var(--color-primary-dark, #009199);
+  transform: translateY(-2px);
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.15);
+}
+
+.generate-workflow-button:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.generate-workflow-button:disabled {
+  background-color: var(--color-disabled, #555);
+  color: var(--color-text-disabled, #777);
+  cursor: not-allowed;
+}
+
+.workflow-warning {
+  background-color: rgba(217, 119, 6, 0.2);
+  border: 1px solid #d97706;
+  color: #fbbf24;
+  border-radius: 6px;
+  padding: 12px;
+  margin: 16px 0;
+}
+
+.my-4 {
+  margin-top: 1rem;
+  margin-bottom: 1rem;
+}

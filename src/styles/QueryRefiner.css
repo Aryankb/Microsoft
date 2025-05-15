@@ -1,0 +1,159 @@
+.query-refiner-container {
+  background: linear-gradient(145deg, rgba(25, 25, 25, 0.7), rgba(30, 30, 30, 0.7));
+  border-radius: 10px;
+  padding: 16px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(8px);
+  transition: all 0.3s ease;
+}
+
+.query-refiner-container:hover {
+  border-color: rgba(255, 255, 255, 0.15);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
+}
+
+.refiner-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.refiner-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: #d1d5db;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.refiner-title::before {
+  content: "";
+  width: 8px;
+  height: 8px;
+  background-color: #10b981;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.query-display {
+  margin-bottom: 16px;
+  border-radius: 6px;
+  background-color: rgba(0, 0, 0, 0.2);
+  padding: 10px 12px;
+}
+
+.query-text {
+  white-space: pre-wrap;
+  font-size: 14px;
+  line-height: 1.5;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.query-editor {
+  width: 100%;
+  background-color: rgba(0, 0, 0, 0.3);
+  color: white;
+  font-size: 14px;
+  line-height: 1.5;
+  border: 1px solid rgba(59, 130, 246, 0.5);
+  border-radius: 6px;
+  padding: 10px 12px;
+  resize: vertical;
+  outline: none;
+  transition: all 0.2s ease;
+  font-family: inherit;
+  min-height: 100px;
+}
+
+.query-editor:focus {
+  border-color: rgba(59, 130, 246, 0.8);
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.25);
+}
+
+.action-buttons {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+}
+
+.generate-button, .regenerate-button {
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-weight: 500;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  border: none;
+}
+
+.generate-button {
+  background: linear-gradient(90deg, #10b981, #059669);
+  color: white;
+}
+
+.regenerate-button {
+  background: linear-gradient(90deg, #6366f1, #4f46e5);
+  color: white;
+}
+
+.generate-button:hover, .regenerate-button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+}
+
+.generate-button:active, .regenerate-button:active {
+  transform: translateY(0);
+  box-shadow: none;
+}
+
+.edit-button, .save-button, .cancel-button {
+  background: transparent;
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 13px;
+  padding: 4px 8px;
+  border-radius: 4px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.edit-controls {
+  display: flex;
+  gap: 6px;
+}
+
+.edit-button:hover, .save-button:hover, .cancel-button:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.save-button {
+  background-color: rgba(16, 185, 129, 0.2);
+  color: #10b981;
+  border-color: rgba(16, 185, 129, 0.4);
+}
+
+.save-button:hover {
+  background-color: rgba(16, 185, 129, 0.3);
+}
+
+.cancel-button {
+  background-color: rgba(239, 68, 68, 0.1);
+  color: #ef4444;
+  border-color: rgba(239, 68, 68, 0.3);
+}
+
+.cancel-button:hover {
+  background-color: rgba(239, 68, 68, 0.2);
+}
