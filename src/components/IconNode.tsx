@@ -165,7 +165,7 @@ const IconNode: React.FC<IconNodeProps> = ({ data }) => {
         {/* <div className="icon-info-tooltip" data-tooltip-id={`icon-tooltip-${data.id}`}>
           <Info size={25} className="icon-info-icon" />
         </div> */}
-        <Tooltip id={`icon-tooltip-${data.id}`} place="top" effect="solid" className="icon-tooltip">
+        <Tooltip id={`icon-tooltip-${data.id}`} place="top" className="icon-tooltip">
           <div className="icon-tooltip-content">
             <div className="tooltip-header">{data.label}</div>
             <div><strong>ID:</strong> {data.id}</div>

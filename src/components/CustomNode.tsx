@@ -50,10 +50,17 @@ interface CustomNodeProps {
   data: CustomNodeData;
 }
 
+interface ModalContent {
+  title: string;
+  value: string;
+  isTextArea: boolean;
+  fieldName: string;
+}
+
 const CustomNode: React.FC<CustomNodeProps> = ({ data }) => {
   const { handleValueChange } = data;
   const [expandedField, setExpandedField] = useState<string | null>(null);
-  const [modalContent, setModalContent] = useState({
+  const [modalContent, setModalContent] = useState<ModalContent>({
     title: "",
     value: "",
     isTextArea: true,
