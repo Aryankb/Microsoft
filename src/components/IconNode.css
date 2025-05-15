@@ -7,6 +7,7 @@
   position: relative;
   box-shadow: 0 6px 12px rgba(0, 0, 0, 0.4);
   transition: transform 0.2s, box-shadow 0.2s;
+  margin-top: 25px;
 }
 
 .icon-node:hover {
@@ -222,4 +223,35 @@
 [id^="icon-tooltip-"] strong {
   font-weight: 600 !important;
   margin-right: 4px !important;
+}
+
+/* Node info display styling */
+.node-info-display {
+  position: absolute;
+  top: -25px;
+  left: -5px;
+  background-color: rgba(0, 0, 0, 0.7);
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 10px;
+  color: white;
+  display: flex;
+  gap: 4px;
+  align-items: center;
+  backdrop-filter: blur(4px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  z-index: 5;
+}
+
+.node-id {
+  font-weight: bold;
+  color: #3b82f6;
+}
+
+.node-name {
+  color: rgba(255, 255, 255, 0.9);
+  max-width: 80px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }

@@ -155,10 +155,16 @@ const IconNode: React.FC<IconNodeProps> = ({ data }) => {
       <div 
         className={`icon-node ${getIconBackgroundColor()} rounded-full shadow-lg cursor-pointer transition-all hover:scale-110 flex items-center justify-center border border-opacity-50 border-white relative`}
       >
-        {/* Info icon with tooltip */}
-        <div className="icon-info-tooltip" data-tooltip-id={`icon-tooltip-${data.id}`}>
-          <Info size={25} className="icon-info-icon" />
+        {/* Node info display */}
+        <div className="node-info-display" data-tooltip-id={`icon-tooltip-${data.id}`}>
+          <span className="node-id">{data.id}</span>
+          <span className="node-name">{data.label.toString().slice(0, 10)}</span>
         </div>
+
+        {/* Info icon with tooltip */}
+        {/* <div className="icon-info-tooltip" data-tooltip-id={`icon-tooltip-${data.id}`}>
+          <Info size={25} className="icon-info-icon" />
+        </div> */}
         <Tooltip id={`icon-tooltip-${data.id}`} place="top" effect="solid" className="icon-tooltip">
           <div className="icon-tooltip-content">
             <div className="tooltip-header">{data.label}</div>
