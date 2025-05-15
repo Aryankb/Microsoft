@@ -486,7 +486,7 @@ const CustomNode: React.FC<CustomNodeProps> = ({ data }) => {
                   toggleTextareaExpand(`config_${key}`);
                 }}
               >
-                {value ? value.substring(0, 25) + (value.length > 25 ? "..." : "") : ""}
+                {value ? String(value).substring(0, 25) + (String(value).length > 25 ? "..." : "") : ""}
               </div>
             </div>
           ))}
