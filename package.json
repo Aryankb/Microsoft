@@ -5,10 +5,10 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tsc -b && vite build",
+    "build": "tsc -b && node_modules/.bin/vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "vercel-build": "yarn install && yarn build"
+    "vercel-build": "yarn install && tsc -b && node_modules/.bin/vite build"
   },
   "dependencies": {
     "@clerk/clerk-react": "^5.23.0",
