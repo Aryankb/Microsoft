@@ -34,9 +34,9 @@
   position: absolute;
   right: -5px;
   bottom: -5px;
-  width: 16px;
+  width: 67px;  /* Increased width for horizontal oval shape */
   height: 16px;
-  border-radius: 50%;
+  border-radius: 12px;  /* Half of the height for oval shape */
   display: flex;
   align-items: center;
   justify-content: center;

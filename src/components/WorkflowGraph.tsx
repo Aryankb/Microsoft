@@ -176,7 +176,7 @@ const generateNodesAndEdges = (workflowJson, handleValueChange) => {
                              (node.type === "connector" && 
                               (node.name.includes("ITERATOR") || 
                                node.name.includes("VALIDATOR") || 
-                               node.name.includes("DELEGATOR")));
+                               node.name.includes("ITER_END")));
     
     return {
       id: node.id.toString(),

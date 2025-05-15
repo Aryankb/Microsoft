@@ -28,6 +28,10 @@ import {
   Code,
   Sparkles,
   Info,
+  Clock,
+  ArrowBigDownDash,
+  XIcon,
+  Check
 } from "lucide-react";
 import "./IconNode.css";
 import CustomNode from "./CustomNode";
@@ -41,52 +45,56 @@ const IconNode: React.FC<IconNodeProps> = ({ data }) => {
 
   const getIconForService = () => {
     const label = data.label.toString().toUpperCase();
-
-    if (label.includes("FILE_UPLOAD")) {
-      return <FileIcon size={32} className="text-blue-300" />;
-    } else if (label.includes("GOOGLESHEETS") || label.includes("GOOGLE SHEETS")) {
-      return <FileSpreadsheet size={32} className="text-green-500" />;
+    if (data.type === "llm") {
+      return <BrainCircuit size={32} className="text-white-400" />;
+    } else if (label.includes("PERIODIC") ) {
+      return <Clock size={32} className="text-white-400" />;
+    }
+     else if (label.includes("GOOGLESHEETS") || label.includes("GOOGLE SHEETS")) {
+      return <FileSpreadsheet size={32} className="text-white-500" />;
     } else if (label.includes("GMAIL")) {
-      return <Mail size={32} className="text-red-500" />;
+      return <Mail size={32} className="text-white-500" />;
     } else if (label.includes("NOTION")) {
-      return <NotebookPen size={32} className="text-gray-100" />;
+      return <NotebookPen size={32} className="text-white-100" />;
     } else if (label.includes("YOUTUBE")) {
-      return <Youtube size={32} className="text-red-600" />;
+      return <Youtube size={32} className="text-white-500" />;
     } else if (label.includes("LINKEDIN")) {
-      return <Linkedin size={32} className="text-blue-500" />;
+      return <Linkedin size={32} className="text-white-500" />;
     } else if (label.includes("GOOGLECALENDAR") || label.includes("GOOGLE CALENDAR")) {
-      return <Calendar size={32} className="text-blue-400" />;
+      return <Calendar size={32} className="text-white-400" />;
     } else if (label.includes("GOOGLEDOCS") || label.includes("GOOGLE DOCS")) {
-      return <FileText size={32} className="text-blue-500" />;
+      return <FileText size={32} className="text-white-500" />;
     } else if (label.includes("GOOGLEMEET") || label.includes("GOOGLE MEET")) {
-      return <AlarmCheck size={32} className="text-green-400" />;
-    } else if (label.includes("TWITTER") || label.includes("X")) {
-      return <Twitter size={32} className="text-sky-400" />;
+      return <AlarmCheck size={32} className="text-white-500" />;
+    } else if (label.includes("TWITTER") ) {
+      return <XIcon size={32} className="text-white-500" />;
     } else if (label.includes("INSTAGRAM")) {
-      return <Instagram size={32} className="text-pink-500" />;
+      return <Instagram size={32} className="text-white-500" />;
     } else if (label.includes("FACEBOOK")) {
-      return <Facebook size={32} className="text-blue-600" />;
+      return <Facebook size={32} className="text-white-500" />;
     } else if (label.includes("SLACK")) {
-      return <MessageSquare size={32} className="text-purple-500" />;
+      return <MessageSquare size={32} className="text-white-500" />;
     } else if (label.includes("TEAMS")) {
-      return <MessagesSquare size={32} className="text-indigo-400" />;
+      return <MessagesSquare size={32} className="text-white-500" />;
     } else if (label.includes("DATABASE")) {
-      return <Database size={32} className="text-yellow-300" />;
+      return <Database size={32} className="text-white-300" />;
     } else if (label.includes("CLOUD")) {
-      return <Cloud size={32} className="text-sky-300" />;
+      return <Cloud size={32} className="text-white-300" />;
     } else if (label.includes("ITERATOR")) {
-      return <IterationCcw size={32} className="text-yellow-400" />;
+      return <IterationCcw size={32} className="text-white-400" />;
     } else if (label.includes("VALIDATOR")) {
-      return <CheckSquare size={32} className="text-purple-400" />;
+      return <CheckSquare size={32} className="text-white-400" />;
     } else if (label.includes("DELEGATOR")) {
-      return <Send size={32} className="text-blue-300" />;
+      return <Send size={32} className="text-white-300" />;
     } else if (label.includes("GEMINI")) {
-      return <Sparkles size={32} className="text-yellow-200" />;
+      return <Sparkles size={32} className="text-white-200" />;
     } else if (label.includes("API") || label.includes("CODE")) {
-      return <Code size={32} className="text-green-300" />;
-    } else if (data.type === "llm") {
-      return <BrainCircuit size={32} className="text-cyan-400" />;
-    } else {
+      return <Code size={32} className="text-white-300" />;
+    }else if (label.includes("ITER_END") ) {
+      return <Check size={32} className="text-white-300" />;
+    }else if (label.includes("FILE_UPLOAD")) {
+      return <FileIcon size={32} className="text-white-300" />;
+    }  else {
       return <MousePointerClick size={32} className="text-gray-300" />;
     }
   };
@@ -95,18 +103,24 @@ const IconNode: React.FC<IconNodeProps> = ({ data }) => {
     const label = data.label.toString().toUpperCase();
     
     if (data.type === "llm") {
-      return "bg-gradient-to-r from-cyan-900 to-blue-900";
+      return "bg-gradient-to-r from-red-900 to-blue-900";
     } else if (label.includes("GMAIL")) {
       return "bg-gradient-to-r from-red-900 to-red-800";
     } else if (label.includes("GOOGLESHEETS") || label.includes("GOOGLE SHEETS")) {
       return "bg-gradient-to-r from-green-900 to-green-800";
+    } else if (label.includes("GOOGLEDOCS")) {
+      return "bg-gradient-to-r from-blue-900 to-blue-800";
+    } else if (label.includes("GOOGLECALENDAR")) {
+      return "bg-gradient-to-r from-green-900 to-green-800";
+    } else if (label.includes("GOOGLEMEET")) {
+      return "bg-gradient-to-r from-red-900 to-red-800";
     } else if (label.includes("NOTION")) {
-      return "bg-gradient-to-r from-gray-900 to-gray-800";
+      return "bg-gradient-to-r from-gray-900 to-gray-900";
     } else if (label.includes("LINKEDIN")) {
       return "bg-gradient-to-r from-blue-900 to-blue-800";
     } else if (label.includes("YOUTUBE")) {
       return "bg-gradient-to-r from-red-900 to-rose-800";
-    } else if (label.includes("TWITTER") || label.includes("X")) {
+    } else if (label.includes("TWITTER") ) {
       return "bg-gradient-to-r from-sky-900 to-blue-800";
     } else if (label.includes("INSTAGRAM")) {
       return "bg-gradient-to-r from-pink-900 to-purple-800";
@@ -115,17 +129,17 @@ const IconNode: React.FC<IconNodeProps> = ({ data }) => {
     } else if (label.includes("SLACK")) {
       return "bg-gradient-to-r from-purple-900 to-purple-800";
     } else if (label.includes("CLOUD")) {
-      return "bg-gradient-to-r from-sky-900 to-blue-800";
+      return "bg-gradient-to-r from-blue-900 to-blue-800";
     } else if (label.includes("VALIDATOR")) {
       return "bg-gradient-to-r from-purple-900 to-purple-800";
     } else if (label.includes("ITERATOR")) {
       return "bg-gradient-to-r from-yellow-900 to-amber-800";
-    } else if (label.includes("DELEGATOR")) {
-      return "bg-gradient-to-r from-blue-900 to-sky-800";
-    } else if (label.includes("GEMINI")) {
-      return "bg-gradient-to-r from-purple-800 to-blue-900";
-    } else if (label.includes("API") || label.includes("CODE")) {
+    } else if (label.includes("ITER_END") ) {
+      return "bg-gradient-to-r from-yellow-900 to-amber-800";
+    } else if (label.includes("API") ) {
       return "bg-gradient-to-r from-emerald-900 to-green-800";
+    } else if (label.includes("PERIODIC") ) {
+      return "bg-gradient-to-r from-orange-900 to-amber-800";
     } else {
       return "bg-gradient-to-r from-gray-800 to-gray-700";
     }
@@ -169,17 +183,27 @@ const IconNode: React.FC<IconNodeProps> = ({ data }) => {
         )}
         
         {/* LLM indicator */}
-        {data.type === "llm" && (
+        {/* {data.type === "llm" && (
           <div className="llm-indicator">
             <div className="absolute -top-1 -left-1 bg-cyan-500 rounded-full w-4 h-4 flex items-center justify-center">
               <Sparkles size={12} className="text-white" />
             </div>
           </div>
-        )}
+        )} */}
 
         {data.to_execute && (
-          <div className={`execution-mark-icon ${data.to_execute[1] === "Y" ? "bg-green-500" : "bg-red-500"}`}>
-            {data.to_execute[1] === "Y" ? "1" : "2"}
+          <div className={`execution-mark-icon ${data.to_execute[1] === "A" ? "bg-green-800" : 
+            data.to_execute[1] === "B" ? "bg-blue-800" :
+            data.to_execute[1] === "C" ? "bg-orange-800" :
+            data.to_execute[1] === "D" ? "bg-purple-500" :
+            data.to_execute[1] === "E" ? "bg-red-800" :
+            data.to_execute[1] === "F" ? "bg-yellow-800" :
+            data.to_execute[1] === "G" ? "bg-pink-500":
+            data.to_execute[1] === "Y" ? "bg-green-800":
+            data.to_execute[1] === "N" ? "bg-red-800" :"bg-gray-500"
+              }`}
+            >
+              Val   -   {data.connectorName}  :  {data.to_execute[1]}
           </div>
         )}
         <Handle type="target" position="top" className="handle-top" />

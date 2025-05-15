@@ -365,14 +365,39 @@ const CustomNode: React.FC<CustomNodeProps> = ({ data }) => {
          label.includes("DELEGATOR")));
     
     if (isIconNodeType) return null;
-    
+   
     return (
       <div
         className={`execution-mark ${
-          data.to_execute[1] === "Y" ? "green" : "red"
+          data.to_execute[1] === "A" ? "green" : 
+      data.to_execute[1] === "B" ? "blue" :
+      data.to_execute[1] === "C" ? "orange" :
+      data.to_execute[1] === "D" ? "purple" :
+      data.to_execute[1] === "E" ? "red" :
+      data.to_execute[1] === "F" ? "yellow" :
+      data.to_execute[1] === "G" ? "pink" :
+      data.to_execute[1] === "H" ? "turquoise" :
+      data.to_execute[1] === "I" ? "lavender" :
+      data.to_execute[1] === "J" ? "cyan" :
+      data.to_execute[1] === "K" ? "magenta" :
+      data.to_execute[1] === "L" ? "teal" :
+      data.to_execute[1] === "M" ? "indigo" :
+      data.to_execute[1] === "N" ? "olive" :
+      data.to_execute[1] === "O" ? "maroon" :
+      data.to_execute[1] === "P" ? "gold" :
+      data.to_execute[1] === "Q" ? "navy" :
+      data.to_execute[1] === "R" ? "coral" :
+      data.to_execute[1] === "S" ? "lime" :
+      data.to_execute[1] === "T" ? "crimson" :
+      data.to_execute[1] === "U" ? "skyblue" :
+      data.to_execute[1] === "V" ? "salmon" :
+      data.to_execute[1] === "W" ? "tan" :
+      data.to_execute[1] === "X" ? "steelblue" :
+      data.to_execute[1] === "Y" ? "sienna" :
+      data.to_execute[1] === "Z" ? "chocolate" : "gray"
         }`}
       >
-        {data.to_execute[1] === "Y" ? "1" : "2"} {data.connectorName}
+        Val-{data.connectorName}: {data.to_execute[1]}
       </div>
     );
   };
