@@ -18,8 +18,6 @@ interface ChatInterfaceProps {
   setMessage: (message: string) => void;
   handleSend: () => void;
   examplePrompts?: string[];
-  mode: "workflow" | "general";
-  handleModeChange: (mode: "workflow" | "general") => void;
   showWorkflow: boolean;
   handleQueryUpdate?: (message: string) => void;
 }
@@ -30,8 +28,6 @@ const ChatInterface = ({
   setMessage,
   handleSend,
   examplePrompts = [],
-  mode,
-  handleModeChange,
   showWorkflow,
   handleQueryUpdate,
 }: ChatInterfaceProps) => {

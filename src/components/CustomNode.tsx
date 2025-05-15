@@ -1,29 +1,11 @@
 import React, { useState } from "react";
 import { Handle } from "reactflow";
-import { Tooltip } from "react-tooltip";
 import "./CustomNode.css";
 import { useAuth } from "@clerk/clerk-react";
 import TextAreaModal from "./TextAreaModal";
 // Import necessary icons
 import {
-  FileSpreadsheet,
-  Mail,
-  NotebookPen,
-  Youtube,
-  Linkedin,
-  Calendar,
-  FileText,
-  FileIcon,
   Maximize2,
-  Minimize2,
-  X,
-  AlarmCheck,
-  BrainCircuit,
-  IterationCcw,
-  CheckSquare,
-  Send,
-  Code,
-  Sparkles
 } from "lucide-react";
 
 interface CustomNodeData {
@@ -68,9 +50,9 @@ const CustomNode: React.FC<CustomNodeProps> = ({ data }) => {
   });
   const { getToken } = useAuth();
 
-  const [textSizeCategory, setTextSizeCategory] = useState<{
-    [key: string]: "small" | "medium" | "large";
-  }>({});
+  // const [textSizeCategory, setTextSizeCategory] = useState<{
+  //   [key: string]: "small" | "medium" | "large";
+  // }>({});
 
   if (!handleValueChange) {
     console.error(`🚨 handleValueChange is missing for node ${data.id}`);
@@ -123,14 +105,16 @@ const CustomNode: React.FC<CustomNodeProps> = ({ data }) => {
         },
         body: JSON.stringify({ file_location: fileLocation }),
       });
-
+      if (!response.ok) {
+        throw new Error("Delete failed");
+      }
       if (data.id && handleValueChange && data.config_inputs) {
         const fileKey = Object.entries(data.config_inputs).find(
           ([_, value]) => value === fileLocation
         )?.[0];
 
         if (fileKey) {
-          const newConfigInputs = {};
+          const newConfigInputs: Record<string, string> = {};
 
           Object.entries(data.config_inputs).forEach(([key, value]) => {
             if (key !== fileKey) {
@@ -151,13 +135,13 @@ const CustomNode: React.FC<CustomNodeProps> = ({ data }) => {
     }
   };
 
-  const getTextSizeCategory = (text: string): "small" | "medium" | "large" => {
-    if (!text) return "small";
-    const length = text.length;
-    if (length < 100) return "small";
-    if (length < 500) return "medium";
-    return "large";
-  };
+  // const getTextSizeCategory = (text: string): "small" | "medium" | "large" => {
+  //   if (!text) return "small";
+  //   const length = text.length;
+  //   if (length < 100) return "small";
+  //   if (length < 500) return "medium";
+  //   return "large";
+  // };
 
   const toggleTextareaExpand = (fieldName: string) => {
     let content = "";
@@ -207,118 +191,118 @@ const CustomNode: React.FC<CustomNodeProps> = ({ data }) => {
     setModalContent(prev => ({ ...prev, value }));
   };
 
-  const renderLabelWithIcon = () => {
-    const label = data.label.toString().toUpperCase();
+  // const renderLabelWithIcon = () => {
+  //   const label = data.label.toString().toUpperCase();
 
-    if (label.includes("FILE_UPLOAD")) {
-      return (
-        <div className="node-icon-wrapper">
-          <FileIcon size={24} className="node-icon" />
-          <span>File Upload</span>
-        </div>
-      );
-    } else if (label.includes("GOOGLESHEETS") || label.includes("GOOGLE SHEETS")) {
-      return (
-        <div className="node-icon-wrapper">
-          <FileSpreadsheet size={24} className="node-icon sheets" />
-          <span>Sheets</span>
-        </div>
-      );
-    } else if (label.includes("GMAIL")) {
-      return (
-        <div className="node-icon-wrapper">
-          <Mail size={24} className="node-icon gmail" />
-          <span>Gmail</span>
-        </div>
-      );
-    } else if (label.includes("NOTION")) {
-      return (
-        <div className="node-icon-wrapper">
-          <NotebookPen size={24} className="node-icon notion" />
-          <span>Notion</span>
-        </div>
-      );
-    } else if (label.includes("YOUTUBE")) {
-      return (
-        <div className="node-icon-wrapper">
-          <Youtube size={24} className="node-icon youtube" />
-          <span>YouTube</span>
-        </div>
-      );
-    } else if (label.includes("LINKEDIN")) {
-      return (
-        <div className="node-icon-wrapper">
-          <Linkedin size={24} className="node-icon linkedin" />
-          <span>LinkedIn</span>
-        </div>
-      );
-    } else if (label.includes("GOOGLECALENDAR") || label.includes("GOOGLE CALENDAR")) {
-      return (
-        <div className="node-icon-wrapper">
-          <Calendar size={24} className="node-icon calendar" />
-          <span>Calendar</span>
-        </div>
-      );
-    } else if (label.includes("GOOGLEDOCS") || label.includes("GOOGLE DOCS")) {
-      return (
-        <div className="node-icon-wrapper">
-          <FileText size={24} className="node-icon docs" />
-          <span>Docs</span>
-        </div>
-      );
-    } else if (label.includes("GOOGLEMEET") || label.includes("GOOGLE MEET")) {
-      return (
-        <div className="node-icon-wrapper">
-          <AlarmCheck size={24} className="node-icon meet" />
-          <span>Google Meet</span>
-        </div>
-      );
-    } else if (label.includes("ITERATOR")) {
-      return (
-        <div className="node-icon-wrapper">
-          <IterationCcw size={24} className="node-icon iterator" />
-          <span>Iterator</span>
-        </div>
-      );
-    } else if (label.includes("VALIDATOR")) {
-      return (
-        <div className="node-icon-wrapper">
-          <CheckSquare size={24} className="node-icon validator" />
-          <span>Validator</span>
-        </div>
-      );
-    } else if (label.includes("DELEGATOR")) {
-      return (
-        <div className="node-icon-wrapper">
-          <Send size={24} className="node-icon delegator" />
-          <span>Delegator</span>
-        </div>
-      );
-    } else if (label.includes("GEMINI")) {
-      return (
-        <div className="node-icon-wrapper">
-          <Sparkles size={24} className="node-icon gemini" />
-          <span>Gemini</span>
-        </div>
-      );
-    } else if (label.includes("API") || label.includes("CODE")) {
-      return (
-        <div className="node-icon-wrapper">
-          <Code size={24} className="node-icon code" />
-          <span>Code</span>
-        </div>
-      );
-    } else if (data.type === "llm") {
-      return (
-        <div className="node-icon-wrapper">
-          <BrainCircuit size={24} className="node-icon llm" />
-          <span>{data.label}</span>
-        </div>
-      );
-    }
+  //   if (label.includes("FILE_UPLOAD")) {
+  //     return (
+  //       <div className="node-icon-wrapper">
+  //         <FileIcon size={24} className="node-icon" />
+  //         <span>File Upload</span>
+  //       </div>
+  //     );
+  //   } else if (label.includes("GOOGLESHEETS") || label.includes("GOOGLE SHEETS")) {
+  //     return (
+  //       <div className="node-icon-wrapper">
+  //         <FileSpreadsheet size={24} className="node-icon sheets" />
+  //         <span>Sheets</span>
+  //       </div>
+  //     );
+  //   } else if (label.includes("GMAIL")) {
+  //     return (
+  //       <div className="node-icon-wrapper">
+  //         <Mail size={24} className="node-icon gmail" />
+  //         <span>Gmail</span>
+  //       </div>
+  //     );
+  //   } else if (label.includes("NOTION")) {
+  //     return (
+  //       <div className="node-icon-wrapper">
+  //         <NotebookPen size={24} className="node-icon notion" />
+  //         <span>Notion</span>
+  //       </div>
+  //     );
+  //   } else if (label.includes("YOUTUBE")) {
+  //     return (
+  //       <div className="node-icon-wrapper">
+  //         <Youtube size={24} className="node-icon youtube" />
+  //         <span>YouTube</span>
+  //       </div>
+  //     );
+  //   } else if (label.includes("LINKEDIN")) {
+  //     return (
+  //       <div className="node-icon-wrapper">
+  //         <Linkedin size={24} className="node-icon linkedin" />
+  //         <span>LinkedIn</span>
+  //       </div>
+  //     );
+  //   } else if (label.includes("GOOGLECALENDAR") || label.includes("GOOGLE CALENDAR")) {
+  //     return (
+  //       <div className="node-icon-wrapper">
+  //         <Calendar size={24} className="node-icon calendar" />
+  //         <span>Calendar</span>
+  //       </div>
+  //     );
+  //   } else if (label.includes("GOOGLEDOCS") || label.includes("GOOGLE DOCS")) {
+  //     return (
+  //       <div className="node-icon-wrapper">
+  //         <FileText size={24} className="node-icon docs" />
+  //         <span>Docs</span>
+  //       </div>
+  //     );
+  //   } else if (label.includes("GOOGLEMEET") || label.includes("GOOGLE MEET")) {
+  //     return (
+  //       <div className="node-icon-wrapper">
+  //         <AlarmCheck size={24} className="node-icon meet" />
+  //         <span>Google Meet</span>
+  //       </div>
+  //     );
+  //   } else if (label.includes("ITERATOR")) {
+  //     return (
+  //       <div className="node-icon-wrapper">
+  //         <IterationCcw size={24} className="node-icon iterator" />
+  //         <span>Iterator</span>
+  //       </div>
+  //     );
+  //   } else if (label.includes("VALIDATOR")) {
+  //     return (
+  //       <div className="node-icon-wrapper">
+  //         <CheckSquare size={24} className="node-icon validator" />
+  //         <span>Validator</span>
+  //       </div>
+  //     );
+  //   } else if (label.includes("DELEGATOR")) {
+  //     return (
+  //       <div className="node-icon-wrapper">
+  //         <Send size={24} className="node-icon delegator" />
+  //         <span>Delegator</span>
+  //       </div>
+  //     );
+  //   } else if (label.includes("GEMINI")) {
+  //     return (
+  //       <div className="node-icon-wrapper">
+  //         <Sparkles size={24} className="node-icon gemini" />
+  //         <span>Gemini</span>
+  //       </div>
+  //     );
+  //   } else if (label.includes("API") || label.includes("CODE")) {
+  //     return (
+  //       <div className="node-icon-wrapper">
+  //         <Code size={24} className="node-icon code" />
+  //         <span>Code</span>
+  //       </div>
+  //     );
+  //   } else if (data.type === "llm") {
+  //     return (
+  //       <div className="node-icon-wrapper">
+  //         <BrainCircuit size={24} className="node-icon llm" />
+  //         <span>{data.label}</span>
+  //       </div>
+  //     );
+  //   }
 
-    return <span>{data.label}</span>;
-  };
+  //   return <span>{data.label}</span>;
+  // };
 
   const getNodeClass = () => {
     let baseClass = "custom-node";

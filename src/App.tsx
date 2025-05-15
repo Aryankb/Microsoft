@@ -2,7 +2,6 @@ import { ClerkProvider, SignedIn, SignedOut ,SignIn} from "@clerk/clerk-react";
 import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
 import MainLayout from "../src/components/MainLayout";
 import CreateToolPage from "./components/CreateToolPage";
-import ApiKeyModal from "./components/ApiKeyModal";
 import ManageAuth from "./components/ManageAuth";
 import ShootingStarsAndStarsBackgroundDemo from "./components/ui/shooting-stars-and-stars-background-demo";
 import CustomSignInForm from "./components/ui/custom-signin-form";
@@ -42,7 +41,6 @@ function App() {
                       colorText: "white",
                       colorTextSecondary: "white",
                       colorInputBackground: "rgba(30, 30, 30, 0.8)",
-                      colorInputBorder: "#00ADB5",
                       colorButtonText: "white",
                     },
                     elements: {

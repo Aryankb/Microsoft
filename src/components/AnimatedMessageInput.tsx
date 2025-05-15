@@ -1,5 +1,5 @@
 import { KeyboardEvent, useCallback, useEffect, useRef, useState } from "react";
-import { Mic, Send, ArrowRight } from "lucide-react";
+import { Mic, ArrowRight } from "lucide-react";
 import { cn } from "../lib/utils";
 
 interface AnimatedMessageInputProps {
@@ -25,7 +25,7 @@ const AnimatedMessageInput = ({
 }: AnimatedMessageInputProps) => {
   const [currentPlaceholder, setCurrentPlaceholder] = useState(0);
   const inputRef = useRef<HTMLTextAreaElement>(null);
-  const intervalRef = useRef<NodeJS.Timeout | null>(null);
+  const intervalRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [isFocused, setIsFocused] = useState(false);
 
   // Example placeholders that rotate
