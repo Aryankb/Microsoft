@@ -1,0 +1,257 @@
+.icon-node {
+  width: 60px;
+  height: 60px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.4);
+  transition: transform 0.2s, box-shadow 0.2s;
+  margin-top: 25px;
+}
+
+.icon-node:hover {
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.5);
+  transform: translateY(-2px);
+}
+
+.icon-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.4));
+}
+
+.handle-top, .handle-bottom {
+  background-color: var(--color-primary);
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, 0.6);
+  box-shadow: 0 0 5px rgba(0, 0, 0, 0.4);
+}
+
+.execution-mark-icon {
+  position: absolute;
+  right: -5px;
+  bottom: -5px;
+  width: 67px;  /* Increased width for horizontal oval shape */
+  height: 16px;
+  border-radius: 12px;  /* Half of the height for oval shape */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  font-weight: bold;
+  color: white;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.25);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.node-dialog {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background-color: var(--color-card);
+  border-radius: 12px;
+  padding: 0;
+  max-width: 90vw;
+  max-height: 90vh;
+  overflow: auto;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+  border: 1px solid var(--color-primary);
+  z-index: 1000;
+}
+
+.node-dialog-content {
+  padding: 1.5rem;
+}
+
+.node-dialog-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  margin-bottom: 1rem;
+}
+
+.node-dialog-header h2 {
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: var(--color-text);
+}
+
+.close-button {
+  background: transparent;
+  border: none;
+  color: var(--color-text-accent);
+  cursor: pointer;
+  transition: color 0.2s;
+  padding: 5px;
+  border-radius: 50%;
+}
+
+.close-button:hover {
+  color: var(--color-text);
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.node-dialog-body {
+  max-height: 70vh;
+  overflow-y: auto;
+  padding-right: 0.5rem;
+}
+
+/* Trigger and LLM indicator styling */
+.icon-node {
+  position: relative;
+}
+
+.trigger-indicator,
+.llm-indicator {
+  position: absolute;
+  z-index: 5;
+}
+
+.trigger-indicator svg {
+  filter: drop-shadow(0px 2px 3px rgba(0, 0, 0, 0.3));
+}
+
+.llm-indicator div {
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+/* Info icon and tooltip styling */
+.icon-info-tooltip {
+  position: absolute;
+  top: -8px;
+  left: -8px;
+  background-color: rgba(0, 0, 0, 0.4);
+  border-radius: 50%;
+  width: 16px;
+  height: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  cursor: pointer;
+  z-index: 10;
+  opacity: 0.7;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.icon-info-tooltip:hover {
+  opacity: 1;
+  transform: scale(1.2);
+}
+
+.icon-info-icon {
+  color: white;
+}
+
+/* Custom tooltip styling */
+:root {
+  --rt-color-white: #fff;
+  --rt-color-dark: #222;
+  --rt-color-info: #272727;
+  --rt-opacity: 0.95;
+}
+
+.icon-tooltip {
+  border-radius: 8px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.25);
+  max-width: 250px;
+  padding: 0 !important;
+  opacity: var(--rt-opacity) !important;
+  backdrop-filter: blur(10px);
+}
+
+.icon-tooltip-content {
+  padding: 8px 10px;
+}
+
+.tooltip-header {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  padding-bottom: 4px;
+  margin-bottom: 6px;
+  font-weight: 600;
+  color: var(--rt-color-white);
+}
+
+.icon-tooltip-content div {
+  font-size: 12px;
+  line-height: 1.4;
+  margin-bottom: 4px;
+  color: var(--rt-color-white);
+}
+
+.icon-tooltip-content div:last-child {
+  margin-bottom: 0;
+}
+
+.icon-tooltip-content strong {
+  font-weight: 600;
+  margin-right: 4px;
+}
+
+/* Tooltip styling for IconNode */
+[id^="icon-tooltip-"] {
+  border-radius: 8px !important;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.25) !important;
+  max-width: 250px !important;
+  padding: 8px 10px !important;
+  opacity: var(--rt-opacity) !important;
+  backdrop-filter: blur(10px) !important;
+  background-color: var(--rt-color-info) !important;
+}
+
+[id^="icon-tooltip-"] div {
+  font-size: 12px !important;
+  line-height: 1.4 !important;
+  margin-bottom: 4px !important;
+  color: var(--rt-color-white) !important;
+}
+
+[id^="icon-tooltip-"] div:first-child {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
+  padding-bottom: 4px !important;
+  margin-bottom: 6px !important;
+}
+
+[id^="icon-tooltip-"] strong {
+  font-weight: 600 !important;
+  margin-right: 4px !important;
+}
+
+/* Node info display styling */
+.node-info-display {
+  position: absolute;
+  top: -25px;
+  left: -5px;
+  background-color: rgba(0, 0, 0, 0.7);
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 10px;
+  color: white;
+  display: flex;
+  gap: 4px;
+  align-items: center;
+  backdrop-filter: blur(4px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  z-index: 5;
+}
+
+.node-id {
+  font-weight: bold;
+  color: #3b82f6;
+}
+
+.node-name {
+  color: rgba(255, 255, 255, 0.9);
+  max-width: 80px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

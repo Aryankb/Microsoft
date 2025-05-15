@@ -51,26 +51,39 @@ export default function Sidebar({
   const [isDeleting, setIsDeleting] = useState(false);
   const sidebarRef = useRef<HTMLDivElement>(null);
 
-  const fetchWorkflows = async () => {
-    try {
-      const token = await getToken();
-      const response = await fetch("http://localhost:8000/sidebar_workflows", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-
-      if (!response.ok)
-        throw new Error(`HTTP error! Status: ${response.status}`);
-
-      const data = await response.json();
-      setWorkflows(data);
-    } catch (error) {
-      console.error("Error fetching workflows:", error);
-    }
-  };
-  // Fetch workflows on startup
   useEffect(() => {
+    let mounted = true;
+
+    const fetchWorkflows = async () => {
+      try {
+        const token = await getToken();
+        if (!mounted) return;
+
+        const response = await fetch("http://localhost:8000/sidebar_workflows", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+
+        if (!mounted) return;
+
+        if (!response.ok)
+          throw new Error(`HTTP error! Status: ${response.status}`);
+
+        const data = await response.json();
+        if (mounted) {
+          setWorkflows(data);
+        }
+      } catch (error) {
+        if (mounted) {
+          console.error("Error fetching workflows:", error);
+        }
+      }
+    };
+
     fetchWorkflows();
-  }, [getToken]);
+    return () => {
+      mounted = false;
+    };
+  }, []); // Remove getToken from dependencies
 
   // Handle workflow selection
   const handleWorkflowClick = (workflowId: string) => {

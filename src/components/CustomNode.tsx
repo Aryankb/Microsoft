@@ -3,6 +3,7 @@ import { Handle } from "reactflow";
 import { Tooltip } from "react-tooltip";
 import "./CustomNode.css";
 import { useAuth } from "@clerk/clerk-react";
+import TextAreaModal from "./TextAreaModal";
 // Import necessary icons
 import {
   FileSpreadsheet,
@@ -17,6 +18,12 @@ import {
   Minimize2,
   X,
   AlarmCheck,
+  BrainCircuit,
+  IterationCcw,
+  CheckSquare,
+  Send,
+  Code,
+  Sparkles
 } from "lucide-react";
 
 interface CustomNodeData {
@@ -27,7 +34,7 @@ interface CustomNodeData {
   to_execute?: [string, string];
   connectorName?: string;
   description?: string;
-  config_inputs?: Record<string, string>; // Now a dictionary
+  config_inputs?: Record<string, string>;
   llm_prompt?: string;
   validation_prompt?: string;
   delegation_prompt?: string;
@@ -46,9 +53,14 @@ interface CustomNodeProps {
 const CustomNode: React.FC<CustomNodeProps> = ({ data }) => {
   const { handleValueChange } = data;
   const [expandedField, setExpandedField] = useState<string | null>(null);
+  const [modalContent, setModalContent] = useState({
+    title: "",
+    value: "",
+    isTextArea: true,
+    fieldName: "",
+  });
   const { getToken } = useAuth();
 
-  // Add state to track text length categories
   const [textSizeCategory, setTextSizeCategory] = useState<{
     [key: string]: "small" | "medium" | "large";
   }>({});
@@ -62,7 +74,6 @@ const CustomNode: React.FC<CustomNodeProps> = ({ data }) => {
     data.handleValueChange(data.id, key, value, "config");
   };
 
-  // Function to handle file upload and update config
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -84,7 +95,6 @@ const CustomNode: React.FC<CustomNodeProps> = ({ data }) => {
 
       const { file_location_s3 } = await response.json();
 
-      // Update the file_location_s3 config input using the parent's handleValueChange
       if (data.id && handleValueChange) {
         handleValueChange(data.id, file.name, file_location_s3, "config");
       }
@@ -93,7 +103,6 @@ const CustomNode: React.FC<CustomNodeProps> = ({ data }) => {
     }
   };
 
-  // Function to handle file deletion
   const handleFileDelete = async (fileLocation: string) => {
     if (!fileLocation) return;
 
@@ -108,30 +117,20 @@ const CustomNode: React.FC<CustomNodeProps> = ({ data }) => {
         body: JSON.stringify({ file_location: fileLocation }),
       });
 
-      // if (!response.ok) {
-      //   throw new Error("Delete failed");
-      // }
-
-      // Remove the file entry completely from the node's config_inputs
       if (data.id && handleValueChange && data.config_inputs) {
-        // Find the key that contains the file path value
         const fileKey = Object.entries(data.config_inputs).find(
           ([_, value]) => value === fileLocation
         )?.[0];
 
         if (fileKey) {
-          // Create a completely new config_inputs without the deleted file
           const newConfigInputs = {};
 
-          // Only keep files that aren't the one being deleted
           Object.entries(data.config_inputs).forEach(([key, value]) => {
             if (key !== fileKey) {
               newConfigInputs[key] = value;
             }
           });
 
-          // Use a special handler to completely replace the config_inputs
-          // This sends a signal to MainLayout.tsx that the entire config structure needs to be updated
           handleValueChange(
             data.id,
             "_replace_all_config_inputs_",
@@ -145,7 +144,6 @@ const CustomNode: React.FC<CustomNodeProps> = ({ data }) => {
     }
   };
 
-  // Function to determine text size category
   const getTextSizeCategory = (text: string): "small" | "medium" | "large" => {
     if (!text) return "small";
     const length = text.length;
@@ -154,306 +152,318 @@ const CustomNode: React.FC<CustomNodeProps> = ({ data }) => {
     return "large";
   };
 
-  // Update size category when expanding a field
   const toggleTextareaExpand = (fieldName: string) => {
-    if (expandedField === fieldName) {
-      setExpandedField(null);
-    } else {
-      setExpandedField(fieldName);
+    let content = "";
+    let title = "";
+    let isTextArea = true;
 
-      // Set size category based on content
-      let content = "";
-      if (fieldName === "llm_prompt") {
-        content = data.llm_prompt || "";
-      } else if (fieldName === "validation_prompt") {
-        content = data.validation_prompt || "";
-      } else if (fieldName.startsWith("config_")) {
-        const key = fieldName.replace("config_", "");
-        content = data.config_inputs?.[key] || "";
-      }
-
-      setTextSizeCategory((prev) => ({
-        ...prev,
-        [fieldName]: getTextSizeCategory(content),
-      }));
+    if (fieldName === "llm_prompt") {
+      content = data.llm_prompt || "";
+      title = "LLM Prompt";
+      isTextArea = true;
+    } else if (fieldName === "validation_prompt") {
+      content = data.validation_prompt || "";
+      title = "Validation Prompt";
+      isTextArea = true;
+    } else if (fieldName.startsWith("config_")) {
+      const key = fieldName.replace("config_", "");
+      content = data.config_inputs?.[key] || "";
+      title = key;
+      isTextArea = false;
     }
+
+    setModalContent({
+      title,
+      value: content,
+      isTextArea,
+      fieldName,
+    });
+    setExpandedField(fieldName);
   };
 
-  const nodeClass =
-    data.type === "llm"
-      ? "node-llm"
-      : data.type === "connector"
-      ? "node-connector"
-      : "node-tool";
+  const handleModalClose = () => {
+    setExpandedField(null);
+  };
 
-  // Function to render an icon based on label text
+  const handleModalChange = (value: string) => {
+    const { fieldName } = modalContent;
+    
+    if (fieldName === "llm_prompt") {
+      handleValueChange(data.id, "llm_prompt", value, "prompt");
+    } else if (fieldName === "validation_prompt") {
+      handleValueChange(data.id, "validation_prompt", value, "prompt");
+    } else if (fieldName.startsWith("config_")) {
+      const key = fieldName.replace("config_", "");
+      handleInputChange(key, value);
+    }
+    
+    setModalContent(prev => ({ ...prev, value }));
+  };
+
   const renderLabelWithIcon = () => {
     const label = data.label.toString().toUpperCase();
 
     if (label.includes("FILE_UPLOAD")) {
-      // Show upload button
       return (
-        <>
-          <FileIcon size={30} className="mr-1" />
-          <label className="file-upload-label">
-            <input
-              type="file"
-              className="hidden-file-input"
-              onChange={handleFileUpload}
-            />
-            <span>Upload File +</span>
-          </label>
-        </>
+        <div className="node-icon-wrapper">
+          <FileIcon size={24} className="node-icon" />
+          <span>File Upload</span>
+        </div>
       );
-    }
-
-    // Map of tool names to their respective icons
-    else if (
-      label.includes("GOOGLESHEETS") ||
-      label.includes("GOOGLE SHEETS")
-    ) {
+    } else if (label.includes("GOOGLESHEETS") || label.includes("GOOGLE SHEETS")) {
       return (
-        <>
-          <FileSpreadsheet size={30} className="mr-1" />
+        <div className="node-icon-wrapper">
+          <FileSpreadsheet size={24} className="node-icon sheets" />
           <span>Sheets</span>
-        </>
+        </div>
       );
     } else if (label.includes("GMAIL")) {
       return (
-        <>
-          <Mail size={30} className="mr-1" />
+        <div className="node-icon-wrapper">
+          <Mail size={24} className="node-icon gmail" />
           <span>Gmail</span>
-        </>
+        </div>
       );
     } else if (label.includes("NOTION")) {
       return (
-        <>
-          <NotebookPen size={30} className="mr-1" />
+        <div className="node-icon-wrapper">
+          <NotebookPen size={24} className="node-icon notion" />
           <span>Notion</span>
-        </>
+        </div>
       );
     } else if (label.includes("YOUTUBE")) {
       return (
-        <>
-          <Youtube size={30} className="mr-1" />
+        <div className="node-icon-wrapper">
+          <Youtube size={24} className="node-icon youtube" />
           <span>YouTube</span>
-        </>
+        </div>
       );
     } else if (label.includes("LINKEDIN")) {
       return (
-        <>
-          <Linkedin size={30} className="mr-1" />
+        <div className="node-icon-wrapper">
+          <Linkedin size={24} className="node-icon linkedin" />
           <span>LinkedIn</span>
-        </>
+        </div>
       );
-    } else if (
-      label.includes("GOOGLECALENDAR") ||
-      label.includes("GOOGLE CALENDAR")
-    ) {
+    } else if (label.includes("GOOGLECALENDAR") || label.includes("GOOGLE CALENDAR")) {
       return (
-        <>
-          <Calendar size={30} className="mr-1" />
+        <div className="node-icon-wrapper">
+          <Calendar size={24} className="node-icon calendar" />
           <span>Calendar</span>
-        </>
+        </div>
       );
     } else if (label.includes("GOOGLEDOCS") || label.includes("GOOGLE DOCS")) {
       return (
-        <>
-          <FileText size={30} className="mr-1" />
+        <div className="node-icon-wrapper">
+          <FileText size={24} className="node-icon docs" />
           <span>Docs</span>
-        </>
+        </div>
       );
-      } else if (label.includes("GOOGLEMEET") || label.includes("GOOGLE MEET")) {
-        return (
-        <>
-          <AlarmCheck size={30} className="mr-1" />
+    } else if (label.includes("GOOGLEMEET") || label.includes("GOOGLE MEET")) {
+      return (
+        <div className="node-icon-wrapper">
+          <AlarmCheck size={24} className="node-icon meet" />
           <span>Google Meet</span>
-        </>
-        );
+        </div>
+      );
     } else if (label.includes("ITERATOR")) {
       return (
-        <>
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            width="30"
-            height="30"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            className="mr-1"
-          >
-            <path d="M17 1v6h-6" />
-            <path d="M7 23v-6h6" />
-            <path d="M3.51 9a9 9 0 0 1 14.36-4.36L17 7" />
-            <path d="M20.49 15a9 9 0 0 1-14.36 4.36L7 17" />
-          </svg>
+        <div className="node-icon-wrapper">
+          <IterationCcw size={24} className="node-icon iterator" />
           <span>Iterator</span>
-        </>
+        </div>
       );
     } else if (label.includes("VALIDATOR")) {
       return (
-        <>
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            width="30"
-            height="30"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            className="mr-1"
-          >
-            <circle cx="11" cy="11" r="8" />
-            <line x1="21" y1="21" x2="16.65" y2="16.65" />
-          </svg>
+        <div className="node-icon-wrapper">
+          <CheckSquare size={24} className="node-icon validator" />
           <span>Validator</span>
-        </>
+        </div>
       );
     } else if (label.includes("DELEGATOR")) {
       return (
-        <>
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            width="30"
-            height="30"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            className="mr-1"
-          >
-            <line x1="22" y1="12" x2="2" y2="12" />
-            <polyline points="15 5 22 12 15 19" />
-          </svg>
+        <div className="node-icon-wrapper">
+          <Send size={24} className="node-icon delegator" />
           <span>Delegator</span>
-        </>
+        </div>
+      );
+    } else if (label.includes("GEMINI")) {
+      return (
+        <div className="node-icon-wrapper">
+          <Sparkles size={24} className="node-icon gemini" />
+          <span>Gemini</span>
+        </div>
+      );
+    } else if (label.includes("API") || label.includes("CODE")) {
+      return (
+        <div className="node-icon-wrapper">
+          <Code size={24} className="node-icon code" />
+          <span>Code</span>
+        </div>
       );
     } else if (data.type === "llm") {
       return (
-        <>
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            width="30"
-            height="30"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2.25"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            class="lucide lucide-brain-icon lucide-brain"
-          >
-            <path d="M12 5a3 3 0 1 0-5.997.125 4 4 0 0 0-2.526 5.77 4 4 0 0 0 .556 6.588A4 4 0 1 0 12 18Z" />
-            <path d="M12 5a3 3 0 1 1 5.997.125 4 4 0 0 1 2.526 5.77 4 4 0 0 1-.556 6.588A4 4 0 1 1 12 18Z" />
-            <path d="M15 13a4.5 4.5 0 0 1-3-4 4.5 4.5 0 0 1-3 4" />
-            <path d="M17.599 6.5a3 3 0 0 0 .399-1.375" />
-            <path d="M6.003 5.125A3 3 0 0 0 6.401 6.5" />
-            <path d="M3.477 10.896a4 4 0 0 1 .585-.396" />
-            <path d="M19.938 10.5a4 4 0 0 1 .585.396" />
-            <path d="M6 18a4 4 0 0 1-1.967-.516" />
-            <path d="M19.967 17.484A4 4 0 0 1 18 18" />
-          </svg>
+        <div className="node-icon-wrapper">
+          <BrainCircuit size={24} className="node-icon llm" />
           <span>{data.label}</span>
-        </>
+        </div>
       );
     }
 
-    // Default: return the original label
-    return data.label;
+    return <span>{data.label}</span>;
+  };
+
+  const getNodeClass = () => {
+    let baseClass = "custom-node";
+    
+    if (data.type === "llm") {
+      baseClass += " node-llm";
+    } else if (data.type === "connector") {
+      baseClass += " node-connector";
+    } else if (data.type === "tool") {
+      baseClass += " node-tool";
+    }
+
+    if (data.label) {
+      const label = data.label.toString().toUpperCase();
+      if (label.includes("GMAIL")) {
+        baseClass += " gmail-node";
+      } else if (label.includes("NOTION")) {
+        baseClass += " notion-node";
+      } else if (label.includes("ITERATOR")) {
+        baseClass += " iterator-node";
+      } else if (label.includes("VALIDATOR")) {
+        baseClass += " validator-node"; 
+      } else if (label.includes("GEMINI")) {
+        baseClass += " gemini-node";
+      }
+    }
+    
+    return baseClass;
+  };
+
+  const isIconNodeType = () => {
+    const label = data.label?.toString().toUpperCase() || '';
+    return data.type === "tool" || 
+           data.type === "llm" || 
+           (data.type === "connector" && 
+             (label.includes("VALIDATOR") || 
+              label.includes("ITERATOR") || 
+              label.includes("DELEGATOR")));
+  };
+
+  const renderExecutionMark = () => {
+    if (!data.to_execute) return null;
+    
+    const label = data.label?.toString().toUpperCase() || '';
+    const isIconNodeType = 
+      data.type === "tool" || 
+      data.type === "llm" || 
+      (data.type === "connector" && 
+        (label.includes("VALIDATOR") || 
+         label.includes("ITERATOR") || 
+         label.includes("DELEGATOR")));
+    
+    if (isIconNodeType) return null;
+   
+    return (
+      <div
+        className={`execution-mark ${
+          data.to_execute[1] === "A" ? "green" : 
+      data.to_execute[1] === "B" ? "blue" :
+      data.to_execute[1] === "C" ? "orange" :
+      data.to_execute[1] === "D" ? "purple" :
+      data.to_execute[1] === "E" ? "red" :
+      data.to_execute[1] === "F" ? "yellow" :
+      data.to_execute[1] === "G" ? "pink" :
+      data.to_execute[1] === "H" ? "turquoise" :
+      data.to_execute[1] === "I" ? "lavender" :
+      data.to_execute[1] === "J" ? "cyan" :
+      data.to_execute[1] === "K" ? "magenta" :
+      data.to_execute[1] === "L" ? "teal" :
+      data.to_execute[1] === "M" ? "indigo" :
+      data.to_execute[1] === "N" ? "olive" :
+      data.to_execute[1] === "O" ? "maroon" :
+      data.to_execute[1] === "P" ? "gold" :
+      data.to_execute[1] === "Q" ? "navy" :
+      data.to_execute[1] === "R" ? "coral" :
+      data.to_execute[1] === "S" ? "lime" :
+      data.to_execute[1] === "T" ? "crimson" :
+      data.to_execute[1] === "U" ? "skyblue" :
+      data.to_execute[1] === "V" ? "salmon" :
+      data.to_execute[1] === "W" ? "tan" :
+      data.to_execute[1] === "X" ? "steelblue" :
+      data.to_execute[1] === "Y" ? "sienna" :
+      data.to_execute[1] === "Z" ? "chocolate" : "gray"
+        }`}
+      >
+        Val-{data.connectorName}: {data.to_execute[1]}
+      </div>
+    );
   };
 
   return (
-    <div className={`custom-node ${nodeClass}`}>
-      <div className="node-header">
-        <div className="flex justify-between w-full">
-          <span className="node-title">
-            {data.id}.
-            {typeof data.label === "string"
-              ? renderLabelWithIcon()
-              : data.label}
-          </span>
-
-          {/* Tooltip */}
-          <span className="info-icon" data-tooltip-id={`tooltip-${data.id}`}>
-            ℹ️
-          </span>
-          <Tooltip id={`tooltip-${data.id}`} place="top" effect="solid">
-            <div>
-              <strong>ID:</strong> {data.id}
-            </div>
-            <div>
-              <strong>Type:</strong> {data.type}
-            </div>
+    <div 
+      className={`${getNodeClass()} ${isIconNodeType() ? 'with-icon-node' : ''}`}
+      onClick={(e) => {
+        // Stop propagation only if this node has editable content
+        if (data.config_inputs?.length > 0 || data.llm_prompt || data.validation_prompt) {
+          e.stopPropagation();
+        }
+      }}
+    >
+      {/* Simplified node identifier */}
+      <div className="node-identifier">
+        <div className="node-id-badge" data-tooltip-id={`tooltip-${data.id}`}>{data.id}</div>
+        {!isIconNodeType() && (
+          <div className="node-title-mini">
+            {typeof data.label === "string" && data.label.split("_").pop()}
+          </div>
+        )}
+        {/* <Tooltip id={`tooltip-${data.id}`} place="top" effect="solid">
+          <div>
+            <strong>ID:</strong> {data.id}
+          </div>
+          <div>
+            <strong>Type:</strong> {data.type}
+          </div>
+          <div>
+            <strong>Name:</strong> {data.label}
+          </div>
+          {data.description && (
             <div>
               <strong>Description:</strong> {data.description}
             </div>
-          </Tooltip>
-        </div>
-
-        {data.tool_action && (
-          <span className="node-action">
-            {data.tool_action.replace(/_/g, " ")}
-          </span>
-        )}
+          )}
+        </Tooltip> */}
       </div>
 
-      {/* Execution Mark */}
-        {data.to_execute && (
-          <div
-            className={`execution-mark ${
-          data.to_execute[1] === "A" ? "green" : 
-          data.to_execute[1] === "B" ? "blue" :
-          data.to_execute[1] === "C" ? "orange" :
-          data.to_execute[1] === "D" ? "purple" :
-          data.to_execute[1] === "E" ? "red" :
-          data.to_execute[1] === "F" ? "yellow" :
-          data.to_execute[1] === "G" ? "pink" :
-          data.to_execute[1] === "H" ? "turquoise" :
-          data.to_execute[1] === "I" ? "lavender" :
-          data.to_execute[1] === "J" ? "cyan" :
-          data.to_execute[1] === "K" ? "magenta" :
-          data.to_execute[1] === "L" ? "teal" :
-          data.to_execute[1] === "M" ? "indigo" :
-          data.to_execute[1] === "N" ? "olive" :
-          data.to_execute[1] === "O" ? "maroon" :
-          data.to_execute[1] === "P" ? "gold" :
-          data.to_execute[1] === "Q" ? "navy" :
-          data.to_execute[1] === "R" ? "coral" :
-          data.to_execute[1] === "S" ? "lime" :
-          data.to_execute[1] === "T" ? "crimson" :
-          data.to_execute[1] === "U" ? "skyblue" :
-          data.to_execute[1] === "V" ? "salmon" :
-          data.to_execute[1] === "W" ? "tan" :
-          data.to_execute[1] === "X" ? "steelblue" :
-          data.to_execute[1] === "Y" ? "sienna" :
-          data.to_execute[1] === "Z" ? "chocolate" : "gray"
-            }`}
-          >
-            Val {data.connectorName}
-          </div>
-        )}
+      {/* Tool action tag if present */}
+      {data.tool_action && !isIconNodeType() && (
+        <span className="node-action-tag">
+          {data.tool_action.replace(/_/g, " ")}
+        </span>
+      )}
 
-        {/* Config Inputs */}
-      {/* Object.keys(data.config_inputs).map((key) => (
-              <div key={key} className="config-input-item">
-          <span className="config-key">{key}</span>
-              </div>
-            )) */}
+      {renderExecutionMark()}
+
+      {/* Add file upload button for FILE_UPLOAD nodes */}
+      {data.label && data.label.toString().toUpperCase().includes("FILE_UPLOAD") && (
+        <div className="node-section upload-section">
+          <label className="upload-button" htmlFor={`file-upload-${data.id}`}>
+            Upload File
+          </label>
+          <input
+            id={`file-upload-${data.id}`}
+            type="file"
+            onChange={handleFileUpload}
+            style={{ display: 'none' }}
+          />
+        </div>
+      )}
+
       {data.config_inputs && Object.keys(data.config_inputs).length > 0 && (
         <div className="node-section">
-          {/* <strong>Config Inputs:</strong> */}
-          {/* data.label==="FILE_UPLOAD" ? {Object.keys(data.config_inputs).map((key) => (
-              <div key={key} className="config-input-item">
-          <span className="config-key">{key}</span>
-              </div>
-            ))}: */}
           {Object.entries(data.config_inputs).map(([key, value]) => (
             <div key={key} className="config-input-item">
               <div className="field-header">
@@ -466,56 +476,23 @@ const CustomNode: React.FC<CustomNodeProps> = ({ data }) => {
                   }}
                   title="Click to expand"
                 >
-                  {expandedField === `config_${key}` ? (
-                    <Minimize2 size={14} />
-                  ) : (
-                    <Maximize2 size={14} />
-                  )}
+                  <Maximize2 size={14} />
                 </button>
               </div>
-              <div
-                className={`textarea-container ${
-                  expandedField === `config_${key}`
-                    ? `expanded ${textSizeCategory[`config_${key}`] || "small"}`
-                    : ""
-                }`}
+              <div 
+                className="input-preview"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  toggleTextareaExpand(`config_${key}`);
+                }}
               >
-                {expandedField === `config_${key}` && (
-                  <div className="expanded-header">
-                    <span className="expanded-title">{key}</span>
-                    <button
-                      className="expanded-close"
-                      onClick={() => setExpandedField(null)}
-                    >
-                      <X size={16} />
-                    </button>
-                  </div>
-                )}
-                {data.label !== "FILE_UPLOAD" && (
-                  <input
-                    type="text"
-                    className="node-input"
-                    placeholder="enter"
-                    defaultValue={value || ""}
-                    onChange={(e) => {
-                      console.log(
-                        `Config input changed: ${key} = ${e.target.value}`
-                      );
-                      handleInputChange(key, e.target.value);
-                    }}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      if (!expandedField) toggleTextareaExpand(`config_${key}`);
-                    }}
-                  />
-                )}
+                {value ? String(value).substring(0, 25) + (String(value).length > 25 ? "..." : "") : ""}
               </div>
             </div>
           ))}
         </div>
       )}
 
-      {/* Display uploaded files with delete buttons (for FILE_UPLOAD nodes only) */}
       {data.label &&
         data.label.toString().toUpperCase().includes("FILE_UPLOAD") &&
         data.config_inputs &&
@@ -542,7 +519,6 @@ const CustomNode: React.FC<CustomNodeProps> = ({ data }) => {
           </div>
         )}
 
-      {/* LLM Prompt */}
       {data.llm_prompt && (
         <div className="node-section">
           <div className="field-header">
@@ -555,57 +531,21 @@ const CustomNode: React.FC<CustomNodeProps> = ({ data }) => {
               }}
               title="Click to expand"
             >
-              {expandedField === "llm_prompt" ? (
-                <Minimize2 size={14} />
-              ) : (
-                <Maximize2 size={14} />
-              )}
+              <Maximize2 size={14} />
             </button>
           </div>
-          <div
-            className={`textarea-container ${
-              expandedField === "llm_prompt"
-                ? `expanded ${textSizeCategory["llm_prompt"] || "medium"}`
-                : ""
-            }`}
+          <div 
+            className="input-preview prompt-preview"
+            onClick={(e) => {
+              e.stopPropagation();
+              toggleTextareaExpand("llm_prompt");
+            }}
           >
-            {expandedField === "llm_prompt" && (
-              <div className="expanded-header">
-                <span className="expanded-title">LLM Prompt</span>
-                <button
-                  className="expanded-close"
-                  onClick={() => setExpandedField(null)}
-                >
-                  <X size={16} />
-                </button>
-              </div>
-            )}
-            <textarea
-              className="node-input"
-              defaultValue={data.llm_prompt || ""}
-              onChange={(e) => {
-                handleValueChange(
-                  data.id,
-                  "llm_prompt",
-                  e.target.value,
-                  "prompt"
-                );
-                // Update size category as user types
-                setTextSizeCategory((prev) => ({
-                  ...prev,
-                  ["llm_prompt"]: getTextSizeCategory(e.target.value),
-                }));
-              }}
-              onClick={(e) => {
-                e.stopPropagation();
-                if (!expandedField) toggleTextareaExpand("llm_prompt");
-              }}
-            />
+            {data.llm_prompt.substring(0, 40) + (data.llm_prompt.length > 40 ? "..." : "")}
           </div>
         </div>
       )}
 
-      {/* Validation Prompt */}
       {data.validation_prompt && (
         <div className="node-section">
           <div className="field-header">
@@ -618,61 +558,33 @@ const CustomNode: React.FC<CustomNodeProps> = ({ data }) => {
               }}
               title="Click to expand"
             >
-              {expandedField === "validation_prompt" ? (
-                <Minimize2 size={14} />
-              ) : (
-                <Maximize2 size={14} />
-              )}
+              <Maximize2 size={14} />
             </button>
           </div>
-          <div
-            className={`textarea-container ${
-              expandedField === "validation_prompt"
-                ? `expanded ${
-                    textSizeCategory["validation_prompt"] || "medium"
-                  }`
-                : ""
-            }`}
+          <div 
+            className="input-preview prompt-preview"
+            onClick={(e) => {
+              e.stopPropagation();
+              toggleTextareaExpand("validation_prompt");
+            }}
           >
-            {expandedField === "validation_prompt" && (
-              <div className="expanded-header">
-                <span className="expanded-title">Validation Prompt</span>
-                <button
-                  className="expanded-close"
-                  onClick={() => setExpandedField(null)}
-                >
-                  <X size={16} />
-                </button>
-              </div>
-            )}
-            <textarea
-              className="node-input"
-              defaultValue={data.validation_prompt}
-              onChange={(e) => {
-                handleValueChange(
-                  data.id,
-                  "validation_prompt",
-                  e.target.value,
-                  "prompt"
-                );
-                // Update size category as user types
-                setTextSizeCategory((prev) => ({
-                  ...prev,
-                  ["validation_prompt"]: getTextSizeCategory(e.target.value),
-                }));
-              }}
-              onClick={(e) => {
-                e.stopPropagation();
-                if (!expandedField) toggleTextareaExpand("validation_prompt");
-              }}
-            />
+            {data.validation_prompt.substring(0, 40) + 
+              (data.validation_prompt.length > 40 ? "..." : "")}
           </div>
         </div>
       )}
 
-      {/* Input/Output Handles */}
-      <Handle type="target" position="top" />
-      <Handle type="source" position="bottom" />
+      <TextAreaModal
+        isOpen={expandedField !== null}
+        onClose={handleModalClose}
+        title={modalContent.title}
+        value={modalContent.value}
+        onChange={handleModalChange}
+        isTextArea={modalContent.isTextArea}
+      />
+
+      <Handle type="target" position="top" className="target-handle" />
+      <Handle type="source" position="bottom" className="source-handle" />
     </div>
   );
 };

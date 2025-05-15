@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import {
   Menu,
   Settings,
@@ -94,7 +94,7 @@ export default function TopBar({
           )}
 
           {/* New Chat Button - Only show when sidebar is closed and not explicitly hidden */}
-          {!sidebarVisible && onNewChatClick && !hideNewChat && (
+          {/* {!sidebarVisible && onNewChatClick && !hideNewChat && (
             <div
               onClick={onNewChatClick}
               className="hidden sm:flex items-center gap-2 px-3 py-2 bg-blue-400 text-gray-900 hover:shadow-[0px_0px_10px_rgba(96,165,250,0.7)] rounded-md transition-colors duration-300 font-medium cursor-pointer"
@@ -103,7 +103,7 @@ export default function TopBar({
               <PlusCircle size={18} />
               <span className="hidden sm:inline">New Chat</span>
             </div>
-          )}
+          )} */}
 
           {/* Creative Workflow Name Display */}
           {currentWorkflow && (
@@ -149,6 +149,9 @@ export default function TopBar({
               <item.icon size={20} />
             </button>
           ))}
+          <Link to="/premade" className="nav-link">
+            Pre-made Workflows
+          </Link>
         </div>
       </div>
     </div>

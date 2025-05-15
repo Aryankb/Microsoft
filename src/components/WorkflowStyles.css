@@ -1,0 +1,23 @@
+.edgebutton-foreignobject {
+  overflow: visible;
+  pointer-events: all;
+}
+
+.edgebutton-foreignobject button {
+  background: white;
+  border: 1px solid #555;
+  border-radius: 50%;
+  cursor: pointer;
+  width: 30px;
+  height: 30px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  transition: all 0.2s ease;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.edgebutton-foreignobject button:hover {
+  background: #f8f8f8;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+}

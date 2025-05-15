@@ -1,55 +1,200 @@
-/* Default node styles */
+/* Modern Node Styles */
 .custom-node {
-  border: 2px solid #333;
-  padding: 10px;
-  border-radius: 8px;
-  width: 220px;
-  text-align: center;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 12px;
+  border-radius: 10px;
+  width: 250px;
   position: relative;
-  box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+  background: linear-gradient(145deg, rgba(30, 30, 30, 0.95), rgba(40, 40, 40, 0.95));
+  transition: all 0.3s ease;
+  backdrop-filter: blur(5px);
+  overflow: hidden;
+}
+
+.custom-node:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.2);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+/* Styling for nodes that also have IconNode representation */
+.custom-node.with-icon-node {
+  padding: 8px;
+  width: auto;
+  min-width: 180px;
+  background: linear-gradient(145deg, rgba(20, 20, 20, 0.85), rgba(30, 30, 30, 0.85));
+  border: 1px solid rgba(255, 255, 255, 0.05);
 }
 
 /* Node Type Colors */
 .node-llm {
-  background-color: rgba(0, 173, 181, 0.2); /* Light Primary Color */
+  background: linear-gradient(145deg, rgba(0, 60, 80, 0.75), rgba(0, 40, 60, 0.75));
+  border-left: 3px solid rgba(0, 173, 181, 0.8);
 }
 
 .node-connector {
-  background-color: rgba(255, 173, 70, 0.2); /* Light Warning Color */
+  background: linear-gradient(145deg, rgba(80, 60, 0, 0.75), rgba(60, 40, 0, 0.75));
+  border-left: 3px solid rgba(255, 173, 70, 0.8);
 }
 
 .node-tool {
-  background-color: rgba(255, 107, 107, 0.2); /* Light Secondary Color */
+  background: linear-gradient(145deg, rgba(80, 30, 30, 0.75), rgba(60, 20, 20, 0.75));
+  border-left: 3px solid rgba(255, 107, 107, 0.8);
 }
 
+/* Specific node theme colors */
+.gmail-node {
+  border-left: 3px solid rgba(234, 67, 53, 0.8); /* Gmail red */
+}
+
+.notion-node {
+  border-left: 3px solid rgba(255, 255, 255, 0.8); /* Notion white */
+}
+
+.iterator-node {
+  border-left: 3px solid rgba(255, 207, 51, 0.8); /* Yellow */
+}
+
+.validator-node {
+  border-left: 3px solid rgba(147, 51, 234, 0.8); /* Purple */
+}
+
+.gemini-node {
+  border-left: 3px solid rgba(108, 99, 255, 0.8); /* Gemini blue-purple */
+}
+
+/* Node Header Styling */
 .node-header {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
+  margin-bottom: 12px;
+}
+
+.node-header.minimal {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-bottom: 4px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  margin-bottom: 8px;
+}
+
+.node-title-wrapper {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  position: relative;
+}
+
+/* Updated Node ID Badge styling */
+.node-id-badge {
+  background-color: rgba(0, 0, 0, 0.4);
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 10px;
+  font-weight: bold;
+  padding: 2px 6px;
+  border-radius: 10px;
+  margin-right: 6px;
+  min-width: 18px;
+  text-align: center;
+  cursor: pointer;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  transition: all 0.2s ease;
+}
+
+.node-id-badge:hover {
+  background-color: rgba(0, 0, 0, 0.6);
+  transform: scale(1.1);
+  border-color: rgba(255, 255, 255, 0.3);
 }
 
 .node-title {
-  font-weight: bold;
+  font-weight: 600;
   color: rgb(230, 230, 230);
-  display: flex;
-  align-items: center;
-  margin-bottom: 4px;
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-/* Add a small margin to align icon and text properly */
-.node-title svg {
-  margin-right: 4px;
+.node-icon-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.node-icon {
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.node-icon.gmail {
+  color: #ea4335; /* Gmail red */
+}
+
+.node-icon.sheets {
+  color: #0f9d58; /* Google Sheets green */
+}
+
+.node-icon.docs {
+  color: #4285f4; /* Google Docs blue */
+}
+
+.node-icon.meet {
+  color: #00897b; /* Google Meet green */
+}
+
+.node-icon.notion {
+  color: #ffffff; /* Notion white */
+}
+
+.node-icon.youtube {
+  color: #ff0000; /* YouTube red */
+}
+
+.node-icon.linkedin {
+  color: #0a66c2; /* LinkedIn blue */
+}
+
+.node-icon.calendar {
+  color: #4285f4; /* Calendar blue */
+}
+
+.node-icon.iterator {
+  color: #ffcf33; /* Yellow */
+}
+
+.node-icon.validator {
+  color: #9333ea; /* Purple */
+}
+
+.node-icon.delegator {
+  color: #3b82f6; /* Blue */
+}
+
+.node-icon.gemini {
+  color: #8c85ff; /* Gemini purple-blue */
+}
+
+.node-icon.llm {
+  color: #22d3ee; /* Cyan */
+}
+
+.node-icon.code {
+  color: #10b981; /* Green */
 }
 
 .node-action {
   font-size: 12px;
   color: rgb(255, 255, 255);
-  background-color: rgba(0, 0, 0, 0.5);
-  padding: 2px 6px;
+  background: linear-gradient(90deg, rgba(0, 0, 0, 0.5), rgba(20, 20, 20, 0.5));
+  padding: 3px 8px;
   border-radius: 4px;
-  margin-top: 2px;
+  margin-top: 6px;
   align-self: flex-start;
   display: inline-block;
+  border-left: 2px solid rgba(255, 255, 255, 0.2);
 }
 
 /* Execution mark at bottom-right */
@@ -57,119 +202,88 @@
   position: absolute;
   bottom: -10px;
   right: -10px;
-  padding: 5px 8px;
-  font-size: 12px;
+  padding: 6px 10px;
+  font-size: 11px;
   font-weight: bold;
-  border-radius: 5px;
+  border-radius: 6px;
   color: white;
-}
-
-.execution-mark.green {
-  background-color: #22c55e; /* Success color */
-}
-
-.execution-mark.red {
-  background-color: #ff6b6b; /* Secondary color */
-}
-
-.node-section {
-  margin-top: 10px;
-  text-align: left;
-}
-
-.field-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 4px;
-}
-
-.expand-button {
-  background-color: rgba(0, 0, 0, 0.2);
-  border: 1px solid rgba(255, 255, 255, 0.3);
-  cursor: pointer;
-  color: #fff;
-  padding: 3px;
-  border-radius: 4px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
   display: flex;
   align-items: center;
   justify-content: center;
+  backdrop-filter: blur(3px);
+}
+
+.execution-mark.green {
+  background: linear-gradient(145deg, rgba(34, 197, 94, 0.9), rgba(21, 128, 61, 0.9));
+}
+
+.execution-mark.red {
+  background: linear-gradient(145deg, rgba(239, 68, 68, 0.9), rgba(153, 27, 27, 0.9));
+}
+
+/* Handle styling */
+.target-handle, .source-handle {
+  width: 10px;
+  height: 10px;
+  background: rgba(255, 255, 255, 0.7);
+  border: 2px solid rgba(30, 30, 30, 1);
   transition: all 0.2s ease;
 }
 
-.expand-button:hover {
-  background-color: rgba(0, 173, 181, 0.4); /* Primary color with opacity */
-  transform: scale(1.1);
+.target-handle:hover, .source-handle:hover {
+  background: rgba(255, 255, 255, 1);
+  transform: scale(1.2);
 }
 
-.textarea-container {
-  position: relative;
-  transition: all 0.3s ease;
-}
-
+/* Improved styling for expanded text areas */
 .textarea-container.expanded {
-  position: fixed;
-  z-index: 999;
-  width: 600px;
-  max-width: 90vw;
-  max-height: 80vh;
-  background-color: #1e1e1e; /* Card color */
-  padding: 15px;
-  border-radius: 8px;
-  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.4);
-  left: 50%;
-  top: 50%;
-  transform: translate(-50%, -50%);
-  overflow: auto;
-}
-
-/* Different sizes based on content length */
-.textarea-container.expanded.small {
-  width: 400px;
-  max-height: 60vh;
-}
-
-.textarea-container.expanded.medium {
-  width: 600px;
-  max-height: 70vh;
-}
-
-.textarea-container.expanded.large {
-  width: 800px;
-  max-height: 80vh;
-  max-width: 90vw; /* Ensure it doesn't go off screen */
-}
-
-/* Adjust textarea height based on content size */
-.textarea-container.expanded.small .node-input {
-  min-height: 50px;
-  max-height: 50vh;
-}
-
-.textarea-container.expanded.medium .node-input {
-  min-height: 150px;
-  max-height: 60vh;
-}
-
-.textarea-container.expanded.large .node-input {
-  min-height: 250px;
-  max-height: 70vh;
-}
-
-.textarea-container.expanded .node-input {
-  min-height: auto;
-  max-height: 70vh;
-  background-color: #3a3a3a;
-  color: white;
-  font-size: 15px;
-  line-height: 1.5;
-  padding: 12px;
-  border: 1px solid #666;
-  box-shadow: inset 0 0 8px rgba(0, 0, 0, 0.2);
+  display: none;
 }
 
 .textarea-container.expanded::before {
-  content: "";
+  display: none;
+}
+
+/* Make sure textarea inside expanded container is visible */
+.textarea-container.expanded textarea.node-input,
+.textarea-container.expanded input.node-input {
+  width: 100%;
+  min-height: 150px; /* Taller minimum height */
+  background-color: rgba(0, 0, 0, 0.3);
+  color: white;
+  font-size: 14px;
+  line-height: 1.6;
+  padding: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 6px;
+  resize: vertical;
+  margin-top: 10px;
+  max-height: 60vh; /* Ensure it's not too tall */
+}
+
+/* Better scrolling for expanded textareas */
+.textarea-container.expanded textarea.node-input::-webkit-scrollbar {
+  width: 8px;
+}
+
+.textarea-container.expanded textarea.node-input::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 4px;
+}
+
+.textarea-container.expanded textarea.node-input::-webkit-scrollbar-thumb {
+  background-color: rgba(255, 255, 255, 0.3);
+  border-radius: 4px;
+}
+
+.textarea-container.expanded textarea.node-input::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(255, 255, 255, 0.4);
+}
+
+/* Overlay to ensure the modal is visible against the background */
+.textarea-container.expanded::before {
+  content: '';
   position: fixed;
   top: 0;
   left: 0;
@@ -177,193 +291,353 @@
   bottom: 0;
   background-color: rgba(0, 0, 0, 0.5);
   z-index: -1;
+  backdrop-filter: blur(3px);
 }
 
+/* Enhanced text area styling */
+.textarea-container {
+  position: relative;
+  width: 100%;
+  transition: all 0.2s ease;
+  margin-bottom: 8px;
+}
+
+.field-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 6px;
+  font-size: 12px;
+}
+
+.field-header .input-label {
+  color: rgba(255, 255, 255, 0.8);
+  font-weight: 500;
+  max-width: 80%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.field-header strong {
+  color: rgba(255, 255, 255, 0.8);
+  font-weight: 500;
+}
+
+.expand-button {
+  background: transparent;
+  border: none;
+  color: rgba(255, 255, 255, 0.6);
+  padding: 2px;
+  cursor: pointer;
+  transition: color 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.expand-button:hover {
+  color: rgba(255, 255, 255, 1);
+}
+
+/* Improved textarea styling */
+textarea.node-input {
+  min-height: 80px;
+  resize: vertical;
+  line-height: 1.5;
+  margin-top: 4px;
+}
+
+/* Expanded header in modal */
 .expanded-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 10px;
   padding-bottom: 8px;
-  border-bottom: 1px solid #555;
+  margin-bottom: 12px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .expanded-title {
-  font-weight: bold;
-  color: #fff;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.9);
   font-size: 16px;
 }
 
 .expanded-close {
-  background: rgba(255, 255, 255, 0.1);
+  background: transparent;
   border: none;
-  color: white;
-  border-radius: 4px;
-  padding: 4px 8px;
+  color: rgba(255, 255, 255, 0.6);
   cursor: pointer;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  transition: all 0.2s ease;
 }
 
 .expanded-close:hover {
-  background: rgba(0, 173, 181, 0.3); /* Primary color with opacity */
+  color: rgba(255, 255, 255, 1);
+  background-color: rgba(255, 255, 255, 0.1);
 }
 
-.textarea-container.expanded label {
-  color: #ffffff;
-  font-weight: bold;
-  margin-bottom: 4px;
-  display: block;
-}
-
-.node-input {
-  width: 100%;
-  height: auto; /* Auto size */
-  min-height: 50px; /* Default height */
-  font-size: 14px;
-  padding: 8px;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-  resize: vertical; /* Allow manual resizing */
-  overflow-y: auto; /* Enable scrolling for large content */
-  white-space: pre-wrap; /* Prevent content from being cut off */
-  background-color: #00000060;
-  transition: all 0.3s ease;
-}
-
-.node-input:focus {
-  outline: 2px solid #4a90e2;
-}
-
-.config-input-item {
-  margin-bottom: 8px;
-  position: relative;
-}
-
-.config-input-item .field-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 2px;
-}
-
-.config-input-item .input-label {
-  margin-bottom: 0;
-  font-size: 12px;
-  font-weight: bold;
-}
-
-/* Make expanded inputs from config more visually appealing */
-.config-input-item .textarea-container.expanded {
-  width: 500px;
-  z-index: 1001; /* Higher than other expanded sections */
-}
-
-.config-input-item .textarea-container.expanded input {
-  font-size: 16px;
-  padding: 12px;
-  background-color: #3a3a3a;
-  color: white;
-  border: 1px solid #666;
-  height: auto;
-  width: 100%;
-}
-
-/* For input fields from config */
-.config-input-item .textarea-container.expanded.small {
-  width: 350px;
-}
-
-.config-input-item .textarea-container.expanded.medium,
-.config-input-item .textarea-container.expanded.large {
-  width: 500px;
-}
-
-/* Add these styles for file upload */
-.file-upload-label {
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  gap: 4px;
-}
-
-.hidden-file-input {
-  display: none;
-}
-
-/* File upload and delete button styles */
-.file-delete-button {
-  margin-left: 10px;
-  padding: 4px 8px;
-  background-color: #f44336;
-  color: white;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: 12px;
-  transition: all 0.3s ease;
-}
-
-.file-delete-button:hover {
-  background-color: #d32f2f;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-}
-
-/* Optional: Add hover effect */
-.file-upload-label:hover {
-  opacity: 0.8;
-}
-
-/* Uploaded files list styling */
+/* File upload styling */
 .file-list-section {
-  margin-top: 10px;
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  margin-top: 12px;
   padding-top: 8px;
+  border-top: 1px dashed rgba(255, 255, 255, 0.1);
 }
 
 .uploaded-files-header {
   font-size: 12px;
-  font-weight: bold;
-  color: #fff;
-  margin-bottom: 6px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.8);
+  margin-bottom: 8px;
 }
 
 .uploaded-file-item {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  padding: 6px 8px;
   background-color: rgba(0, 0, 0, 0.2);
   border-radius: 4px;
-  padding: 6px 8px;
   margin-bottom: 6px;
 }
 
 .file-info {
-  flex: 1;
-  overflow: hidden;
+  display: flex;
+  align-items: center;
+  max-width: 70%;
 }
 
 .file-name {
   font-size: 12px;
+  color: rgba(255, 255, 255, 0.9);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  max-width: 120px;
-  display: inline-block;
 }
 
-/* Adjust the delete button for uploaded files */
-.uploaded-file-item .file-delete-button {
-  margin-left: 8px;
-  padding: 2px 6px;
-  background-color: #f44336;
+.file-delete-button {
+  background-color: rgba(220, 38, 38, 0.6);
   color: white;
   border: none;
+  padding: 3px 6px;
   border-radius: 3px;
+  font-size: 10px;
   cursor: pointer;
-  font-size: 11px;
+  transition: background-color 0.2s ease;
+}
+
+.file-delete-button:hover {
+  background-color: rgba(220, 38, 38, 0.8);
+}
+
+/* File upload button styling */
+.upload-section {
+  margin-top: 8px;
+  margin-bottom: 12px;
+}
+
+.upload-button {
+  display: inline-block;
+  background: linear-gradient(90deg, rgba(16, 185, 129, 0.8), rgba(5, 150, 105, 0.8));
+  color: white;
+  font-size: 12px;
+  font-weight: 500;
+  padding: 6px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: center;
+  border: none;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.upload-button:hover {
+  background: linear-gradient(90deg, rgba(16, 185, 129, 0.9), rgba(5, 150, 105, 0.9));
+  transform: translateY(-1px);
+  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.15);
+}
+
+.upload-button:active {
+  transform: translateY(0);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+/* Config input item */
+.config-input-item {
+  margin-bottom: 10px;
+}
+
+/* Modern styling for node inputs */
+.node-input {
+  width: 100%;
+  background-color: rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: white;
+  border-radius: 6px;
+  padding: 8px 12px;
+  font-size: 14px;
   transition: all 0.2s ease;
 }
 
-.uploaded-file-item .file-delete-button:hover {
-  background-color: #d32f2f;
-  transform: scale(1.05);
+.node-input:focus {
+  outline: none;
+  border-color: rgba(59, 130, 246, 0.5);
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.3);
+}
+
+.with-icon-node .node-section {
+  margin-top: 6px;
+}
+
+.with-icon-node .field-header {
+  margin-bottom: 4px;
+}
+
+.with-icon-node .node-input {
+  font-size: 12px;
+  padding: 6px 8px;
+}
+
+/* Remove info-icon styling */
+.info-icon {
+  display: none;
+}
+
+/* Custom tooltip styling */
+:root {
+  --rt-color-white: #fff;
+  --rt-color-dark: #222;
+  --rt-color-info: #272727;
+  --rt-opacity: 0.95;
+}
+
+/* Override react-tooltip styling to match IconNode */
+[id^="tooltip-"] {
+  border-radius: 8px !important;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.25) !important;
+  max-width: 250px !important;
+  padding: 8px 10px !important;
+  backdrop-filter: blur(10px) !important;
+  background-color: var(--rt-color-info, #272727) !important;
+}
+
+[id^="tooltip-"] div {
+  font-size: 12px !important;
+  line-height: 1.4 !important;
+  margin-bottom: 4px !important;
+  color: white !important;
+}
+
+[id^="tooltip-"] div:first-child {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
+  padding-bottom: 4px !important;
+  margin-bottom: 6px !important;
+}
+
+[id^="tooltip-"] strong {
+  font-weight: 600 !important;
+  margin-right: 4px !important;
+}
+
+/* Input preview styling */
+.input-preview {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.7);
+  background-color: rgba(0, 0, 0, 0.2);
+  border-radius: 4px;
+  padding: 6px 8px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  margin-top: 2px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  position: relative;
+}
+
+.input-preview:hover {
+  border-color: rgba(255, 255, 255, 0.3);
+  background-color: rgba(0, 0, 0, 0.3);
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+}
+
+.input-preview:active {
+  transform: translateY(1px);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+}
+
+/* Indicate it's clickable with a subtle edit icon on hover */
+.input-preview::after {
+  content: '✎';
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 10px;
+  color: rgba(255, 255, 255, 0.4);
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.input-preview:hover::after {
+  opacity: 1;
+}
+
+.prompt-preview {
+  font-style: italic;
+  max-height: 60px;
+  white-space: normal;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  padding-right: 20px; /* Space for the edit icon */
+}
+
+/* New simplified node identifier */
+.node-identifier {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 12px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.node-title-mini {
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.8);
+  font-weight: 500;
+  text-transform: capitalize;
+  background-color: rgba(0, 0, 0, 0.2);
+  border-radius: 4px;
+  padding: 2px 6px;
+  max-width: 150px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* New tool action tag styling */
+.node-action-tag {
+  display: inline-block;
+  font-size: 10px;
+  color: white;
+  background: linear-gradient(90deg, rgba(59, 130, 246, 0.7), rgba(29, 78, 216, 0.7));
+  padding: 2px 6px;
+  border-radius: 3px;
+  margin-bottom: 8px;
+  font-weight: 500;
+  letter-spacing: 0.2px;
+  text-transform: uppercase;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+  position: absolute;
+  top: 8px;
+  right: 8px;
 }

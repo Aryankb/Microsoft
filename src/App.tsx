@@ -6,6 +6,7 @@ import ApiKeyModal from "./components/ApiKeyModal";
 import ManageAuth from "./components/ManageAuth";
 import ShootingStarsAndStarsBackgroundDemo from "./components/ui/shooting-stars-and-stars-background-demo";
 import CustomSignInForm from "./components/ui/custom-signin-form";
+import PremadeWorkflows from "./components/PremadeWorkflows";
 import { useState } from "react";
 
 const CLERK_PUBLISHABLE_KEY =
@@ -97,6 +98,7 @@ function App() {
             <Route path="/create-tool" element={<CreateToolPage />} />
             <Route path="/api-keys" element={<ManageAuth />} />
             <Route path="/manage-auths" element={<ManageAuth />} />
+            <Route path="/premade" element={<PremadeWorkflows />} />
           </Routes>
         </SignedIn>
       </Router>
@@ -107,13 +109,18 @@ function App() {
 // ✅ Move useAuth inside a child component
 import { useEffect } from "react";
 import { useAuth } from "@clerk/clerk-react";
+
 function MainLayoutWithAuthCheck() {
   const { getToken } = useAuth();
 
   useEffect(() => {
+    let mounted = true;
+
     const checkUser = async () => {
       try {
         const token = await getToken();
+        if (!mounted) return;
+        
         const response = await fetch("http://localhost:8000/checkuser", {
           method: "POST",
           headers: {
@@ -121,15 +128,22 @@ function MainLayoutWithAuthCheck() {
             Authorization: `Bearer ${token}`,
           },
         });
+        if (!mounted) return;
+        
         const data = await response.json();
         console.log("User Check Response:", data);
       } catch (error) {
-        console.error("Error checking user:", error);
+        if (mounted) {
+          console.error("Error checking user:", error);
+        }
       }
     };
 
     checkUser();
-  }, [getToken]);
+    return () => {
+      mounted = false;
+    };
+  }, []); // Remove getToken from dependencies
 
   return <MainLayout />;
 }
