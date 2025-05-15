@@ -157,7 +157,7 @@ const IconNode: React.FC<IconNodeProps> = ({ data }) => {
       >
         {/* Info icon with tooltip */}
         <div className="icon-info-tooltip" data-tooltip-id={`icon-tooltip-${data.id}`}>
-          <Info size={10} className="icon-info-icon" />
+          <Info size={25} className="icon-info-icon" />
         </div>
         <Tooltip id={`icon-tooltip-${data.id}`} place="top" effect="solid" className="icon-tooltip">
           <div className="icon-tooltip-content">

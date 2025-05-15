@@ -420,7 +420,7 @@ const CustomNode: React.FC<CustomNodeProps> = ({ data }) => {
             {typeof data.label === "string" && data.label.split("_").pop()}
           </div>
         )}
-        <Tooltip id={`tooltip-${data.id}`} place="top" effect="solid">
+        {/* <Tooltip id={`tooltip-${data.id}`} place="top" effect="solid">
           <div>
             <strong>ID:</strong> {data.id}
           </div>
@@ -435,7 +435,7 @@ const CustomNode: React.FC<CustomNodeProps> = ({ data }) => {
               <strong>Description:</strong> {data.description}
             </div>
           )}
-        </Tooltip>
+        </Tooltip> */}
       </div>
 
       {/* Tool action tag if present */}
