@@ -8,7 +8,8 @@
     "build": "node_modules/.bin/vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "vercel-build": "yarn install && node_modules/.bin/vite build"
+    "vercel-build": "yarn install && node_modules/.bin/vite build",
+     "type-check": "tsc --noEmit"
   },
   "dependencies": {
     "@clerk/clerk-react": "^5.23.0",

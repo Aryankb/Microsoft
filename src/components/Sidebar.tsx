@@ -59,7 +59,7 @@ export default function Sidebar({
         const token = await getToken();
         if (!mounted) return;
 
-        const response = await fetch("http://localhost:8000/sidebar_workflows", {
+        const response = await fetch("http://52.90.220.109/sidebar_workflows", {
           headers: { Authorization: `Bearer ${token}` },
         });
 
@@ -118,7 +118,7 @@ export default function Sidebar({
     try {
       const token = await getToken();
       const response = await fetch(
-        `http://localhost:8000/delete_workflow/${workflowId}`,
+        `http://52.90.220.109/delete_workflow/${workflowId}`,
         {
           method: "DELETE",
           headers: {

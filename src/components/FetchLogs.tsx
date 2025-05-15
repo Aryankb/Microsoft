@@ -24,7 +24,7 @@ export const useWorkflowLogs = (onLogReceived: (log: LogMessage) => void) => {
 
         try {
             const token = await getToken();
-            const ws = new WebSocket(`ws://localhost:8000/ws?token=${token}`);
+            const ws = new WebSocket(`ws://52.90.220.109/ws?token=${token}`);
             wsRef.current = ws;
 
             ws.onopen = () => {
