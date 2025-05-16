@@ -24,7 +24,8 @@ export const useWorkflowLogs = (onLogReceived: (log: LogMessage) => void) => {
 
         try {
             const token = await getToken();
-            const ws = new WebSocket(`wss://backend.sigmoyd.in/ws?token=${token}`);
+            // const ws = new WebSocket(`wss://backend.sigmoyd.in/ws?token=${token}`);
+            const ws = new WebSocket(`wss://backend.sigmoyd.in/ws`);
             wsRef.current = ws;
 
             ws.onopen = () => {
