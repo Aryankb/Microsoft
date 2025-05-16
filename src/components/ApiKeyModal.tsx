@@ -26,7 +26,7 @@ export default function ApiKeyPage() {
 
     try {
       const token = await getToken();
-      const response = await fetch("http://127.0.0.1:8000/save_api_keys", {
+      const response = await fetch("https://backend.sigmoyd.in/save_api_keys", {
         method: "POST",
         headers: { "Content-Type": "application/json",
           'Authorization': `Bearer ${token}`

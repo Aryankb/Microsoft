@@ -72,7 +72,7 @@ const CustomNode: React.FC<CustomNodeProps> = ({ data }) => {
 
     try {
       const token = await getToken();
-      const response = await fetch("http://52.90.220.109/file_upload", {
+      const response = await fetch("https://backend.sigmoyd.in/file_upload", {
         method: "POST",
         headers: { Authorization: `Bearer ${token}` },
         body: formData,
@@ -97,7 +97,7 @@ const CustomNode: React.FC<CustomNodeProps> = ({ data }) => {
 
     try {
       const token = await getToken();
-      const response = await fetch("http://52.90.220.109/file_delete", {
+      const response = await fetch("https://backend.sigmoyd.in/file_delete", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

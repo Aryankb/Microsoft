@@ -563,7 +563,7 @@ const WorkflowGraph: React.FC<WorkflowGraphProps> = ({
   const saveWorkflowWithInputs = async () => {
     const token = await getToken();
     try {
-      const response = await fetch("http://52.90.220.109/save_workflow", {
+      const response = await fetch("https://backend.sigmoyd.in/save_workflow", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -589,7 +589,7 @@ const WorkflowGraph: React.FC<WorkflowGraphProps> = ({
   const saveWorkflow = async () => {
     const token = await getToken();
     try {
-      const response = await fetch("http://52.90.220.109/save_workflow", {
+      const response = await fetch("https://backend.sigmoyd.in/save_workflow", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -617,7 +617,7 @@ const WorkflowGraph: React.FC<WorkflowGraphProps> = ({
   const fetchWorkflows = async () => {
     try {
       const token = await getToken();
-      const response = await fetch("http://52.90.220.109/sidebar_workflows", {
+      const response = await fetch("https://backend.sigmoyd.in/sidebar_workflows", {
         headers: { Authorization: `Bearer ${token}` },
       });
 
@@ -670,8 +670,8 @@ const WorkflowGraph: React.FC<WorkflowGraphProps> = ({
 
     const url =
       workflowJson.trigger.name === "TRIGGER_MANUAL"
-        ? "http://52.90.220.109/run_workflow"
-        : "http://52.90.220.109/activate_workflow";
+        ? "https://backend.sigmoyd.in/run_workflow"
+        : "https://backend.sigmoyd.in/activate_workflow";
 
     console.log("🚀 Running or activating workflow:", workflowData);
 

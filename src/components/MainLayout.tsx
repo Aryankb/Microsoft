@@ -108,7 +108,7 @@ export default function MainLayout() {
     if (mode === "general") {
       try {
         const token = await getToken();
-        const response = await fetch("http://52.90.220.109/general", {
+        const response = await fetch("https://backend.sigmoyd.in/general", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -233,7 +233,7 @@ export default function MainLayout() {
 
     try {
       const token = await getToken();
-      const response = await fetch("http://52.90.220.109/refine_query", {
+      const response = await fetch("https://backend.sigmoyd.in/refine_query", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -319,7 +319,7 @@ export default function MainLayout() {
       setQanda(updatedQandA);
       console.log("Q&A:", updatedQandA);
       console.log("refinedQuery:", refinedQuery);
-      const response = await fetch("http://52.90.220.109/refine_query", {
+      const response = await fetch("https://backend.sigmoyd.in/refine_query", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -348,7 +348,7 @@ export default function MainLayout() {
   const sendRefinedQuery = async (updatedQandA: QandA) => {
     try {
       const token = await getToken();
-      const response = await fetch("http://52.90.220.109/refine_query", {
+      const response = await fetch("https://backend.sigmoyd.in/refine_query", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -392,7 +392,7 @@ export default function MainLayout() {
   const fetchWorkflows = async () => {
     try {
       const token = await getToken();
-      const response = await fetch("http://52.90.220.109/sidebar_workflows", {
+      const response = await fetch("https://backend.sigmoyd.in/sidebar_workflows", {
         headers: { Authorization: `Bearer ${token}` },
       });
 
@@ -437,7 +437,7 @@ export default function MainLayout() {
         advancePhase();
       }, 500);
 
-      const response = await fetch("http://52.90.220.109/create_agents", {
+      const response = await fetch("https://backend.sigmoyd.in/create_agents", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -610,7 +610,7 @@ export default function MainLayout() {
     try {
       console.log("Making workflow public:", publicWorkflow);
       const token = await getToken();
-      const response = await fetch("http://52.90.220.109/public_workflow", {
+      const response = await fetch("https://backend.sigmoyd.in/public_workflow", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

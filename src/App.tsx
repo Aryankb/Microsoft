@@ -119,7 +119,7 @@ function MainLayoutWithAuthCheck() {
         const token = await getToken();
         if (!mounted) return;
         
-        const response = await fetch("http://52.90.220.109/checkuser", {
+        const response = await fetch("https://backend.sigmoyd.in/checkuser", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
