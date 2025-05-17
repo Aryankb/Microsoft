@@ -5,6 +5,12 @@
   gap: 1.5rem;
   padding: 1rem;
   max-width: 100%;
+  max-height: calc(
+    100vh - 180px
+  ); /* Adjust based on your header/footer heights */
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scroll-behavior: smooth;
 }
 
 /* Message Bubbles */
@@ -535,4 +541,3 @@
   color: var(--color-text-secondary);
   cursor: not-allowed;
 }
-

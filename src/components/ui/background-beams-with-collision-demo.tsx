@@ -4,7 +4,7 @@ import { BackgroundBeamsWithCollision } from "./background-beams-with-collision"
 export default function BackgroundBeamsWithCollisionDemo() {
   return (
     <BackgroundBeamsWithCollision className="absolute inset-0">
-      <div className="relative left-1/2 z-20 pb-40 text-center transform -translate-y-1/2">
+      <div className="relative left-1/2 z-20 pb-20 text-center transform -translate-y-1/2">
         <h2 className="text-4xl md:text-6xl lg:text-8xl font-bold text-white font-sans tracking-tight mb-2 relative z-30">
           SIGMOYD
         </h2>

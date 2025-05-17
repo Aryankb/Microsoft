@@ -1,4 +1,4 @@
-import { ClerkProvider, SignedIn, SignedOut ,SignIn} from "@clerk/clerk-react";
+import { ClerkProvider, SignedIn, SignedOut, SignIn } from "@clerk/clerk-react";
 import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
 import MainLayout from "../src/components/MainLayout";
 import CreateToolPage from "./components/CreateToolPage";
@@ -6,7 +6,8 @@ import ManageAuth from "./components/ManageAuth";
 import ShootingStarsAndStarsBackgroundDemo from "./components/ui/shooting-stars-and-stars-background-demo";
 import CustomSignInForm from "./components/ui/custom-signin-form";
 import PremadeWorkflows from "./components/PremadeWorkflows";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import OnboardingFlow from "./components/ui/OnboardingFlow";
 
 const CLERK_PUBLISHABLE_KEY =
   "pk_test_bWludC1kaW5vc2F1ci01NC5jbGVyay5hY2NvdW50cy5kZXYk";
@@ -14,6 +15,8 @@ const CLERK_PUBLISHABLE_KEY =
 function App() {
   // Toggle to switch between custom and Clerk UI (for development)
   const [useCustomUI, setUseCustomUI] = useState(true);
+  const [isNewUser, setIsNewUser] = useState(false);
+  const [onboardingComplete, setOnboardingComplete] = useState(true);
 
   return (
     <ClerkProvider publishableKey={CLERK_PUBLISHABLE_KEY}>
@@ -91,13 +94,25 @@ function App() {
         </SignedOut>
 
         <SignedIn>
-          <Routes>
-            <Route path="/*" element={<MainLayoutWithAuthCheck />} />
-            <Route path="/create-tool" element={<CreateToolPage />} />
-            <Route path="/api-keys" element={<ManageAuth />} />
-            <Route path="/manage-auths" element={<ManageAuth />} />
-            <Route path="/premade" element={<PremadeWorkflows />} />
-          </Routes>
+          {!onboardingComplete ? (
+            <OnboardingFlow onComplete={() => setOnboardingComplete(true)} />
+          ) : (
+            <Routes>
+              <Route
+                path="/*"
+                element={
+                  <MainLayoutWithAuthCheck
+                    onNewUser={setIsNewUser}
+                    onboardingComplete={setOnboardingComplete}
+                  />
+                }
+              />
+              <Route path="/create-tool" element={<CreateToolPage />} />
+              <Route path="/api-keys" element={<ManageAuth />} />
+              <Route path="/manage-auths" element={<ManageAuth />} />
+              <Route path="/premade" element={<PremadeWorkflows />} />
+            </Routes>
+          )}
         </SignedIn>
       </Router>
     </ClerkProvider>
@@ -105,10 +120,15 @@ function App() {
 }
 
 // ✅ Move useAuth inside a child component
-import { useEffect } from "react";
 import { useAuth } from "@clerk/clerk-react";
 
-function MainLayoutWithAuthCheck() {
+function MainLayoutWithAuthCheck({
+  onNewUser,
+  onboardingComplete,
+}: {
+  onNewUser: (isNew: boolean) => void;
+  onboardingComplete: (isComplete: boolean) => void;
+}) {
   const { getToken } = useAuth();
 
   useEffect(() => {
@@ -118,7 +138,7 @@ function MainLayoutWithAuthCheck() {
       try {
         const token = await getToken();
         if (!mounted) return;
-        
+
         const response = await fetch("https://backend.sigmoyd.in/checkuser", {
           method: "POST",
           headers: {
@@ -127,9 +147,15 @@ function MainLayoutWithAuthCheck() {
           },
         });
         if (!mounted) return;
-        
+
         const data = await response.json();
         console.log("User Check Response:", data);
+
+        // Check if user needs to complete onboarding
+        if (data.isNewUser || data.onboardingIncomplete) {
+          onNewUser(true);
+          onboardingComplete(false);
+        }
       } catch (error) {
         if (mounted) {
           console.error("Error checking user:", error);
