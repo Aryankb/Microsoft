@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import Sidebar from "./Sidebar";
 import TopBar from "./TopBar";
 import { useAuth } from "@clerk/clerk-react";
@@ -41,6 +41,7 @@ type QandA = {
 }[];
 
 export default function MainLayout() {
+  const { getToken } = useAuth();
   const [showSidebar, setShowSidebar] = useState(false);
   const [message, setMessage] = useState("");
   const [chats, setChats] = useState<ChatMessage[]>([]);
@@ -49,7 +50,6 @@ export default function MainLayout() {
   const [qanda, setQanda] = useState<{ [key: string]: string }>({});
   const [questions, setQuestions] = useState<string[]>([]);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
-  const { getToken } = useAuth();
   const [refinedQuery, setRefinedQuery] = useState<string | null>(null);
   const [workflowJson, setWorkflowJson] = useState(null);
   const [showWorkflow, setShowWorkflow] = useState(false);
@@ -62,6 +62,8 @@ export default function MainLayout() {
   const [bootComplete, setBootComplete] = useState(false);
   const [fullScreenWorkflow, setFullScreenWorkflow] = useState(false);
   const [showPublicDialog, setShowPublicDialog] = useState(false);
+
+  const chatContainerRef = useRef<HTMLDivElement>(null);
 
   const bootSequence = [
     "Initializing workflow engine...",
@@ -260,19 +262,19 @@ export default function MainLayout() {
               </span>
             );
           });
-          
-          // <div>{mainText}</div>
-          // <div className="option-buttons">
-          //   {options.map((option, index) => (
-          //     <button 
-          //       key={index}
-          //       className="message-list-button"
-          //       onClick={() => setMessage(option.trim())}
-          //     >
-          //       {option.trim()}
-          //     </button>
-          //   ))}
-          // </div>
+
+        // <div>{mainText}</div>
+        // <div className="option-buttons">
+        //   {options.map((option, index) => (
+        //     <button
+        //       key={index}
+        //       className="message-list-button"
+        //       onClick={() => setMessage(option.trim())}
+        //     >
+        //       {option.trim()}
+        //     </button>
+        //   ))}
+        // </div>
         setQuestions(data.response);
         setCurrentQuestionIndex(1);
 
@@ -392,9 +394,12 @@ export default function MainLayout() {
   const fetchWorkflows = async () => {
     try {
       const token = await getToken();
-      const response = await fetch("https://backend.sigmoyd.in/sidebar_workflows", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const response = await fetch(
+        "https://backend.sigmoyd.in/sidebar_workflows",
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
 
       if (!response.ok)
         throw new Error(`HTTP error! Status: ${response.status}`);
@@ -486,11 +491,11 @@ export default function MainLayout() {
 
   // Add state for workflow logs
   const [workflowLogs, setWorkflowLogs] = useState<LogMessage[]>([]);
-  
+
   // Use the custom hook to connect to WebSocket and receive logs
   useWorkflowLogs((log: LogMessage) => {
-    setWorkflowLogs(prevLogs => [...prevLogs, log]);
-    
+    setWorkflowLogs((prevLogs) => [...prevLogs, log]);
+
     // If this log belongs to the current workflow, add it to the chat panel
     if (currentWorkflow === log.workflow_id) {
       console.log("Received log:", log);
@@ -499,35 +504,35 @@ export default function MainLayout() {
           <div className="log-header flex items-center justify-between bg-card text-text-primary p-2 rounded-t-md">
             <span className="log-agent font-bold">{log.agent_name}</span>
             <span className="log-status flex items-center">
-          {log.status === "executed successfully" ? (
-            <span className="text-green-500 mr-2">✔</span>
-          ) : (
-            <span className="text-yellow-500 mr-2">⚠</span>
-          )}
-          {log.status}
+              {log.status === "executed successfully" ? (
+                <span className="text-green-500 mr-2">✔</span>
+              ) : (
+                <span className="text-yellow-500 mr-2">⚠</span>
+              )}
+              {log.status}
             </span>
             <span className="log-time text-sm text-gray-400">
-          {new Date(log.timestamp).toLocaleTimeString()}
+              {new Date(log.timestamp).toLocaleTimeString()}
             </span>
           </div>
           <div className="log-content bg-[var(--color-background)] p-3 rounded-b-md">
             <div className="data-flow-notebook bg-[var(--color-background)] p-3 rounded-md shadow-md">
-          {Object.entries(log.data).map(([key, value]) => (
-            <div key={key} className="flex justify-between border-b py-1">
-              <span className="font-medium text-blue">{key}:</span>
-              <span className="text-white-900">
-                {typeof value === 'object' && value !== null
-                  ? renderObjectValue(value)
-                  : String(value)}
-              </span>
-            </div>
-          ))}
+              {Object.entries(log.data).map(([key, value]) => (
+                <div key={key} className="flex justify-between border-b py-1">
+                  <span className="font-medium text-blue">{key}:</span>
+                  <span className="text-white-900">
+                    {typeof value === "object" && value !== null
+                      ? renderObjectValue(value)
+                      : String(value)}
+                  </span>
+                </div>
+              ))}
             </div>
           </div>
         </div>
       );
-      
-      setChats(prevChats => [
+
+      setChats((prevChats) => [
         ...prevChats,
         {
           id: Date.now().toString(),
@@ -535,7 +540,7 @@ export default function MainLayout() {
           sender: "bot",
           isLog: true,
           log_id: log.workflow_id,
-        }
+        },
       ]);
     }
   });
@@ -546,12 +551,12 @@ export default function MainLayout() {
     if (obj === null || obj === undefined) {
       return "null";
     }
-      
+
     // Special handling for strings to prevent iteration over individual characters
-    if (typeof obj === 'string') {
+    if (typeof obj === "string") {
       return obj;
     }
-    
+
     // Handle arrays
     if (Array.isArray(obj)) {
       return (
@@ -559,7 +564,7 @@ export default function MainLayout() {
           {obj.map((item, index) => (
             <div key={`array-item-${index}`} className="mb-1">
               <span className="font-medium text-gray-400">[{index}]: </span>
-              {typeof item === 'object' && item !== null
+              {typeof item === "object" && item !== null
                 ? renderObjectValue(item)
                 : String(item)}
             </div>
@@ -567,9 +572,9 @@ export default function MainLayout() {
         </div>
       );
     }
-    
+
     // Handle object types (but not arrays, functions, dates, etc.)
-    if (typeof obj === 'object') {
+    if (typeof obj === "object") {
       try {
         // Check if it's an object we can safely iterate over
         if (!obj.constructor || obj.constructor === Object) {
@@ -577,13 +582,13 @@ export default function MainLayout() {
           if (entries.length === 0) {
             return "{Empty Object}";
           }
-          
+
           return (
             <div className="pl-2 mt-1">
               {entries.map(([key, value], idx) => (
                 <div key={`obj-key-${key}-${idx}`} className="mb-1">
                   <span className="font-medium text-blue">{key}: </span>
-                  {typeof value === 'object' && value !== null
+                  {typeof value === "object" && value !== null
                     ? renderObjectValue(value)
                     : String(value)}
                 </div>
@@ -598,7 +603,7 @@ export default function MainLayout() {
         return `{Error rendering object: ${error.message}}`;
       }
     }
-    
+
     // For everything else, convert to string
     return String(obj);
   };
@@ -606,21 +611,24 @@ export default function MainLayout() {
   // Handle making a workflow public
   const handleMakePublic = async (publicWorkflow: any) => {
     setShowPublicDialog(false);
-    
+
     try {
       console.log("Making workflow public:", publicWorkflow);
       const token = await getToken();
-      const response = await fetch("https://backend.sigmoyd.in/public_workflow", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ 
-          workflowjson: publicWorkflow,
-          refined_prompt: refinedQuery 
-        }),
-      });
+      const response = await fetch(
+        "https://backend.sigmoyd.in/public_workflow",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            workflowjson: publicWorkflow,
+            refined_prompt: refinedQuery,
+          }),
+        }
+      );
 
       if (!response.ok) {
         throw new Error("Failed to make workflow public");
@@ -628,14 +636,14 @@ export default function MainLayout() {
 
       const responseData = await response.json();
       // // Update the workflows list
-      // setWorkflows(prevWorkflows => 
-      //   prevWorkflows.map(workflow => 
-      //     workflow.id === responseData.json.workflow_id 
-      //       ? { ...workflow, public: true } 
+      // setWorkflows(prevWorkflows =>
+      //   prevWorkflows.map(workflow =>
+      //     workflow.id === responseData.json.workflow_id
+      //       ? { ...workflow, public: true }
       //       : workflow
       //   )
       // );
-      
+
       alert("Workflow has been made public successfully!");
     } catch (error) {
       console.error("Error making workflow public:", error);
@@ -644,29 +652,31 @@ export default function MainLayout() {
   };
 
   // Utility function to transform messages with bullet points into interactive buttons
-  const transformMessageWithButtons = (message: string | JSX.Element): React.ReactNode => {
+  const transformMessageWithButtons = (
+    message: string | JSX.Element
+  ): React.ReactNode => {
     // If message is already a JSX element, return it as is
-    if (typeof message !== 'string') {
+    if (typeof message !== "string") {
       return message;
     }
-    
+
     // Check if the message contains bullet points (asterisks)
-    if (message.includes('* ')) {
+    if (message.includes("* ")) {
       // Split the message into parts based on asterisks
-      const parts = message.split('* ');
-      
+      const parts = message.split("* ");
+
       // The first part is the main message text
       const mainText = parts[0];
-      
+
       // The rest are options that should be buttons
       const options = parts.slice(1);
-      
+
       return (
         <>
           <div>{mainText}</div>
           <div className="option-buttons">
             {options.map((option, index) => (
-              <button 
+              <button
                 key={index}
                 className="message-list-button"
                 onClick={() => setMessage(option.trim())}
@@ -678,10 +688,31 @@ export default function MainLayout() {
         </>
       );
     }
-    
+
     // Return the original message if no bullet points
     return message;
   };
+
+  // Add this function to scroll to the bottom of chat
+  const scrollToBottom = useCallback(() => {
+    if (chatContainerRef.current) {
+      chatContainerRef.current.scrollTop =
+        chatContainerRef.current.scrollHeight;
+    }
+  }, []);
+
+  // Add this effect to scroll when messages change
+  useEffect(() => {
+    scrollToBottom();
+  }, [chats, scrollToBottom]);
+
+  // Add this for smooth scrolling behavior in the component did mount
+  useEffect(() => {
+    // Set scroll behavior to smooth for the chat container
+    if (chatContainerRef.current) {
+      chatContainerRef.current.style.scrollBehavior = "smooth";
+    }
+  }, []);
 
   useEffect(() => {
     fetchWorkflows();
@@ -690,41 +721,41 @@ export default function MainLayout() {
   return (
     <div className="min-h-screen flex flex-col bg-[var(--color-background)] text-[var(--color-text)] relative">
       {loading && (
-      <div className="boot-overlay fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-75">
-        <div className="boot-container">
-        <div className="boot-header">
-          <h1 className="boot-title">SIGMOYD AI</h1>
-          <p className="boot-subtitle">WORKFLOW GENERATION SEQUENCE</p>
-        </div>
-
-        <div className="boot-terminal">
-          <div className="boot-console">
-          {bootSequence.slice(0, bootPhase + 1).map((text, index) => (
-            <div key={index} className="boot-line">
-            <span className="boot-prompt">&gt;</span>
-            <div
-              className={`boot-message ${
-              index === bootPhase ? "boot-cursor" : ""
-              }`}
-            >
-              {text}
+        <div className="boot-overlay fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-75">
+          <div className="boot-container">
+            <div className="boot-header">
+              <h1 className="boot-title">SIGMOYD AI</h1>
+              <p className="boot-subtitle">WORKFLOW GENERATION SEQUENCE</p>
             </div>
-            </div>
-          ))}
-          </div>
 
-          <div className="boot-progress-container">
-          <div className="boot-progress-bar">
-            <div
-            className="boot-progress-fill"
-            style={{ width: `${loadingProgress}%` }}
-            />
-          </div>
-          <div className="boot-progress-text">{loadingProgress}%</div>
+            <div className="boot-terminal">
+              <div className="boot-console">
+                {bootSequence.slice(0, bootPhase + 1).map((text, index) => (
+                  <div key={index} className="boot-line">
+                    <span className="boot-prompt">&gt;</span>
+                    <div
+                      className={`boot-message ${
+                        index === bootPhase ? "boot-cursor" : ""
+                      }`}
+                    >
+                      {text}
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              <div className="boot-progress-container">
+                <div className="boot-progress-bar">
+                  <div
+                    className="boot-progress-fill"
+                    style={{ width: `${loadingProgress}%` }}
+                  />
+                </div>
+                <div className="boot-progress-text">{loadingProgress}%</div>
+              </div>
+            </div>
           </div>
         </div>
-        </div>
-      </div>
       )}
 
       <div className="fixed top-0 left-0 right-0 z-50 bg-black">
@@ -732,7 +763,9 @@ export default function MainLayout() {
           onMenuClick={() => setShowSidebar(true)}
           onHomeClick={handleNewChatClick}
           onNewChatClick={handleNewChatClick}
-          onPublicClick={currentWorkflow ? () => setShowPublicDialog(true) : undefined}
+          onPublicClick={
+            currentWorkflow ? () => setShowPublicDialog(true) : undefined
+          }
           sidebarVisible={showSidebar}
           currentWorkflow={
             currentWorkflowObject
@@ -782,16 +815,26 @@ export default function MainLayout() {
               handleQueryUpdate={handleQueryUpdate}
             />
           ) : (
-            <div className="chat-container">
+            <div className="chat-container" ref={chatContainerRef}>
               {chats.map((chat) => (
                 <div
                   key={chat.id}
                   className={`message ${
-                    chat.sender === "user" ? "user-message" : chat.isLog ? "bot-message" : "bot-message"
+                    chat.sender === "user"
+                      ? "user-message"
+                      : chat.isLog
+                      ? "bot-message"
+                      : "bot-message"
                   }`}
                 >
-                 { ((workflowJson && workflowJson.workflow_id===chat.log_id) || (!workflowJson)) && <div className="message-content">{transformMessageWithButtons(chat.message)}</div>}
-                  { chat.timestamp && (
+                  {((workflowJson &&
+                    workflowJson.workflow_id === chat.log_id) ||
+                    !workflowJson) && (
+                    <div className="message-content">
+                      {transformMessageWithButtons(chat.message)}
+                    </div>
+                  )}
+                  {chat.timestamp && (
                     <div className="message-timestamp">
                       {new Date(chat.timestamp).toLocaleTimeString()}
                     </div>
