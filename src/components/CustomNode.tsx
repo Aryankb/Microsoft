@@ -83,6 +83,7 @@ const CustomNode: React.FC<CustomNodeProps> = ({ data }) => {
       }
 
       const { file_location_s3 } = await response.json();
+      console.log("File uploaded successfully:", file_location_s3);
 
       if (data.id && handleValueChange) {
         handleValueChange(data.id, file.name, file_location_s3, "config");
