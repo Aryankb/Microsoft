@@ -578,7 +578,7 @@ const WorkflowGraph: React.FC<WorkflowGraphProps> = ({
       }
 
       const responseData = await response.json();
-      setWorkflowData(responseData.json);
+      // setWorkflowData(responseData.json);
       fetchWorkflows();
       console.log("Workflow with inputs saved successfully", responseData);
     } catch (error) {
@@ -604,7 +604,7 @@ const WorkflowGraph: React.FC<WorkflowGraphProps> = ({
       }
 
       const responseData = await response.json();
-      setWorkflowData(responseData.json);
+      // setWorkflowData(responseData.json);
       fetchWorkflows();
       console.log("Workflow saved successfully:", responseData);
       alert("Workflow saved successfully!");
