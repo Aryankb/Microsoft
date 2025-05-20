@@ -535,7 +535,7 @@ const WorkflowGraph: React.FC<WorkflowGraphProps> = ({
             : node
         );
       }
-      
+      console.log("updated workflow data with inputs", newData);
       return newData;
     });
     
