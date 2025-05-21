@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { X, ArrowRight, Check, AlertCircle } from "lucide-react";
+import { X, ArrowRight, Check, AlertCircle, Copy } from "lucide-react";
 
 interface PublicDialogueProps {
   isOpen: boolean;
@@ -18,7 +18,13 @@ const PublicDialogue: React.FC<PublicDialogueProps> = ({
   const [publicWorkflow, setPublicWorkflow] = useState<any>(null);
   const [editableNodes, setEditableNodes] = useState<any[]>([]);
   const [isConfirmView, setIsConfirmView] = useState(false);
-  const [allConfigInputs, setAllConfigInputs] = useState<{[key: string]: any}>({});
+  const [allConfigInputs, setAllConfigInputs] = useState<{
+    [key: string]: any;
+  }>({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isPublished, setIsPublished] = useState(false);
+  const [publicUrl, setPublicUrl] = useState("");
+  const [copied, setCopied] = useState(false);
 
   // Initialize the component when a workflow is provided
   useEffect(() => {
@@ -51,11 +57,13 @@ const PublicDialogue: React.FC<PublicDialogueProps> = ({
       setEditableNodes(nodesWithInputs);
 
       // Initialize all config inputs for summary view
-      const allInputs: {[key: string]: any} = {};
+      const allInputs: { [key: string]: any } = {};
       nodesWithInputs.forEach((node: any) => {
         const nodeId = node.isTrigger ? "trigger" : node.id;
-        const nodeName = node.isTrigger ? node.name : `Node ${node.id}: ${node.name}`;
-        
+        const nodeName = node.isTrigger
+          ? node.name
+          : `Node ${node.id}: ${node.name}`;
+
         allInputs[nodeId] = {
           name: nodeName,
           config_inputs: node.config_inputs || {},
@@ -150,9 +158,7 @@ const PublicDialogue: React.FC<PublicDialogueProps> = ({
       // Update workflow node prompt
       setPublicWorkflow((prev: any) => {
         const updatedWorkflow = prev.workflow.map((node: any) =>
-          node.id === currentNode.id
-            ? { ...node, [type]: value }
-            : node
+          node.id === currentNode.id ? { ...node, [type]: value } : node
         );
         return { ...prev, workflow: updatedWorkflow };
       });
@@ -185,34 +191,55 @@ const PublicDialogue: React.FC<PublicDialogueProps> = ({
   };
 
   // Handler for confirming the public workflow
-  const handleConfirm = () => {
+  const handleConfirm = async () => {
     // Mark the workflow as public
     const finalWorkflow = {
       ...publicWorkflow,
       public: true,
     };
-    
-    onConfirm(finalWorkflow);
+
+    setIsSubmitting(true);
+
+    try {
+      await onConfirm(finalWorkflow);
+
+      // Show success state
+      setIsPublished(true);
+      setPublicUrl(
+        `${window.location.origin}/public/workflow/${finalWorkflow.workflow_id}`
+      );
+    } catch (error) {
+      console.error("Error making workflow public:", error);
+      alert("Failed to make workflow public. Please try again.");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const copyToClipboard = () => {
+    navigator.clipboard.writeText(publicUrl);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
   };
 
   if (!isOpen || !publicWorkflow) return null;
 
   // Current node to edit
   const currentNode = isConfirmView ? null : editableNodes[currentStep];
-  
+
   return (
     <div className="fixed inset-0 bg-black bg-opacity-70 overflow-y-auto z-50 p-4 flex justify-center items-start">
-
       <div className="bg-card rounded-lg shadow-xl w-full max-w-3xl max-h-[90vh] overflow-y-auto">
-
         {/* Dialog header */}
         <div className="flex justify-between items-center p-4 border-b border-gray-700">
           <h2 className="text-xl font-bold text-text">
-            {isConfirmView 
-              ? "Confirm Public Workflow" 
-              : `Configure Public View (${currentStep + 1}/${editableNodes.length})`}
+            {isConfirmView
+              ? "Confirm Public Workflow"
+              : `Configure Public View (${currentStep + 1}/${
+                  editableNodes.length
+                })`}
           </h2>
-          <button 
+          <button
             onClick={onClose}
             className="p-1 rounded-full hover:bg-gray-700 transition-colors"
           >
@@ -222,83 +249,114 @@ const PublicDialogue: React.FC<PublicDialogueProps> = ({
 
         {/* Dialog content */}
         <div className="p-6">
-
           {isConfirmView ? (
             // Confirmation view - shows all nodes and their config
             <div className="space-y-6">
-
               <div className="bg-gray-800 p-4 rounded-lg mb-6">
                 <div className="flex items-center mb-2">
                   <AlertCircle size={20} className="text-yellow-500 mr-2" />
                   <span className="font-medium">Important Notice</span>
                 </div>
                 <p className="text-gray-300">
-                  This workflow will be made public with the configurations shown below. 
-                  Public workflows can be viewed and used by other users. Make sure all 
-                  sensitive information has been removed or redacted.
+                  This workflow will be made public with the configurations
+                  shown below. Public workflows can be viewed and used by other
+                  users. Make sure all sensitive information has been removed or
+                  redacted.
                 </p>
               </div>
-              
-              <h3 className="text-lg font-medium text-text-secondary mb-4">Summary of Configurations</h3>
-              
-              {Object.entries(allConfigInputs).map(([nodeId, nodeData]: [string, any]) => (
-                <div key={nodeId} className="border border-gray-700 rounded-lg p-4 mb-4">
-                  <h4 className="font-medium text-text-secondary mb-2">{nodeData.name}</h4>
-                  
-                  {/* Config Inputs */}
-                  {Object.keys(nodeData.config_inputs).length > 0 && (
-                    <div className="mb-4">
-                      <h5 className="text-sm text-gray-400 mb-2">Config Inputs:</h5>
-                      <div className="bg-background rounded p-2">
-                        {Object.entries(nodeData.config_inputs).map(([key, value]: [string, any]) => (
-                          <div key={key} className="flex justify-between mb-1 border-b border-gray-700 pb-1">
-                            <span className="font-mono text-sm">{key}:</span>
-                            <span className="font-mono text-sm text-green-400">{String(value)}</span>
-                          </div>
-                        ))}
+
+              <h3 className="text-lg font-medium text-text-secondary mb-4">
+                Summary of Configurations
+              </h3>
+
+              {Object.entries(allConfigInputs).map(
+                ([nodeId, nodeData]: [string, any]) => (
+                  <div
+                    key={nodeId}
+                    className="border border-gray-700 rounded-lg p-4 mb-4"
+                  >
+                    <h4 className="font-medium text-text-secondary mb-2">
+                      {nodeData.name}
+                    </h4>
+
+                    {/* Config Inputs */}
+                    {Object.keys(nodeData.config_inputs).length > 0 && (
+                      <div className="mb-4">
+                        <h5 className="text-sm text-gray-400 mb-2">
+                          Config Inputs:
+                        </h5>
+                        <div className="bg-background rounded p-2">
+                          {Object.entries(nodeData.config_inputs).map(
+                            ([key, value]: [string, any]) => (
+                              <div
+                                key={key}
+                                className="flex justify-between mb-1 border-b border-gray-700 pb-1"
+                              >
+                                <span className="font-mono text-sm">
+                                  {key}:
+                                </span>
+                                <span className="font-mono text-sm text-green-400">
+                                  {String(value)}
+                                </span>
+                              </div>
+                            )
+                          )}
+                        </div>
                       </div>
-                    </div>
-                  )}
-                  
-                  {/* LLM Prompt */}
-                  {nodeData.llm_prompt && (
-                    <div className="mb-4">
-                      <h5 className="text-sm text-gray-400 mb-2">LLM Prompt:</h5>
-                      <div className="bg-background rounded p-2">
-                        <p className="text-sm font-mono whitespace-pre-wrap">{nodeData.llm_prompt}</p>
+                    )}
+
+                    {/* LLM Prompt */}
+                    {nodeData.llm_prompt && (
+                      <div className="mb-4">
+                        <h5 className="text-sm text-gray-400 mb-2">
+                          LLM Prompt:
+                        </h5>
+                        <div className="bg-background rounded p-2">
+                          <p className="text-sm font-mono whitespace-pre-wrap">
+                            {nodeData.llm_prompt}
+                          </p>
+                        </div>
                       </div>
-                    </div>
-                  )}
-                  
-                  {/* Validation Prompt */}
-                  {nodeData.validation_prompt && (
-                    <div className="mb-4">
-                      <h5 className="text-sm text-gray-400 mb-2">Validation Prompt:</h5>
-                      <div className="bg-background rounded p-2">
-                        <p className="text-sm font-mono whitespace-pre-wrap">{nodeData.validation_prompt}</p>
+                    )}
+
+                    {/* Validation Prompt */}
+                    {nodeData.validation_prompt && (
+                      <div className="mb-4">
+                        <h5 className="text-sm text-gray-400 mb-2">
+                          Validation Prompt:
+                        </h5>
+                        <div className="bg-background rounded p-2">
+                          <p className="text-sm font-mono whitespace-pre-wrap">
+                            {nodeData.validation_prompt}
+                          </p>
+                        </div>
                       </div>
-                    </div>
-                  )}
-                  
-                  {/* Delegation Prompt */}
-                  {nodeData.delegation_prompt && (
-                    <div>
-                      <h5 className="text-sm text-gray-400 mb-2">Delegation Prompt:</h5>
-                      <div className="bg-background rounded p-2">
-                        <p className="text-sm font-mono whitespace-pre-wrap">{nodeData.delegation_prompt}</p>
+                    )}
+
+                    {/* Delegation Prompt */}
+                    {nodeData.delegation_prompt && (
+                      <div>
+                        <h5 className="text-sm text-gray-400 mb-2">
+                          Delegation Prompt:
+                        </h5>
+                        <div className="bg-background rounded p-2">
+                          <p className="text-sm font-mono whitespace-pre-wrap">
+                            {nodeData.delegation_prompt}
+                          </p>
+                        </div>
                       </div>
-                    </div>
-                  )}
-                </div>
-              ))}
+                    )}
+                  </div>
+                )
+              )}
             </div>
           ) : currentNode ? (
             // Node configuration view
             <div>
               <div className="bg-gray-800 p-4 rounded-lg mb-6">
                 <h3 className="font-medium text-lg mb-2">
-                  {currentNode.isTrigger 
-                    ? `Trigger: ${currentNode.name}` 
+                  {currentNode.isTrigger
+                    ? `Trigger: ${currentNode.name}`
                     : `Node ${currentNode.id}: ${currentNode.name}`}
                 </h3>
                 <p className="text-gray-300 text-sm">
@@ -307,23 +365,36 @@ const PublicDialogue: React.FC<PublicDialogueProps> = ({
               </div>
 
               {/* Config Inputs */}
-              {currentNode.config_inputs && Object.keys(currentNode.config_inputs).length > 0 && (
-                <div className="mb-6">
-                  <h4 className="text-md font-medium mb-2">Config Inputs</h4>
-                  {Object.entries(currentNode.config_inputs).map(([key, value]: [string, any]) => (
-                    <div key={key} className="mb-4">
-                      <label className="block text-text-secondary mb-1">{key}</label>
-                      <input
-                        type="text"
-                        className="w-full bg-background border border-gray-700 rounded p-2 text-text"
-                        value={allConfigInputs[currentNode.isTrigger ? "trigger" : currentNode.id]?.config_inputs?.[key] || ""}
-                        onChange={(e) => handleConfigInputChange(key, e.target.value)}
-                        placeholder={`Enter value for ${key}`}
-                      />
-                    </div>
-                  ))}
-                </div>
-              )}
+              {currentNode.config_inputs &&
+                Object.keys(currentNode.config_inputs).length > 0 && (
+                  <div className="mb-6">
+                    <h4 className="text-md font-medium mb-2">Config Inputs</h4>
+                    {Object.entries(currentNode.config_inputs).map(
+                      ([key, value]: [string, any]) => (
+                        <div key={key} className="mb-4">
+                          <label className="block text-text-secondary mb-1">
+                            {key}
+                          </label>
+                          <input
+                            type="text"
+                            className="w-full bg-background border border-gray-700 rounded p-2 text-text"
+                            value={
+                              allConfigInputs[
+                                currentNode.isTrigger
+                                  ? "trigger"
+                                  : currentNode.id
+                              ]?.config_inputs?.[key] || ""
+                            }
+                            onChange={(e) =>
+                              handleConfigInputChange(key, e.target.value)
+                            }
+                            placeholder={`Enter value for ${key}`}
+                          />
+                        </div>
+                      )
+                    )}
+                  </div>
+                )}
 
               {/* LLM Prompt */}
               {currentNode.llm_prompt && (
@@ -331,8 +402,14 @@ const PublicDialogue: React.FC<PublicDialogueProps> = ({
                   <h4 className="text-md font-medium mb-2">LLM Prompt</h4>
                   <textarea
                     className="w-full bg-background border border-gray-700 rounded p-2 text-text min-h-[150px]"
-                    value={allConfigInputs[currentNode.isTrigger ? "trigger" : currentNode.id]?.llm_prompt || ""}
-                    onChange={(e) => handlePromptChange("llm_prompt", e.target.value)}
+                    value={
+                      allConfigInputs[
+                        currentNode.isTrigger ? "trigger" : currentNode.id
+                      ]?.llm_prompt || ""
+                    }
+                    onChange={(e) =>
+                      handlePromptChange("llm_prompt", e.target.value)
+                    }
                     placeholder="Enter LLM prompt"
                   />
                 </div>
@@ -341,11 +418,19 @@ const PublicDialogue: React.FC<PublicDialogueProps> = ({
               {/* Validation Prompt */}
               {currentNode.validation_prompt && (
                 <div className="mb-6">
-                  <h4 className="text-md font-medium mb-2">Validation Prompt</h4>
+                  <h4 className="text-md font-medium mb-2">
+                    Validation Prompt
+                  </h4>
                   <textarea
                     className="w-full bg-background border border-gray-700 rounded p-2 text-text min-h-[150px]"
-                    value={allConfigInputs[currentNode.isTrigger ? "trigger" : currentNode.id]?.validation_prompt || ""}
-                    onChange={(e) => handlePromptChange("validation_prompt", e.target.value)}
+                    value={
+                      allConfigInputs[
+                        currentNode.isTrigger ? "trigger" : currentNode.id
+                      ]?.validation_prompt || ""
+                    }
+                    onChange={(e) =>
+                      handlePromptChange("validation_prompt", e.target.value)
+                    }
                     placeholder="Enter validation prompt"
                   />
                 </div>
@@ -354,11 +439,19 @@ const PublicDialogue: React.FC<PublicDialogueProps> = ({
               {/* Delegation Prompt */}
               {currentNode.delegation_prompt && (
                 <div className="mb-6">
-                  <h4 className="text-md font-medium mb-2">Delegation Prompt</h4>
+                  <h4 className="text-md font-medium mb-2">
+                    Delegation Prompt
+                  </h4>
                   <textarea
                     className="w-full bg-background border border-gray-700 rounded p-2 text-text min-h-[150px]"
-                    value={allConfigInputs[currentNode.isTrigger ? "trigger" : currentNode.id]?.delegation_prompt || ""}
-                    onChange={(e) => handlePromptChange("delegation_prompt", e.target.value)}
+                    value={
+                      allConfigInputs[
+                        currentNode.isTrigger ? "trigger" : currentNode.id
+                      ]?.delegation_prompt || ""
+                    }
+                    onChange={(e) =>
+                      handlePromptChange("delegation_prompt", e.target.value)
+                    }
                     placeholder="Enter delegation prompt"
                   />
                 </div>
@@ -384,10 +477,24 @@ const PublicDialogue: React.FC<PublicDialogueProps> = ({
               </button>
               <button
                 onClick={handleConfirm}
-                className="flex items-center px-4 py-2 bg-green-600 hover:bg-green-700 rounded-md transition-colors"
+                disabled={isSubmitting}
+                className={`flex items-center px-4 py-2 ${
+                  isSubmitting
+                    ? "bg-gray-600"
+                    : "bg-green-600 hover:bg-green-700"
+                } rounded-md transition-colors`}
               >
-                <Check size={18} className="mr-2" />
-                Confirm & Make Public
+                {isSubmitting ? (
+                  <>
+                    <div className="animate-spin mr-2 h-4 w-4 border-2 border-white border-t-transparent rounded-full"></div>
+                    Processing...
+                  </>
+                ) : (
+                  <>
+                    <Check size={18} className="mr-2" />
+                    Confirm & Make Public
+                  </>
+                )}
               </button>
             </>
           ) : (
@@ -396,7 +503,9 @@ const PublicDialogue: React.FC<PublicDialogueProps> = ({
                 onClick={handleBack}
                 disabled={currentStep === 0}
                 className={`px-4 py-2 border border-gray-600 rounded-md transition-colors ${
-                  currentStep === 0 ? "opacity-50 cursor-not-allowed" : "hover:bg-gray-700"
+                  currentStep === 0
+                    ? "opacity-50 cursor-not-allowed"
+                    : "hover:bg-gray-700"
                 }`}
               >
                 Back
@@ -418,6 +527,46 @@ const PublicDialogue: React.FC<PublicDialogueProps> = ({
             </>
           )}
         </div>
+
+        {/* Public URL Dialog */}
+        {isPublished && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            <div className="bg-gray-800 rounded-lg w-full max-w-md p-6 relative z-10 shadow-2xl border border-gray-700">
+              <h2 className="text-xl font-bold mb-4 text-white">
+                Workflow Published!
+              </h2>
+              <p className="text-gray-300 mb-4">
+                Your workflow is now public. Share this link with others to let
+                them view and use your workflow:
+              </p>
+              <div className="flex items-center mb-6">
+                <input
+                  type="text"
+                  value={publicUrl}
+                  readOnly
+                  className="flex-1 p-3 bg-gray-900 text-white border border-gray-700 rounded-l focus:outline-none focus:ring-1 focus:ring-blue-500"
+                />
+                <button
+                  onClick={copyToClipboard}
+                  className="p-3 bg-gray-700 border border-gray-600 rounded-r hover:bg-gray-600 transition-colors"
+                  title="Copy to clipboard"
+                >
+                  {copied ? (
+                    <Check size={20} className="text-green-500" />
+                  ) : (
+                    <Copy size={20} />
+                  )}
+                </button>
+              </div>
+              <button
+                onClick={onClose}
+                className="w-full px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

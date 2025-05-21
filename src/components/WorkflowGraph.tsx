@@ -97,9 +97,13 @@ interface Workflow {
 }
 
 interface WorkflowGraphProps {
-  workflowJson: WorkflowJson;
-  workflows: Workflow[];
-  setWorkflows: React.Dispatch<React.SetStateAction<Workflow[]>>;
+  workflowJson: any;
+  workflows?: any[];
+  setWorkflows?: (workflows: any[]) => void;
+  setCurrentWorkflow?: (id: string | null) => void;
+  currentWorkflow?: string | null;
+  onNodeClick?: () => void;
+  isPublicView?: boolean; // Add this prop for public view mode
 }
 
 // Enhanced node arrangement function for better visualization
@@ -369,7 +373,10 @@ const WorkflowGraph: React.FC<WorkflowGraphProps> = ({
   workflowJson,
   workflows,
   setWorkflows,
-  onNodeClick, // This prop may be passed from MainLayout
+  setCurrentWorkflow,
+  currentWorkflow,
+  onNodeClick,
+  isPublicView = false,
 }) => {
   const { getToken } = useAuth();
   const [loading, setLoading] = useState(false);

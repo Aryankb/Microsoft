@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import Sidebar from "./Sidebar";
 import TopBar from "./TopBar";
 import { useAuth } from "@clerk/clerk-react";
+import { useLocation } from "react-router-dom"; // Add this import
 import WorkflowGraph from "./WorkflowGraph.tsx";
 import ChatInterface from "./ChatInterface";
 import QueryRefiner from "./QueryRefiner";
@@ -610,8 +611,6 @@ export default function MainLayout() {
 
   // Handle making a workflow public
   const handleMakePublic = async (publicWorkflow: any) => {
-    setShowPublicDialog(false);
-
     try {
       console.log("Making workflow public:", publicWorkflow);
       const token = await getToken();
@@ -635,19 +634,32 @@ export default function MainLayout() {
       }
 
       const responseData = await response.json();
-      // // Update the workflows list
-      // setWorkflows(prevWorkflows =>
-      //   prevWorkflows.map(workflow =>
-      //     workflow.id === responseData.json.workflow_id
-      //       ? { ...workflow, public: true }
-      //       : workflow
-      //   )
-      // );
 
-      alert("Workflow has been made public successfully!");
+      // Update the workflows list to show it's now public
+      setWorkflows((prevWorkflows) =>
+        prevWorkflows.map((workflow) =>
+          workflow.id === publicWorkflow.workflow_id
+            ? { ...workflow, public: true }
+            : workflow
+        )
+      );
+
+      // Set the current workflow as public
+      if (currentWorkflowObject) {
+        const updatedWorkflow = { ...currentWorkflowObject, public: true };
+        // Update the current workflow in state
+        setWorkflows((prevWorkflows) =>
+          prevWorkflows.map((w) =>
+            w.id === updatedWorkflow.id ? updatedWorkflow : w
+          )
+        );
+      }
+
+      return Promise.resolve();
     } catch (error) {
       console.error("Error making workflow public:", error);
       alert("Failed to make workflow public. Please try again.");
+      return Promise.reject(error);
     }
   };
 
@@ -728,6 +740,8 @@ export default function MainLayout() {
   }, []);
 
   // Function to determine if we're on the home page
+  const location = useLocation();
+  const isRootPath = location.pathname === "/";
   const isHomePage = !showWorkflow && !currentWorkflow && chats.length === 0;
 
   return (
@@ -788,12 +802,12 @@ export default function MainLayout() {
                 }
               : null
           }
-          isHomePage={isHomePage} // Pass this new prop
+          isHomePage={isRootPath} // Now using isRootPath to determine if menu button should be visible
         />
       </div>
 
-      {/* Only render the Sidebar on the home page */}
-      {isHomePage && (
+      {/* Always render the Sidebar when at root path, regardless of component state */}
+      {isRootPath && (
         <Sidebar
           show={showSidebar}
           onClose={() => setShowSidebar(false)}

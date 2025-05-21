@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate, Link, useLocation } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import {
   Menu,
   Settings,
@@ -11,22 +11,24 @@ import {
   DollarSign,
   Plus,
   Home,
-  Globe,
+  PlusCircle,
+  Activity,
+  Globe, // Added Globe icon
 } from "lucide-react";
 
 interface TopBarProps {
   onMenuClick: () => void;
   onHomeClick?: () => void;
   onNewChatClick?: () => void;
-  onPublicClick?: () => void;
+  onPublicClick?: () => void; // New prop
   sidebarVisible: boolean;
   hideNewChat?: boolean;
   currentWorkflow?: {
     name: string;
     id: string;
-    public?: boolean;
+    public?: boolean; // Added public field
   } | null;
-  isHomePage?: boolean;
+  isHomePage?: boolean; // Add this back to the interface
 }
 
 const menuItems = [
@@ -48,10 +50,9 @@ export default function TopBar({
   sidebarVisible,
   hideNewChat = false,
   currentWorkflow = null,
-  isHomePage = false,
+  isHomePage = false, // Add this back to the function parameters with default value
 }: TopBarProps) {
   const navigate = useNavigate();
-  const location = useLocation();
   const [animateWorkflowName, setAnimateWorkflowName] = useState(false);
 
   // Trigger animation when workflow changes
@@ -79,7 +80,7 @@ export default function TopBar({
     <div className="fixed top-0 left-0 right-0 bg-black border-b border-gray-700 z-50">
       <div className="container mx-auto px-4 h-16 flex items-center justify-between">
         <div className="flex items-center gap-2">
-          {/* Only show menu button on home page */}
+          {/* Menu button - Only visible on homepage */}
           {isHomePage && (
             <button
               onClick={onMenuClick}
@@ -89,15 +90,15 @@ export default function TopBar({
             </button>
           )}
 
-          {/* Home Button - Always visible when provided */}
+          {/* Home Button */}
           {onHomeClick && (
             <div
               onClick={onHomeClick}
-              className="flex items-center gap-2 px-3 py-2 bg-blue-400 text-gray-900 hover:shadow-[0px_0px_10px_rgba(96,165,250,0.7)] rounded-md transition-colors duration-300 font-medium cursor-pointer"
+              className="hidden sm:flex items-center gap-2 px-3 py-2 bg-blue-400 text-gray-900 hover:shadow-[0px_0px_10px_rgba(96,165,250,0.7)] rounded-md transition-colors duration-300 font-medium cursor-pointer"
               title="Home"
             >
               <Home size={18} />
-              <span className="sm:inline">Home</span>
+              <span className="hidden sm:inline">Home</span>
             </div>
           )}
 

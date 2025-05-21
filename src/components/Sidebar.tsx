@@ -179,11 +179,11 @@ export default function Sidebar({
   return (
     <div
       ref={sidebarRef}
-      className="sidebar-container"
+      className="sidebar-container fixed left-0 top-0 h-full bg-gray-900 overflow-hidden border-r border-gray-700"
       style={{
         width: show ? "300px" : "0px",
-        height: "100vh", // Ensure full height
-        top: 0, // Start from the very top
+        transform: show ? "translateX(0)" : "translateX(-100%)",
+        transition: "all 0.3s ease-in-out",
         zIndex: 50, // Ensure it's above other content
       }}
     >
