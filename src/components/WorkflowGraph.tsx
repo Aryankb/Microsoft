@@ -11,6 +11,7 @@ import ReactFlow, {
   Panel,
   EdgeProps,
 } from "reactflow";
+import { useNavigate } from "react-router-dom";
 import CustomNode from "./CustomNode.tsx";
 import IconNode from "./IconNode";
 import { ButtonEdge } from "./button-edge";
@@ -360,7 +361,7 @@ const WorkflowGraph: React.FC<WorkflowGraphProps> = ({
   // New state variables for tracking workflow freshness
   const [isNewWorkflow, setIsNewWorkflow] = useState(false);
   const [processingComplete, setProcessingComplete] = useState(false);
-
+  const navigate = useNavigate();
   const bootSequence = [
     "Initializing workflow engine...",
     "Analyzing workflow requirements...",
@@ -700,7 +701,7 @@ const WorkflowGraph: React.FC<WorkflowGraphProps> = ({
         if (
           responseData.message === "Please fill in your API keys to proceed."
         ) {
-          window.location.href = "/manage-auths";
+          navigate("/manage-auths");
         }
       } else {
         const responseData = await response.json();
