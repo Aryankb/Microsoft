@@ -727,6 +727,9 @@ export default function MainLayout() {
     fetchWorkflows();
   }, []);
 
+  // Function to determine if we're on the home page
+  const isHomePage = !showWorkflow && !currentWorkflow && chats.length === 0;
+
   return (
     <div className="min-h-screen flex flex-col bg-[var(--color-background)] text-[var(--color-text)] relative">
       {loading && (
@@ -785,21 +788,25 @@ export default function MainLayout() {
                 }
               : null
           }
+          isHomePage={isHomePage} // Pass this new prop
         />
       </div>
 
-      <Sidebar
-        show={showSidebar}
-        onClose={() => setShowSidebar(false)}
-        onNewChatClick={handleNewChatClick}
-        setWorkflowJson={setWorkflowJson}
-        setRefinedQuery={setRefinedQuery}
-        setShowWorkflow={setShowWorkflow}
-        workflows={workflows}
-        setWorkflows={setWorkflows}
-        currentWorkflow={currentWorkflow}
-        setCurrentWorkflow={setCurrentWorkflow}
-      />
+      {/* Only render the Sidebar on the home page */}
+      {isHomePage && (
+        <Sidebar
+          show={showSidebar}
+          onClose={() => setShowSidebar(false)}
+          onNewChatClick={handleNewChatClick}
+          setWorkflowJson={setWorkflowJson}
+          setRefinedQuery={setRefinedQuery}
+          setShowWorkflow={setShowWorkflow}
+          workflows={workflows}
+          setWorkflows={setWorkflows}
+          currentWorkflow={currentWorkflow}
+          setCurrentWorkflow={setCurrentWorkflow}
+        />
+      )}
 
       <main className="flex flex-1 pt-16 pb-24 relative">
         <div

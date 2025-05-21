@@ -31,7 +31,7 @@ interface Workflow {
   json: string;
   prompt: string;
   active?: boolean;
-  public?: boolean;  // Added this field
+  public?: boolean; // Added this field
 }
 
 export default function Sidebar({
@@ -59,9 +59,12 @@ export default function Sidebar({
         const token = await getToken();
         if (!mounted) return;
 
-        const response = await fetch("https://backend.sigmoyd.in/sidebar_workflows", {
-          headers: { Authorization: `Bearer ${token}` },
-        });
+        const response = await fetch(
+          "https://backend.sigmoyd.in/sidebar_workflows",
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        );
 
         if (!mounted) return;
 

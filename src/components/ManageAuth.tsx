@@ -399,7 +399,6 @@ export default function ManageAuth() {
         onHomeClick={handleHomeClick}
         sidebarVisible={false} // Always false - sidebar disabled
         hideNewChat={true} // Hide the New Chat button
-        
       />
 
       {/* Main Content */}

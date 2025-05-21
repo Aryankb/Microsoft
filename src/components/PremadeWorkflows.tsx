@@ -1,248 +1,206 @@
 import React, { useState, useEffect } from "react";
 import { useAuth } from "@clerk/clerk-react";
-import ReactFlow, { Background } from "reactflow";
-import "reactflow/dist/style.css";
-import { FaStar, FaUsers, FaArrowRight } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 import TopBar from "./TopBar";
 import "./PremadeWorkflows.css";
 
-// Dummy data for pre-made workflows
-const dummyWorkflows = [
-  {
-    id: "wf1",
-    title: "Email Marketing Automation",
-    description: "Automatically send personalized emails based on user behavior and engagement metrics.",
-    stars: 4.8,
-    usageCount: 2543,
-    previewFlow: {
-      nodes: [
-        { id: '1', position: { x: 10, y: 10 }, data: { label: 'Trigger' }, style: { background: 'var(--color-primary)', color: 'white', border: 'none', borderRadius: '6px' } },
-        { id: '2', position: { x: 10, y: 80 }, data: { label: 'Filter Users' }, style: { background: 'var(--color-secondary)', color: 'white', border: 'none', borderRadius: '6px' } },
-        { id: '3', position: { x: 10, y: 150 }, data: { label: 'Send Email' }, style: { background: 'var(--color-accent)', color: 'white', border: 'none', borderRadius: '6px' } }
-      ],
-      edges: [
-        { id: 'e1-2', source: '1', target: '2', style: { stroke: 'var(--color-secondary)' } },
-        { id: 'e2-3', source: '2', target: '3', style: { stroke: 'var(--color-secondary)' } }
-      ]
-    }
-  },
-  {
-    id: "wf2",
-    title: "Social Media Scheduler",
-    description: "Schedule and publish content across multiple social media platforms with automatic analytics tracking.",
-    stars: 4.5,
-    usageCount: 1876,
-    previewFlow: {
-      nodes: [
-        { id: '1', position: { x: 10, y: 10 }, data: { label: 'Content Creation' }, style: { background: 'var(--color-primary)', color: 'white', border: 'none', borderRadius: '6px' } },
-        { id: '2', position: { x: 10, y: 80 }, data: { label: 'Review' }, style: { background: 'var(--color-secondary)', color: 'white', border: 'none', borderRadius: '6px' } },
-        { id: '3', position: { x: 10, y: 150 }, data: { label: 'Schedule' }, style: { background: 'var(--color-accent)', color: 'white', border: 'none', borderRadius: '6px' } }
-      ],
-      edges: [
-        { id: 'e1-2', source: '1', target: '2', style: { stroke: 'var(--color-secondary)' } },
-        { id: 'e2-3', source: '2', target: '3', style: { stroke: 'var(--color-secondary)' } }
-      ]
-    }
-  },
-  {
-    id: "wf3",
-    title: "Customer Onboarding",
-    description: "Streamline the customer onboarding process with automated welcome emails, tutorials, and follow-ups.",
-    stars: 4.7,
-    usageCount: 2105,
-    previewFlow: {
-      nodes: [
-        { id: '1', position: { x: 10, y: 10 }, data: { label: 'New Signup' }, style: { background: 'var(--color-primary)', color: 'white', border: 'none', borderRadius: '6px' } },
-        { id: '2', position: { x: 10, y: 80 }, data: { label: 'Welcome Email' }, style: { background: 'var(--color-secondary)', color: 'white', border: 'none', borderRadius: '6px' } },
-        { id: '3', position: { x: 10, y: 150 }, data: { label: 'Tutorial' }, style: { background: 'var(--color-accent)', color: 'white', border: 'none', borderRadius: '6px' } }
-      ],
-      edges: [
-        { id: 'e1-2', source: '1', target: '2', style: { stroke: 'var(--color-secondary)' } },
-        { id: 'e2-3', source: '2', target: '3', style: { stroke: 'var(--color-secondary)' } }
-      ]
-    }
-  },
-  {
-    id: "wf4",
-    title: "Lead Qualification",
-    description: "Automatically qualify and score leads based on behavior, demographics, and engagement metrics.",
-    stars: 4.6,
-    usageCount: 1542,
-    previewFlow: {
-      nodes: [
-        { id: '1', position: { x: 10, y: 10 }, data: { label: 'Lead Entry' }, style: { background: 'var(--color-primary)', color: 'white', border: 'none', borderRadius: '6px' } },
-        { id: '2', position: { x: 10, y: 80 }, data: { label: 'Score' }, style: { background: 'var(--color-secondary)', color: 'white', border: 'none', borderRadius: '6px' } },
-        { id: '3', position: { x: 10, y: 150 }, data: { label: 'Assign' }, style: { background: 'var(--color-accent)', color: 'white', border: 'none', borderRadius: '6px' } }
-      ],
-      edges: [
-        { id: 'e1-2', source: '1', target: '2', style: { stroke: 'var(--color-secondary)' } },
-        { id: 'e2-3', source: '2', target: '3', style: { stroke: 'var(--color-secondary)' } }
-      ]
-    }
-  },
-  {
-    id: "wf5",
-    title: "E-commerce Order Processing",
-    description: "Streamline order processing from checkout to fulfillment with automated notifications and inventory updates.",
-    stars: 4.9,
-    usageCount: 3025,
-    previewFlow: {
-      nodes: [
-        { id: '1', position: { x: 10, y: 10 }, data: { label: 'Order Placed' }, style: { background: 'var(--color-primary)', color: 'white', border: 'none', borderRadius: '6px' } },
-        { id: '2', position: { x: 10, y: 80 }, data: { label: 'Payment' }, style: { background: 'var(--color-secondary)', color: 'white', border: 'none', borderRadius: '6px' } },
-        { id: '3', position: { x: 10, y: 150 }, data: { label: 'Fulfillment' }, style: { background: 'var(--color-accent)', color: 'white', border: 'none', borderRadius: '6px' } }
-      ],
-      edges: [
-        { id: 'e1-2', source: '1', target: '2', style: { stroke: 'var(--color-secondary)' } },
-        { id: 'e2-3', source: '2', target: '3', style: { stroke: 'var(--color-secondary)' } }
-      ]
-    }
-  },
-  {
-    id: "wf6",
-    title: "Content Approval Workflow",
-    description: "Streamline your content creation process with automated approval workflows and notifications.",
-    stars: 4.4,
-    usageCount: 1230,
-    previewFlow: {
-      nodes: [
-        { id: '1', position: { x: 10, y: 10 }, data: { label: 'Draft' }, style: { background: 'var(--color-primary)', color: 'white', border: 'none', borderRadius: '6px' } },
-        { id: '2', position: { x: 10, y: 80 }, data: { label: 'Review' }, style: { background: 'var(--color-secondary)', color: 'white', border: 'none', borderRadius: '6px' } },
-        { id: '3', position: { x: 10, y: 150 }, data: { label: 'Publish' }, style: { background: 'var(--color-accent)', color: 'white', border: 'none', borderRadius: '6px' } }
-      ],
-      edges: [
-        { id: 'e1-2', source: '1', target: '2', style: { stroke: 'var(--color-secondary)' } },
-        { id: 'e2-3', source: '2', target: '3', style: { stroke: 'var(--color-secondary)' } }
-      ]
-    }
-  }
-];
-
-const WorkflowCard = ({ workflow }) => {
-  const navigate = useNavigate();
+export default function PremadeWorkflows() {
   const { getToken } = useAuth();
-  const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
+  const [workflows, setWorkflows] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  const handleUseWorkflow = async () => {
-    setLoading(true);
-    try {
-      // This is where you would make an API call to import the workflow
-      // For now, we'll just simulate a delay and navigate to the main layout
-      setTimeout(() => {
+  // Function to navigate back to the home page
+  const handleHomeClick = () => {
+    navigate("/");
+  };
+
+  useEffect(() => {
+    const fetchPublicWorkflows = async () => {
+      try {
+        setLoading(true);
+        const token = await getToken();
+        const response = await fetch(
+          "https://backend.sigmoyd.in/fetch_public",
+          {
+            method: "GET",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+
+        if (!response.ok) {
+          throw new Error(`HTTP error! Status: ${response.status}`);
+        }
+
+        const data = await response.json();
+        console.log("API Response:", data); // Debug the response structure
+
+        // Handle the specific response format from the backend
+        if (data && typeof data === "object") {
+          if (data.workflows && Array.isArray(data.workflows)) {
+            // The API returns { workflows: [...] }
+            setWorkflows(data.workflows);
+          } else if (Array.isArray(data)) {
+            // In case the API returns direct array
+            setWorkflows(data);
+          } else {
+            // Fallback for other object formats
+            const workflowsArray = Object.values(data).filter(
+              (item) => item && typeof item === "object"
+            );
+            setWorkflows(workflowsArray);
+          }
+        } else {
+          // Default to empty array if the response is invalid
+          setWorkflows([]);
+          console.error("Invalid API response format:", data);
+          setError("Received invalid data format from server");
+        }
+      } catch (error) {
+        console.error("Error fetching public workflows:", error);
+        setError("Failed to load public workflows");
+      } finally {
         setLoading(false);
-        navigate('/');
-      }, 1000);
-      
-      // Future implementation:
-      // const token = await getToken();
-      // const response = await fetch("https://backend.sigmoyd.in/import_premade_workflow", {
-      //   method: "POST",
-      //   headers: {
-      //     "Content-Type": "application/json",
-      //     Authorization: `Bearer ${token}`,
-      //   },
-      //   body: JSON.stringify({ workflow_id: workflow.id }),
-      // });
-      // if (response.ok) {
-      //   navigate('/');
-      // }
-    } catch (error) {
-      console.error("Error importing workflow:", error);
-      setLoading(false);
-    }
+      }
+    };
+
+    fetchPublicWorkflows();
+  }, [getToken]);
+
+  const handleWorkflowClick = (workflow) => {
+    // Pass complete workflow data as state to avoid additional API calls
+    navigate(`/public-workflow/${workflow.wid}`, {
+      state: { workflowData: workflow },
+    });
   };
 
-  return (
-    <div className="workflow-card">
-      <div className="workflow-card-header">
-        <h3>{workflow.title}</h3>
-        <div className="workflow-card-rating">
-          <FaStar className="star-icon" />
-          <span>{workflow.stars.toFixed(1)}</span>
-        </div>
-      </div>
-      
-      <div className="workflow-preview">
-        <ReactFlow
-          nodes={workflow.previewFlow.nodes}
-          edges={workflow.previewFlow.edges}
-          fitView
-          nodesDraggable={false}
-          nodesConnectable={false}
-          elementsSelectable={false}
-          zoomOnScroll={false}
-          zoomOnPinch={false}
-          panOnScroll={false}
-          panOnDrag={false}
-          preventScrolling={false}
-          proOptions={{ hideAttribution: true }}
-        >
-          <Background color="var(--color-text-accent)" gap={16} size={1} variant="dots" />
-        </ReactFlow>
-      </div>
-      
-      <p className="workflow-description">{workflow.description}</p>
-      
-      <div className="workflow-card-footer">
-        <div className="workflow-usage">
-          <FaUsers className="users-icon" />
-          <span>{workflow.usageCount.toLocaleString()} uses</span>
-        </div>
-        
-        <button 
-          className="use-workflow-btn" 
-          onClick={handleUseWorkflow}
-          disabled={loading}
-        >
-          {loading ? "Loading..." : (
-            <>
-              Use <FaArrowRight className="arrow-icon" />
-            </>
-          )}
-        </button>
-      </div>
-    </div>
-  );
-};
-
-const PremadeWorkflows = () => {
-  const [showSidebar, setShowSidebar] = useState(false);
-  const [currentWorkflow, setCurrentWorkflow] = useState(null);
-  
-  const handleNewChatClick = () => {
-    // In a real implementation, this would reset the current state
-    console.log("New chat clicked");
+  const handleUseWorkflow = (e, workflow) => {
+    e.stopPropagation(); // Prevent triggering the card click
+    // Navigate to the use workflow page or trigger workflow usage
+    navigate(`/use-workflow/${workflow.wid}`, {
+      state: { workflowData: workflow },
+    });
   };
 
+  if (loading) {
+    return (
+      <div className="loading-container">
+        <div className="loading-spinner"></div>
+        <span className="loading-text">Loading public workflows...</span>
+      </div>
+    );
+  }
+
+  if (error) {
+    return <div className="error-message">{error}</div>;
+  }
+
   return (
-    <div className="min-h-screen flex flex-col bg-[var(--color-background)] text-[var(--color-text)] relative">
-      <div className="fixed top-0 left-0 right-0 z-50 bg-black">
+    <div className="premade-workflows-container">
+      <div className="topbar-container">
         <TopBar
-          onMenuClick={() => setShowSidebar(true)}
-          onNewChatClick={handleNewChatClick}
-          sidebarVisible={showSidebar}
-          currentWorkflow={currentWorkflow}
+          onMenuClick={() => {}}
+          onHomeClick={handleHomeClick}
+          isHomePage={false}
+          sidebarVisible={false}
         />
       </div>
 
-      <main className="flex flex-1 pt-24 pb-6 relative">
-        <div className="w-full max-w-7xl mx-auto px-4">
-          <h1 className="text-3xl font-bold mb-8 text-center">Pre-made Workflows</h1>
-          <p className="text-center mb-8 max-w-3xl mx-auto">
-            Choose from our collection of pre-built workflows to jumpstart your automation journey. 
-            Each workflow is ready to use or can be customized to fit your specific needs.
+      <main className="main-content">
+        <div className="content-wrapper">
+          <h1 className="page-title">Pre-made Workflows</h1>
+          <p className="page-description">
+            Choose from our collection of pre-built workflows to jumpstart your
+            automation journey. Each workflow is ready to use or can be
+            customized to fit your specific needs.
           </p>
-          
+
           <div className="workflows-grid">
-            {dummyWorkflows.map((workflow) => (
-              <WorkflowCard key={workflow.id} workflow={workflow} />
-            ))}
+            {!workflows || workflows.length === 0 ? (
+              <p className="no-workflows-message">
+                No public workflows available
+              </p>
+            ) : (
+              <div className="workflows-grid-layout">
+                {Array.isArray(workflows) &&
+                  workflows.map((workflow, index) => {
+                    // Extract workflow data from json property or use direct properties
+                    const workflowData = workflow.json || workflow;
+                    const name =
+                      workflowData.name ||
+                      workflowData.workflow_name ||
+                      "Unnamed Workflow";
+                    const description =
+                      workflowData.description ||
+                      workflowData.refined_prompt ||
+                      "";
+                    const wid = workflow.wid || workflowData.workflow_id;
+                    const likes = workflow.likes || 0;
+                    const uses = workflow.uses || 0;
+
+                    // Assign a gradient type based on index
+                    const gradientClass = `workflow-card-gradient-${
+                      (index % 5) + 1
+                    }`;
+
+                    return (
+                      <div
+                        key={wid || index}
+                        className={`workflow-card ${gradientClass}`}
+                        onClick={() =>
+                          handleWorkflowClick({
+                            wid,
+                            name,
+                            description,
+                            likes,
+                            uses,
+                            json: workflowData,
+                          })
+                        }
+                      >
+                        <div className="card-glow-effect"></div>
+                        <div className="card-content">
+                          <h3 className="card-title">{name}</h3>
+                          <p className="card-description">{description}</p>
+                          <div className="card-footer">
+                            <div className="card-stats">
+                              <span className="stat-likes">
+                                <span className="stat-icon">❤️</span> {likes}
+                              </span>
+                              <span className="stat-uses">
+                                <span className="stat-icon">👥</span> {uses}{" "}
+                                uses
+                              </span>
+                            </div>
+                            <button
+                              className="use-workflow-btn"
+                              onClick={(e) =>
+                                handleUseWorkflow(e, {
+                                  wid,
+                                  name,
+                                  description,
+                                  likes,
+                                  uses,
+                                  json: workflowData,
+                                })
+                              }
+                            >
+                              Use it
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+              </div>
+            )}
           </div>
         </div>
       </main>
     </div>
   );
-};
-
-export default PremadeWorkflows;
+}
