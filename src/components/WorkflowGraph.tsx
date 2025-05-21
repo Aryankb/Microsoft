@@ -700,7 +700,7 @@ const WorkflowGraph: React.FC<WorkflowGraphProps> = ({
         if (
           responseData.message === "Please fill in your API keys to proceed."
         ) {
-          window.location.href = "/api-keys";
+          window.location.href = "/manage-auths";
         }
       } else {
         const responseData = await response.json();
