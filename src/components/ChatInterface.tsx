@@ -55,23 +55,29 @@ const ChatInterface = ({
   // Apply staggered animation to dropdown items
   useEffect(() => {
     if (isDropdownVisible && dropdownRef.current) {
-      const items = dropdownRef.current.querySelectorAll('.dropdown-item');
+      const items = dropdownRef.current.querySelectorAll(".dropdown-item");
       items.forEach((item, index) => {
         setTimeout(() => {
-          (item as HTMLElement).style.opacity = '1';
-          (item as HTMLElement).style.transform = 'translateY(0)';
-        }, 50 + (index * 30)); // Staggered delay
+          (item as HTMLElement).style.opacity = "1";
+          (item as HTMLElement).style.transform = "translateY(0)";
+        }, 50 + index * 30); // Staggered delay
       });
     }
   }, [isDropdownVisible]);
 
   // Get the appropriate icon for each prompt
   const getPromptIcon = (prompt: string) => {
-    if (prompt.toLowerCase().includes("social media") || prompt.toLowerCase().includes("post scheduling")) {
+    if (
+      prompt.toLowerCase().includes("social media") ||
+      prompt.toLowerCase().includes("post scheduling")
+    ) {
       return <Calendar className="w-5 h-5 text-blue-400" />;
     } else if (prompt.toLowerCase().includes("email")) {
       return <Mail className="w-5 h-5 text-green-400" />;
-    } else if (prompt.toLowerCase().includes("customer") || prompt.toLowerCase().includes("onboarding")) {
+    } else if (
+      prompt.toLowerCase().includes("customer") ||
+      prompt.toLowerCase().includes("onboarding")
+    ) {
       return <Users className="w-5 h-5 text-purple-400" />;
     } else {
       return <ArrowUpRight className="w-5 h-5 text-gray-400" />;
@@ -81,7 +87,7 @@ const ChatInterface = ({
   return (
     <div className="flex flex-col space-y-6 h-full">
       {chats.length === 0 && !showWorkflow ? (
-        <div className="flex flex-col items-center justify-center flex-grow h-screen overflow-hidden">
+        <div className="flex flex-col items-center justify-center flex-grow ">
           <div style={{ position: "absolute", inset: 0, zIndex: 10 }}>
             <BackgroundBeamsWithCollisionDemo />
           </div>
@@ -100,37 +106,42 @@ const ChatInterface = ({
                   onBlur={handleInputBlur}
                 />
 
-                <div 
+                <div
                   ref={dropdownRef}
                   className={`absolute w-full mt-1 bg-[#222222] border border-gray-700 rounded-md shadow-lg z-50 overflow-hidden transition-all duration-300 ease-in-out ${
-                    isInputFocused 
-                      ? 'opacity-100 max-h-[300px]' 
-                      : 'opacity-0 max-h-0 pointer-events-none'
+                    isInputFocused
+                      ? "opacity-100 max-h-[300px]"
+                      : "opacity-0 max-h-0 pointer-events-none"
                   }`}
                   style={{
-                    transformOrigin: 'top center',
-                    transform: isInputFocused ? 'scaleY(1)' : 'scaleY(0.95)',
+                    transformOrigin: "top center",
+                    transform: isInputFocused ? "scaleY(1)" : "scaleY(0.95)",
                   }}
                 >
-                  {examplePrompts.length > 0 && isDropdownVisible && examplePrompts.map((prompt, index) => (
-                    <div
-                      key={index}
-                      className="dropdown-item px-4 py-3 hover:bg-[#333333] cursor-pointer text-gray-200 flex items-center gap-3 transition-all duration-200 ease-out opacity-0"
-                      style={{ 
-                        transform: 'translateY(10px)',
-                        transitionProperty: 'background-color, opacity, transform',
-                      }}
-                      onClick={() => {
-                        setMessage(prompt);
-                        setIsInputFocused(false);
-                      }}
-                    >
-                      <div className="flex-shrink-0 bg-[#444444] p-2 rounded-full transition-transform duration-200 ease-out hover:scale-110">
-                        {getPromptIcon(prompt)}
+                  {examplePrompts.length > 0 &&
+                    isDropdownVisible &&
+                    examplePrompts.map((prompt, index) => (
+                      <div
+                        key={index}
+                        className="dropdown-item px-4 py-3 hover:bg-[#333333] cursor-pointer text-gray-200 flex items-center gap-3 transition-all duration-200 ease-out opacity-0"
+                        style={{
+                          transform: "translateY(10px)",
+                          transitionProperty:
+                            "background-color, opacity, transform",
+                        }}
+                        onClick={() => {
+                          setMessage(prompt);
+                          setIsInputFocused(false);
+                        }}
+                      >
+                        <div className="flex-shrink-0 bg-[#444444] p-2 rounded-full transition-transform duration-200 ease-out hover:scale-110">
+                          {getPromptIcon(prompt)}
+                        </div>
+                        <span className="transition-colors duration-200">
+                          {prompt}
+                        </span>
                       </div>
-                      <span className="transition-colors duration-200">{prompt}</span>
-                    </div>
-                  ))}
+                    ))}
                 </div>
               </div>
             </div>

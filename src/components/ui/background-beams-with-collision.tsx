@@ -84,15 +84,6 @@ export const BackgroundBeamsWithCollision = ({
       ))}
 
       {children}
-      <div
-        ref={containerRef}
-        className="absolute bottom-0 bg-[var(--color-card)] h-20 w-full inset-x-0 pointer-events-none"
-        style={{
-          height: "20%",
-          boxShadow:
-            "0 0 24px rgba(0, 0, 0, 0.06), 0 1px 1px rgba(0, 0, 0, 0.05), 0 0 0 1px rgba(0, 0, 0, 0.04), 0 0 4px rgba(0, 0, 0, 0.08), 0 16px 68px rgba(0, 0, 0, 0.05), 0 1px 0 rgba(255, 255, 255, 0.1) inset",
-        }}
-      ></div>
     </div>
   );
 };

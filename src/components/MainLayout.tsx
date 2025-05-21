@@ -701,6 +701,15 @@ export default function MainLayout() {
     }
   }, []);
 
+  // Remove the handleWorkflowUpdate function and use this approach instead
+  const [graphKey, setGraphKey] = useState(0);
+
+  // This function will be called when a node is clicked/edited
+  const handleNodeClick = useCallback(() => {
+    // Force re-render of the workflow graph by updating its key
+    setGraphKey((prevKey) => prevKey + 1);
+  }, []);
+
   // Add this effect to scroll when messages change
   useEffect(() => {
     scrollToBottom();
@@ -892,19 +901,17 @@ export default function MainLayout() {
             </button>
 
             <WorkflowGraph
-              key={JSON.stringify(workflowJson)}
+              key={`${currentWorkflow}-${graphKey}`} // Add graphKey to force re-render
               workflowJson={workflowJson}
               workflows={workflows}
               setWorkflows={setWorkflows}
               setCurrentWorkflow={setCurrentWorkflow}
               currentWorkflow={currentWorkflow}
+              onNodeClick={handleNodeClick} // Pass the node click handler
             />
           </div>
         )}
       </main>
-
-      {/* Increase the size of the input spacer to provide more room */}
-      <div className="input-spacer" style={{ height: "80px" }}></div>
 
       {chats.length > 0 && !showWorkflow && (
         <div className="message-input-container">

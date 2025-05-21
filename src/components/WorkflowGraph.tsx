@@ -19,6 +19,36 @@ import "reactflow/dist/style.css";
 import { FaPlay, FaCheckCircle, FaSave, FaBolt, FaStop } from "react-icons/fa";
 import { useAuth } from "@clerk/clerk-react";
 import "./WorkflowLoadingAnimation.css";
+import { ToastContainer, toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+
+// Add these utility functions for persistent toasts at the top of the file
+const saveToastMessage = (type, message) => {
+  localStorage.setItem("pendingToast", JSON.stringify({ type, message }));
+};
+
+const checkAndShowPendingToast = () => {
+  const pendingToast = localStorage.getItem("pendingToast");
+  if (pendingToast) {
+    try {
+      const { type, message } = JSON.parse(pendingToast);
+      // Show the toast based on its type
+      if (type === "success") {
+        toast.success(message, { position: "bottom-right" });
+      } else if (type === "error") {
+        toast.error(message, { position: "bottom-right" });
+      } else if (type === "info") {
+        toast.info(message, { position: "bottom-right" });
+      } else if (type === "warning") {
+        toast.warning(message, { position: "bottom-right" });
+      }
+    } catch (e) {
+      console.error("Error parsing pending toast:", e);
+    }
+    // Clear the pending toast
+    localStorage.removeItem("pendingToast");
+  }
+};
 
 interface WorkflowNode {
   id: string | number;
@@ -168,16 +198,17 @@ const arrangeNodes = (workflow, trigger) => {
 const generateNodesAndEdges = (workflowJson, handleValueChange) => {
   const { workflow, trigger, data_flow_notebook_keys } = workflowJson;
   const positions = arrangeNodes(workflow, trigger);
-  
+
   const nodes = workflow.map((node) => {
     // Determine if this node should use the icon view
-    const shouldUseIconView = node.type === "tool" || 
-                             node.type === "llm" ||  // Added LLM support for icon view
-                             (node.type === "connector" && 
-                              (node.name.includes("ITERATOR") || 
-                               node.name.includes("VALIDATOR") || 
-                               node.name.includes("ITER_END")));
-    
+    const shouldUseIconView =
+      node.type === "tool" ||
+      node.type === "llm" || // Added LLM support for icon view
+      (node.type === "connector" &&
+        (node.name.includes("ITERATOR") ||
+          node.name.includes("VALIDATOR") ||
+          node.name.includes("ITER_END")));
+
     return {
       id: node.id.toString(),
       type: shouldUseIconView ? "iconNode" : "customNode",
@@ -190,8 +221,8 @@ const generateNodesAndEdges = (workflowJson, handleValueChange) => {
         connectorName: node.to_execute
           ? node.to_execute[0]
             ? node.to_execute.length === 1
-              ? `${node.to_execute[0][0].replace("validator_", "")}`:
-              `${node.to_execute[0].replace("validator_", "")}`
+              ? `${node.to_execute[0][0].replace("validator_", "")}`
+              : `${node.to_execute[0].replace("validator_", "")}`
             : ""
           : "",
         description: node.description,
@@ -201,16 +232,18 @@ const generateNodesAndEdges = (workflowJson, handleValueChange) => {
         llm_prompt: node.llm_prompt,
         validation_prompt: node.validation_prompt,
       },
-      style: shouldUseIconView ? {
-        width: 40,
-        height: 40,
-        padding: 0,
-        borderRadius: '50%'
-      } : {
-        boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
-        border: "1px solid #ddd",
-        borderRadius: "8px",
-      },
+      style: shouldUseIconView
+        ? {
+            width: 40,
+            height: 40,
+            padding: 0,
+            borderRadius: "50%",
+          }
+        : {
+            boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
+            border: "1px solid #ddd",
+            borderRadius: "8px",
+          },
     };
   });
 
@@ -232,7 +265,7 @@ const generateNodesAndEdges = (workflowJson, handleValueChange) => {
         width: 40,
         height: 40,
         padding: 0,
-        borderRadius: '50%'
+        borderRadius: "50%",
       },
     });
   }
@@ -336,6 +369,7 @@ const WorkflowGraph: React.FC<WorkflowGraphProps> = ({
   workflowJson,
   workflows,
   setWorkflows,
+  onNodeClick, // This prop may be passed from MainLayout
 }) => {
   const { getToken } = useAuth();
   const [loading, setLoading] = useState(false);
@@ -345,21 +379,28 @@ const WorkflowGraph: React.FC<WorkflowGraphProps> = ({
   const [loadingProgress, setLoadingProgress] = useState<number>(0);
   const [bootPhase, setBootPhase] = useState(0);
   const [bootComplete, setBootComplete] = useState(false);
-  
+
   // New state for input collection modal
   const [showInputModal, setShowInputModal] = useState(false);
   const [currentInputNodeIndex, setCurrentInputNodeIndex] = useState(0);
-  const [nodesToProcess, setNodesToProcess] = useState<Array<{
-    id: string | number;
-    type: string;
-    name: string;
-    config_inputs: Record<string, any>;
-  }>>([]);
-  const [currentInputValues, setCurrentInputValues] = useState<Record<string, string>>({});
+  const [nodesToProcess, setNodesToProcess] = useState<
+    Array<{
+      id: string | number;
+      type: string;
+      name: string;
+      config_inputs: Record<string, any>;
+    }>
+  >([]);
+  const [currentInputValues, setCurrentInputValues] = useState<
+    Record<string, string>
+  >({});
 
   // New state variables for tracking workflow freshness
   const [isNewWorkflow, setIsNewWorkflow] = useState(false);
   const [processingComplete, setProcessingComplete] = useState(false);
+
+  // Add this state to keep track of the real-time active status
+  const [isActive, setIsActive] = useState(workflowJson.active);
 
   const bootSequence = [
     "Initializing workflow engine...",
@@ -379,14 +420,12 @@ const WorkflowGraph: React.FC<WorkflowGraphProps> = ({
 
   useEffect(() => {
     setWorkflowData(workflowJson);
-    
-    // Check if this is a new workflow based on whether it appears in the workflows list
-    const isNew = !workflows.some(w => w.id === workflowJson?.workflow_id);
-    setIsNewWorkflow(isNew);
-    setProcessingComplete(false);
-    
-    console.log("changed flow");
-  }, [workflowJson, workflows]);
+    setIsActive(workflowJson.active);
+    console.log(
+      "Workflow active state updated from props:",
+      workflowJson.active
+    );
+  }, [workflowJson]);
 
   useEffect(() => {
     const { nodes: newNodes, edges: newEdges } = generateNodesAndEdges(
@@ -404,42 +443,67 @@ const WorkflowGraph: React.FC<WorkflowGraphProps> = ({
     // Only show the input modal for new workflows and when not already processed
     if (isNewWorkflow && !processingComplete && workflowJson) {
       const nodesWithConfigInputs = [];
-      
+
       // Check trigger for config inputs
-      if (workflowJson.trigger && workflowJson.trigger.config_inputs && 
-          Object.keys(workflowJson.trigger.config_inputs).length > 0) {
+      if (
+        workflowJson.trigger &&
+        workflowJson.trigger.config_inputs &&
+        Object.keys(workflowJson.trigger.config_inputs).length > 0
+      ) {
         nodesWithConfigInputs.push({
           id: "trigger",
           type: "trigger",
           name: workflowJson.trigger.name,
-          config_inputs: workflowJson.trigger.config_inputs
+          config_inputs: workflowJson.trigger.config_inputs,
         });
       }
-      
-      // Check all workflow nodes for config inputs
-      workflowJson.workflow.forEach(node => {
-        if (node.config_inputs && Object.keys(node.config_inputs).length > 0) {
+
+      // Check all workflow nodes for config inputs or prompts
+      workflowJson.workflow.forEach((node) => {
+        const hasConfigInputs =
+          node.config_inputs && Object.keys(node.config_inputs).length > 0;
+        const hasLlmPrompt =
+          node.type === "llm" && node.llm_prompt !== undefined;
+        const hasValidationPrompt =
+          node.type === "connector" &&
+          node.name.includes("validator") &&
+          node.validation_prompt !== undefined;
+
+        if (hasConfigInputs || hasLlmPrompt || hasValidationPrompt) {
           nodesWithConfigInputs.push({
             id: node.id,
             type: node.type,
             name: node.name,
-            config_inputs: node.config_inputs
+            config_inputs: node.config_inputs || {},
+            llm_prompt: node.llm_prompt,
+            validation_prompt: node.validation_prompt,
           });
         }
       });
-      
+
       if (nodesWithConfigInputs.length > 0) {
         setNodesToProcess(nodesWithConfigInputs);
         setCurrentInputNodeIndex(0);
-        
+
         // Pre-populate current input values with existing values from the first node
         const firstNode = nodesWithConfigInputs[0];
         const initialValues: Record<string, string> = {};
-        
-        Object.entries(firstNode.config_inputs).forEach(([key, value]) => {
-          initialValues[key] = value as string || '';
-        });
-        
+
+        Object.entries(firstNode.config_inputs || {}).forEach(
+          ([key, value]) => {
+            initialValues[key] = (value as string) || "";
+          }
+        );
+
+        // Also add prompt values if they exist
+        if (firstNode.llm_prompt) {
+          initialValues["llm_prompt"] = firstNode.llm_prompt;
+        }
+
+        if (firstNode.validation_prompt) {
+          initialValues["validation_prompt"] = firstNode.validation_prompt;
+        }
+
         setCurrentInputValues(initialValues);
         setShowInputModal(true);
       } else {
@@ -500,9 +564,9 @@ const WorkflowGraph: React.FC<WorkflowGraphProps> = ({
 
   // Handle input value changes in the modal
   const handleInputChange = (field: string, value: string) => {
-    setCurrentInputValues(prev => ({
+    setCurrentInputValues((prev) => ({
       ...prev,
-      [field]: value
+      [field]: value,
     }));
   };
 
@@ -510,27 +574,38 @@ const WorkflowGraph: React.FC<WorkflowGraphProps> = ({
   const handleNextNode = () => {
     // Apply current input values to the workflow
     const currentNode = nodesToProcess[currentInputNodeIndex];
-    
+
     // Update the workflow data with current input values
-    setWorkflowData(prevData => {
+    setWorkflowData((prevData) => {
       const newData = JSON.parse(JSON.stringify(prevData));
-      
+
       if (currentNode.type === "trigger") {
         // Update trigger inputs
         newData.trigger.config_inputs = {
           ...newData.trigger.config_inputs,
-          ...currentInputValues
+          ...currentInputValues,
         };
       } else {
-        // Update regular node inputs
-        newData.workflow = newData.workflow.map(node =>
+        // Update regular node inputs and prompts
+        newData.workflow = newData.workflow.map((node) =>
           node.id === currentNode.id
             ? {
                 ...node,
                 config_inputs: {
                   ...node.config_inputs,
-                  ...currentInputValues
-                }
+                  ...Object.fromEntries(
+                    Object.entries(currentInputValues).filter(
+                      ([key]) =>
+                        key !== "llm_prompt" && key !== "validation_prompt"
+                    )
+                  ),
+                },
+                ...(currentInputValues.llm_prompt !== undefined && {
+                  llm_prompt: currentInputValues.llm_prompt,
+                }),
+                ...(currentInputValues.validation_prompt !== undefined && {
+                  validation_prompt: currentInputValues.validation_prompt,
+                }),
               }
             : node
         );
@@ -538,19 +613,28 @@ const WorkflowGraph: React.FC<WorkflowGraphProps> = ({
       console.log("updated workflow data with inputs", newData);
       return newData;
     });
-    
+
     // Move to next node or close modal if done
     if (currentInputNodeIndex < nodesToProcess.length - 1) {
       // Pre-populate values for the next node
       const nextNode = nodesToProcess[currentInputNodeIndex + 1];
       const nextValues: Record<string, string> = {};
-      
-      Object.entries(nextNode.config_inputs).forEach(([key, value]) => {
-        nextValues[key] = value as string || '';
+
+      Object.entries(nextNode.config_inputs || {}).forEach(([key, value]) => {
+        nextValues[key] = (value as string) || "";
       });
-      
+
+      // Also add prompt values if they exist
+      if (nextNode.llm_prompt) {
+        nextValues["llm_prompt"] = nextNode.llm_prompt;
+      }
+
+      if (nextNode.validation_prompt) {
+        nextValues["validation_prompt"] = nextNode.validation_prompt;
+      }
+
       setCurrentInputValues(nextValues);
-      setCurrentInputNodeIndex(index => index + 1);
+      setCurrentInputNodeIndex((index) => index + 1);
     } else {
       // Save the workflow with all inputs
       saveWorkflowWithInputs();
@@ -558,7 +642,7 @@ const WorkflowGraph: React.FC<WorkflowGraphProps> = ({
       setProcessingComplete(true);
     }
   };
-  
+
   // Save workflow after all inputs have been collected
   const saveWorkflowWithInputs = async () => {
     const token = await getToken();
@@ -607,19 +691,42 @@ const WorkflowGraph: React.FC<WorkflowGraphProps> = ({
       // setWorkflowData(responseData.json);
       fetchWorkflows();
       console.log("Workflow saved successfully:", responseData);
-      alert("Workflow saved successfully!");
+
+      // Replace alert with toast notification at bottom-right
+      toast.success("Workflow saved successfully!", {
+        position: "bottom-right",
+        autoClose: 3000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+      });
+
       setShowSaveButton(false);
     } catch (error) {
       console.error("Error saving workflow:", error);
+
+      // Show error toast at bottom-right
+      toast.error(`Error saving workflow: ${error.message}`, {
+        position: "bottom-right",
+        autoClose: 5000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+      });
     }
   };
 
   const fetchWorkflows = async () => {
     try {
       const token = await getToken();
-      const response = await fetch("https://backend.sigmoyd.in/sidebar_workflows", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const response = await fetch(
+        "https://backend.sigmoyd.in/sidebar_workflows",
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
 
       if (!response.ok)
         throw new Error(`HTTP error! Status: ${response.status}`);
@@ -637,6 +744,31 @@ const WorkflowGraph: React.FC<WorkflowGraphProps> = ({
   );
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
+
+  // Add effect to refresh workflows when workflowData changes
+  useEffect(() => {
+    // If this is an existing workflow and we change its active state,
+    // make sure to update the workflows list
+    if (workflowData?.workflow_id && !isNewWorkflow) {
+      // Update workflows list with latest active state
+      setWorkflows((prevWorkflows) =>
+        prevWorkflows.map((workflow) =>
+          workflow.id === workflowData.workflow_id
+            ? {
+                ...workflow,
+                active: workflowData.active,
+                json: JSON.stringify(workflowData),
+              }
+            : workflow
+        )
+      );
+    }
+  }, [
+    workflowData?.active,
+    workflowData?.workflow_id,
+    setWorkflows,
+    isNewWorkflow,
+  ]);
 
   const runOrActivateWorkflow = async () => {
     const token = await getToken();
@@ -690,25 +822,98 @@ const WorkflowGraph: React.FC<WorkflowGraphProps> = ({
       setLoadingStep("");
       setLoadingProgress(0);
       setBootComplete(true);
-      fetchWorkflows();
+
       if (!response.ok) {
         const responseData = await response.json();
         console.error(
           "Failed to run or activate workflow",
           responseData.message
         );
+
+        // Save error message before possible redirect
         if (
           responseData.message === "Please fill in your API keys to proceed."
         ) {
+          saveToastMessage(
+            "error",
+            responseData.message || "Failed to run/activate workflow"
+          );
           window.location.href = "/api-keys";
+        } else {
+          // Show error toast notification
+          toast.error(
+            responseData.message || "Failed to run/activate workflow",
+            {
+              position: "bottom-right",
+              autoClose: 5000,
+              hideProgressBar: false,
+              closeOnClick: true,
+              pauseOnHover: true,
+              draggable: true,
+            }
+          );
         }
       } else {
         const responseData = await response.json();
-        console.log("🚀 Workflow activated:", responseData);
-        setWorkflowData(responseData.json);
+        console.log("🚀 Workflow activated/deactivated:", responseData);
+
+        // Important: Properly update the workflow data with the new state
+        const updatedWorkflow = responseData.json;
+
+        // Update our local states explicitly
+        setWorkflowData(updatedWorkflow);
+        setIsActive(updatedWorkflow.active);
+
+        console.log("New active state:", updatedWorkflow.active);
+
+        // Use the updated active state from the response for the toast message
+        const isNowActive = updatedWorkflow.active;
+
+        // Show success toast notification based on the response data
+        const actionType =
+          workflowJson.trigger.name === "TRIGGER_MANUAL"
+            ? "executed"
+            : isNowActive
+            ? "activated"
+            : "deactivated";
+
+        toast.success(`Workflow successfully ${actionType}!`, {
+          position: "bottom-right",
+          autoClose: 5000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+        });
+
+        // Also update the workflows list immediately
+        setWorkflows((prevWorkflows) =>
+          prevWorkflows.map((workflow) =>
+            workflow.id === updatedWorkflow.workflow_id
+              ? {
+                  ...workflow,
+                  active: updatedWorkflow.active,
+                  json: JSON.stringify(updatedWorkflow),
+                }
+              : workflow
+          )
+        );
       }
+
+      // Always refresh the workflows list after activation/deactivation
+      await fetchWorkflows();
     } catch (error) {
       console.error("Error activating workflow:", error);
+
+      // Show error toast for exceptions
+      toast.error(`Error: ${error.message || "Failed to process workflow"}`, {
+        position: "bottom-right",
+        autoClose: 5000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+      });
 
       setLoading(false);
       setLoadingStep("");
@@ -730,6 +935,38 @@ const WorkflowGraph: React.FC<WorkflowGraphProps> = ({
         overflow: "hidden",
       }}
     >
+      {/* Update ToastContainer with bottom-right position and higher z-index */}
+      <ToastContainer
+        position="bottom-right"
+        autoClose={5000}
+        hideProgressBar={false}
+        newestOnTop
+        closeOnClick
+        rtl={false}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+        theme="dark"
+        style={{ zIndex: 9999 }}
+      />
+
+      {/* Add custom style to ensure the toast container is visible */}
+      <style jsx global>{`
+        .Toastify__toast-container {
+          z-index: 99999 !important;
+        }
+
+        .Toastify__toast {
+          background-color: var(--color-card);
+          color: var(--color-text);
+          z-index: 99999 !important;
+        }
+
+        .Toastify__progress-bar {
+          background: var(--color-primary);
+        }
+      `}</style>
+
       {/* Input Collection Modal */}
       {showInputModal && nodesToProcess.length > 0 && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
@@ -740,19 +977,24 @@ const WorkflowGraph: React.FC<WorkflowGraphProps> = ({
             <p className="text-gray-300 mb-4">
               Please provide the following information for this node:
             </p>
-            
+
             <div className="space-y-4">
-              {Object.entries(nodesToProcess[currentInputNodeIndex].config_inputs).map(([key, value]) => {
-                const isMultiline = 
-                  typeof value === 'string' && 
-                  (value.length > 50 || value.includes('\n') || key.toLowerCase().includes('prompt'));
-                
+              {/* Config Inputs */}
+              {Object.entries(
+                nodesToProcess[currentInputNodeIndex].config_inputs || {}
+              ).map(([key, value]) => {
+                const isMultiline =
+                  typeof value === "string" &&
+                  (value.length > 50 ||
+                    value.includes("\n") ||
+                    key.toLowerCase().includes("prompt"));
+
                 return (
                   <div key={key} className="mb-4">
                     <label className="block text-white mb-2">{key}:</label>
                     {isMultiline ? (
                       <textarea
-                        value={currentInputValues[key] || ''}
+                        value={currentInputValues[key] || ""}
                         onChange={(e) => handleInputChange(key, e.target.value)}
                         className="w-full px-3 py-2 bg-gray-700 text-white rounded border border-gray-500 focus:outline-none focus:border-blue-500"
                         placeholder={`Enter ${key}`}
@@ -761,7 +1003,7 @@ const WorkflowGraph: React.FC<WorkflowGraphProps> = ({
                     ) : (
                       <input
                         type="text"
-                        value={currentInputValues[key] || ''}
+                        value={currentInputValues[key] || ""}
                         onChange={(e) => handleInputChange(key, e.target.value)}
                         className="w-full px-3 py-2 bg-gray-700 text-white rounded border border-gray-500 focus:outline-none focus:border-blue-500"
                         placeholder={`Enter ${key}`}
@@ -770,17 +1012,61 @@ const WorkflowGraph: React.FC<WorkflowGraphProps> = ({
                   </div>
                 );
               })}
+
+              {/* LLM Prompt */}
+              {nodesToProcess[currentInputNodeIndex].llm_prompt !==
+                undefined && (
+                <div className="mb-4">
+                  <label className="block text-white mb-2">LLM Prompt:</label>
+                  <textarea
+                    value={currentInputValues["llm_prompt"] || ""}
+                    onChange={(e) =>
+                      handleInputChange("llm_prompt", e.target.value)
+                    }
+                    className="w-full px-3 py-2 bg-gray-700 text-white rounded border border-gray-500 focus:outline-none focus:border-blue-500"
+                    placeholder="Enter the prompt for the LLM"
+                    rows={8}
+                  />
+                  <p className="text-gray-400 text-xs mt-1">
+                    This is the prompt that will be sent to the language model
+                  </p>
+                </div>
+              )}
+
+              {/* Validation Prompt */}
+              {nodesToProcess[currentInputNodeIndex].validation_prompt !==
+                undefined && (
+                <div className="mb-4">
+                  <label className="block text-white mb-2">
+                    Validation Prompt:
+                  </label>
+                  <textarea
+                    value={currentInputValues["validation_prompt"] || ""}
+                    onChange={(e) =>
+                      handleInputChange("validation_prompt", e.target.value)
+                    }
+                    className="w-full px-3 py-2 bg-gray-700 text-white rounded border border-gray-500 focus:outline-none focus:border-blue-500"
+                    placeholder="Enter the validation criteria"
+                    rows={8}
+                  />
+                  <p className="text-gray-400 text-xs mt-1">
+                    This prompt determines when the validation passes or fails
+                  </p>
+                </div>
+              )}
             </div>
-            
+
             <div className="flex justify-end mt-6">
               <button
                 onClick={handleNextNode}
                 className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"
               >
-                {currentInputNodeIndex < nodesToProcess.length - 1 ? "Next" : "Finish"}
+                {currentInputNodeIndex < nodesToProcess.length - 1
+                  ? "Next"
+                  : "Finish"}
               </button>
             </div>
-            
+
             <div className="mt-4 text-gray-400 text-sm">
               Step {currentInputNodeIndex + 1} of {nodesToProcess.length}
             </div>
@@ -923,16 +1209,16 @@ const WorkflowGraph: React.FC<WorkflowGraphProps> = ({
             className={`flex items-center justify-center gap-2 px-6 py-3 rounded-lg shadow-md transition-all duration-300 mt-8 font-medium cursor-pointer ${
               workflowJson.trigger.name === "TRIGGER_MANUAL"
                 ? "bg-blue-400 text-black rounded shadow hover:bg-blue-600"
-                : workflowData.active
+                : isActive // Use the dedicated state variable here
                 ? "bg-red-400 text-black rounded shadow hover:bg-red-600"
-                : "bg-red-400 text-black rounded shadow hover:bg-red-600"
+                : "bg-green-400 text-black rounded shadow hover:bg-green-600"
             } hover:scale-105 active:scale-95 border border-gray-600`}
             style={{ width: "220px", textAlign: "center" }}
           >
             <div className="flex items-center justify-center">
               {workflowJson.trigger.name === "TRIGGER_MANUAL" ? (
                 <FaPlay className="mr-2" />
-              ) : workflowData.active ? (
+              ) : isActive ? ( // Use the dedicated state variable here
                 <FaStop className="mr-2" />
               ) : (
                 <FaBolt className="mr-2" />
@@ -940,25 +1226,20 @@ const WorkflowGraph: React.FC<WorkflowGraphProps> = ({
               <span>
                 {workflowJson.trigger.name === "TRIGGER_MANUAL"
                   ? "Run Workflow"
-                  : workflowData.active
+                  : isActive // Use the dedicated state variable here
                   ? "Deactivate Workflow"
                   : "Activate Workflow"}
               </span>
             </div>
           </div>
-            {showSaveButton && (
-            <div
-              onClick={saveWorkflow}
-              className="flex flex items-center justify-center gap-2 px-6 py-3 rounded-lg shadow-md transition-all duration-300 mt-4 font-medium cursor-pointer bg-green-500 text-black rounded shadow hover:bg-green-600"
-              style={{ width: "220px", textAlign: "center" }}
-            >
-              <FaSave className="inline-block mr-2" />
-              <span>Save Changes</span>
-            </div>
-            )}
+
+          {/* ...existing code... */}
         </Panel>
+
+        {/* ...existing code... */}
       </ReactFlow>
     </div>
   );
 };
+
 export default WorkflowGraph;
