@@ -100,7 +100,7 @@ export default function ManageAuth() {
       const token = await getToken();
       setLoading(true);
       setReloadingStatus(true);
-      const response = await fetch("http://127.0.0.1:8000/user_auths", {
+      const response = await fetch("https://backend.sigmoyd.in/user_auths", {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
@@ -152,7 +152,7 @@ export default function ManageAuth() {
     const fetchAuthStatus = async () => {
       try {
         const token = await getToken();
-        const response = await fetch("http://127.0.0.1:8000/user_auths", {
+        const response = await fetch("https://backend.sigmoyd.in/user_auths", {
           method: "GET",
           headers: {
             "Content-Type": "application/json",
@@ -195,8 +195,8 @@ export default function ManageAuth() {
     try {
       const token = await getToken();
       const endpoint = enabled
-        ? "http://127.0.0.1:8000/auth"
-        : "http://127.0.0.1:8000/delete_auth";
+        ? "https://backend.sigmoyd.in/auth"
+        : "https://backend.sigmoyd.in/delete_auth";
 
       const response = await fetch(endpoint, {
         method: "POST",
@@ -297,7 +297,7 @@ export default function ManageAuth() {
     try {
       const token = await getToken();
       console.log("API Keys:", keys);
-      const response = await fetch("http://127.0.0.1:8000/save_api_keys", {
+      const response = await fetch("https://backend.sigmoyd.in/save_api_keys", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

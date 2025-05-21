@@ -12,47 +12,55 @@ export interface LogMessage {
 }
 
 // Custom hook to manage WebSocket connection
+// Custom hook
 export const useWorkflowLogs = (onLogReceived: (log: LogMessage) => void) => {
     const [connected, setConnected] = useState(false);
     const { getToken } = useAuth();
     const wsRef = useRef<WebSocket | null>(null);
+    const onLogRef = useRef(onLogReceived);
 
-    const connectWebSocket = useCallback(async () => {
-        if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
-            return; // already connected
-        }
-
-        try {
-            const token = await getToken();
-            const ws = new WebSocket(`wss://backend.sigmoyd.in/ws/?token=${token}`);
-            wsRef.current = ws;
-
-            ws.onopen = () => {
-                console.log("✅ WebSocket connected");
-                setConnected(true);
-            };
-
-            ws.onmessage = (event) => {
-                const data = JSON.parse(event.data);
-                console.log("📡 Workflow update:", data);
-                onLogReceived(data);
-            };
-
-            // ws.onclose = () => {
-            //     console.log("❌ WebSocket disconnected");
-            //     setConnected(false);
-            // };
-
-            // ws.onerror = (error) => {
-            //     console.error("⚠️ WebSocket error:", error);
-            //     setConnected(false);
-            // };
-        } catch (error) {
-            console.error("Failed to connect to WebSocket:", error);
-        }
-    }, [getToken, onLogReceived]);
+    // Update ref if callback changes (keeps it stable)
+    useEffect(() => {
+        onLogRef.current = onLogReceived;
+    }, [onLogReceived]);
 
     useEffect(() => {
+        const connectWebSocket = async () => {
+            if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
+                return;
+            }
+
+            try {
+                const token = await getToken();
+                const ws = new WebSocket(`wss://backend.sigmoyd.in/ws/?token=${token}`);
+                wsRef.current = ws;
+
+                ws.onopen = () => {
+                    console.log("✅ WebSocket connected");
+                    setConnected(true);
+                };
+
+                ws.onmessage = (event) => {
+                    const data = JSON.parse(event.data);
+                    console.log("📡 Workflow update:", data);
+                    // Use stable ref
+                    onLogRef.current(data);
+                };
+
+                ws.onclose = () => {
+                    console.log("❌ WebSocket disconnected");
+                    setConnected(false);
+                };
+
+                ws.onerror = (error) => {
+                    console.error("⚠️ WebSocket error:", error);
+                    setConnected(false);
+                };
+            } catch (error) {
+                console.error("Failed to connect to WebSocket:", error);
+            }
+        };
+
         connectWebSocket();
 
         return () => {
@@ -61,10 +69,11 @@ export const useWorkflowLogs = (onLogReceived: (log: LogMessage) => void) => {
                 wsRef.current = null;
             }
         };
-    }, [connectWebSocket]);
+    }, [getToken]);
 
     return { connected };
 };
+
 
 // Main component
 const FetchLogs: React.FC = () => {

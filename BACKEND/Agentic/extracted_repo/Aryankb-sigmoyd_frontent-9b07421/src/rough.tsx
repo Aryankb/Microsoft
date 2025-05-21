@@ -33,7 +33,7 @@ export default function TopBar({ onMenuClick }: TopBarProps) {
   const fetchUserAuths = async () => {
     try {
       const token = await getToken();
-      const response = await fetch('http://127.0.0.1:8000/user_auths', {
+      const response = await fetch('https://backend.sigmoyd.in/user_auths', {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -58,7 +58,7 @@ export default function TopBar({ onMenuClick }: TopBarProps) {
   const handleAuthToggle = async (tool: string, enabled: boolean) => {
     try {
         const token = await getToken();
-        const endpoint = enabled ? 'http://127.0.0.1:8000/auth' : 'http://127.0.0.1:8000/delete_auth';
+        const endpoint = enabled ? 'https://backend.sigmoyd.in/auth' : 'https://backend.sigmoyd.in/delete_auth';
 
         const response = await fetch(endpoint, {
             method: 'GET',
