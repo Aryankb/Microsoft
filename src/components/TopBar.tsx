@@ -9,6 +9,7 @@ import {
   Key,
   BarChart3,
   DollarSign,
+  UploadCloud,
   Plus,
   Home,
   PlusCircle,
@@ -32,13 +33,12 @@ interface TopBarProps {
 
 const menuItems = [
   { icon: Key, label: "Add Auth" },
-  { icon: Zap, label: "Your Triggers" },
   { icon: BarChart3, label: "Workflow Logs" },
-  { icon: Book, label: "Documentation" },
+  // { icon: Book, label: "Documentation" },
   { icon: MessageSquare, label: "Feedback" },
   { icon: DollarSign, label: "Plans and Usage" },
-  { icon: Settings, label: "Your Collections" },
-  { icon: Plus, label: "Create Tool" },
+  { icon: UploadCloud, label: "Collections"},
+  // { icon: Plus, label: "Create Tool" },
 ];
 
 export default function TopBar({
@@ -68,6 +68,9 @@ export default function TopBar({
 
   const handleManageAuths = () => {
     navigate("/manage-auths");
+  };
+  const handleCreateCollections = () => {
+    navigate("/collections");
   };
 
   return (
@@ -143,15 +146,17 @@ export default function TopBar({
                   ? handleManageAuths
                   : item.label === "Create Tool"
                   ? handleCreateTool
+                  : item.label === "Collections"
+                  ? handleCreateCollections
                   : undefined
               }
             >
               <item.icon size={20} />
             </button>
           ))}
-          <Link to="/premade" className="nav-link">
+          {/* <Link to="/premade" className="nav-link">
             Pre-made Workflows
-          </Link>
+          </Link> */}
         </div>
       </div>
     </div>

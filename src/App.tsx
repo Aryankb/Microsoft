@@ -8,6 +8,7 @@ import CustomSignInForm from "./components/ui/custom-signin-form";
 import PremadeWorkflows from "./components/PremadeWorkflows";
 import { useState, useEffect } from "react";
 import OnboardingFlow from "./components/ui/OnboardingFlow";
+import CreateCollection from "./components/CreateCollection";
 
 const CLERK_PUBLISHABLE_KEY =
   "pk_test_bWludC1kaW5vc2F1ci01NC5jbGVyay5hY2NvdW50cy5kZXYk";
@@ -108,9 +109,9 @@ function App() {
                 }
               />
               <Route path="/create-tool" element={<CreateToolPage />} />
-              {/* <Route path="/api-keys" element={<ManageAuth />} /> */} 
               <Route path="/manage-auths" element={<ManageAuth />} />
               <Route path="/premade" element={<PremadeWorkflows />} />
+              <Route path="/collections" element={<CreateCollection />} />
             </Routes>
           )}
         </SignedIn>
