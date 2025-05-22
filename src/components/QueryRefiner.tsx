@@ -60,6 +60,88 @@ const QueryRefiner = ({
     setIsEditing(false);
   };
 
+  // Helper function to format text with asterisks
+  const formatText = (text: string) => {
+    // Split by lines to handle each line separately
+    const lines = text.split("\n");
+
+    return (
+      <div className="formatted-text">
+        {lines.map((line, lineIndex) => {
+          // Check if line is a bullet point
+          if (line.trim().startsWith("*")) {
+            // Determine indentation level (number of spaces at beginning)
+            const indentLevel = line.search(/\S|$/) / 4;
+
+            // Remove asterisk and extract the content
+            let content = line.trim().substring(1).trim();
+
+            // Handle bold text within the line (text between ** **)
+            const boldPattern = /\*\*(.*?)\*\*/g;
+            const parts = [];
+            let lastIndex = 0;
+            let match;
+
+            while ((match = boldPattern.exec(content)) !== null) {
+              // Add text before the bold part
+              if (match.index > lastIndex) {
+                parts.push(
+                  <span key={`${lineIndex}-text-${lastIndex}`}>
+                    {content.substring(lastIndex, match.index)}
+                  </span>
+                );
+              }
+
+              // Add the bold part
+              parts.push(
+                <span
+                  key={`${lineIndex}-bold-${match.index}`}
+                  className="font-bold text-blue-300"
+                >
+                  {match[1]}
+                </span>
+              );
+
+              lastIndex = match.index + match[0].length;
+            }
+
+            // Add any remaining text
+            if (lastIndex < content.length) {
+              parts.push(
+                <span key={`${lineIndex}-text-end`}>
+                  {content.substring(lastIndex)}
+                </span>
+              );
+            }
+
+            return (
+              <div
+                key={lineIndex}
+                className="flex"
+                style={{
+                  marginLeft: `${indentLevel * 1.5}rem`,
+                  marginBottom: "0.5rem",
+                }}
+              >
+                <span className="text-blue-400 mr-2">•</span>
+                <div>{parts}</div>
+              </div>
+            );
+          }
+
+          // For non-bullet lines
+          return line.trim() ? (
+            <div key={lineIndex} className="mb-2">
+              {line}
+            </div>
+          ) : (
+            <div key={lineIndex} className="h-2"></div>
+          );
+        })}
+      </div>
+    );
+  };
+
   if (!refinedQuery) {
     return null;
   }
@@ -70,15 +152,14 @@ const QueryRefiner = ({
       {!isEditing && (
         <div className="flex items-center justify-between mb-2">
           <div className="refined-query">
-              <span className="refined-query-header">
-                I've refined your query:
-              </span>
-            </div>
+            <span className="refined-query-header">
+              I've refined your query:
+            </span>
+          </div>
           <div className="text-text-accent text-xs flex items-center bg-card bg-opacity-50 px-2 py-1 rounded-md">
             <span className="mr-1">✏️</span>
             <span>Click query below to edit</span>
           </div>
-          
         </div>
       )}
 
@@ -88,7 +169,7 @@ const QueryRefiner = ({
           onClick={handleStartEditing}
           title="Click to edit query"
         >
-          {refinedQuery}
+          {formatText(refinedQuery)}
         </div>
       ) : (
         <textarea
