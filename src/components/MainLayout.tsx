@@ -46,6 +46,9 @@ export default function MainLayout() {
   const [showSidebar, setShowSidebar] = useState(false);
   const [message, setMessage] = useState("");
   const [chats, setChats] = useState<ChatMessage[]>([]);
+  // Add a message counter for unique IDs
+  const messageIdCounter = useRef(0);
+
   const [mode, setMode] = useState<"workflow" | "general">("workflow");
   const [flag, setFlag] = useState(2);
   const [qanda, setQanda] = useState<{ [key: string]: string }>({});
@@ -84,11 +87,17 @@ export default function MainLayout() {
 
   const currentWorkflowObject = workflows.find((w) => w.id === currentWorkflow);
 
+  // Create a function to generate unique IDs
+  const generateUniqueId = () => {
+    messageIdCounter.current += 1;
+    return `${Date.now()}-${messageIdCounter.current}`;
+  };
+
   const handleSend = async () => {
     if (!message.trim()) return;
 
-    const userMessageId = Date.now().toString();
-    const botMessageId = (Date.now() + 1).toString();
+    const userMessageId = generateUniqueId();
+    const botMessageId = generateUniqueId();
 
     setChats((prevChats) => [
       ...prevChats,
@@ -519,7 +528,10 @@ export default function MainLayout() {
           <div className="log-content bg-[var(--color-background)] p-3 rounded-b-md">
             <div className="data-flow-notebook bg-[var(--color-background)] p-3 rounded-md shadow-md">
               {Object.entries(log.data).map(([key, value]) => (
-                <div key={key} className="flex justify-between border-b py-1">
+                <div
+                  key={`${key}-${generateUniqueId()}`}
+                  className="flex justify-between border-b py-1"
+                >
                   <span className="font-medium text-blue">{key}:</span>
                   <span className="text-white-900">
                     {typeof value === "object" && value !== null
@@ -536,7 +548,7 @@ export default function MainLayout() {
       setChats((prevChats) => [
         ...prevChats,
         {
-          id: Date.now().toString(),
+          id: generateUniqueId(),
           message: logMessage,
           sender: "bot",
           isLog: true,
@@ -558,12 +570,15 @@ export default function MainLayout() {
       return obj;
     }
 
-    // Handle arrays
+    // Handle arrays with unique keys
     if (Array.isArray(obj)) {
       return (
         <div className="pl-2 mt-1">
           {obj.map((item, index) => (
-            <div key={`array-item-${index}`} className="mb-1">
+            <div
+              key={`array-item-${index}-${generateUniqueId()}`}
+              className="mb-1"
+            >
               <span className="font-medium text-gray-400">[{index}]: </span>
               {typeof item === "object" && item !== null
                 ? renderObjectValue(item)
@@ -574,7 +589,7 @@ export default function MainLayout() {
       );
     }
 
-    // Handle object types (but not arrays, functions, dates, etc.)
+    // Handle object types with unique keys
     if (typeof obj === "object") {
       try {
         // Check if it's an object we can safely iterate over
@@ -587,7 +602,10 @@ export default function MainLayout() {
           return (
             <div className="pl-2 mt-1">
               {entries.map(([key, value], idx) => (
-                <div key={`obj-key-${key}-${idx}`} className="mb-1">
+                <div
+                  key={`obj-key-${key}-${idx}-${generateUniqueId()}`}
+                  className="mb-1"
+                >
                   <span className="font-medium text-blue">{key}: </span>
                   {typeof value === "object" && value !== null
                     ? renderObjectValue(value)
