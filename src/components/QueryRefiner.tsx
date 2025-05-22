@@ -1,5 +1,5 @@
 import { useRef, useState } from "react";
-import { Copy, Check } from "lucide-react";
+import { Copy, Check, Plus, RefreshCw, X } from "lucide-react";
 
 interface QueryRefinerProps {
   refinedQuery: string | null;
@@ -17,6 +17,8 @@ const QueryRefiner = ({
   const [copySuccess, setCopySuccess] = useState(false);
   const refinedQueryRef = useRef<HTMLTextAreaElement>(null);
   const [isEditing, setIsEditing] = useState(false);
+  // Add state for custom confirmation dialog
+  const [showConfirmDialog, setShowConfirmDialog] = useState(false);
 
   // Function to auto-resize textarea based on content
   const autoResizeTextarea = (element: HTMLTextAreaElement) => {
@@ -146,6 +148,17 @@ const QueryRefiner = ({
     return null;
   }
 
+  // Add a function to handle the workflow generation button click
+  const handleWorkflowButtonClick = () => {
+    if (showWorkflow) {
+      // Show custom dialog instead of window.confirm
+      setShowConfirmDialog(true);
+    } else {
+      // If no existing workflow, just generate a new one (false = new)
+      handleGenerateWorkflow(false);
+    }
+  };
+
   return (
     <div className="query-refiner">
       {/* Improved edit prompt above the query display */}
@@ -194,15 +207,7 @@ const QueryRefiner = ({
       )}
 
       <div className="query-actions">
-        <div
-          onClick={() => {
-            const userChoice = showWorkflow
-              ? window.confirm("Cancel → create new\nOK → update existing")
-              : false;
-            handleGenerateWorkflow(userChoice);
-          }}
-          className="generate-button"
-        >
+        <div onClick={handleWorkflowButtonClick} className="generate-button">
           Generate Workflow
         </div>
 
@@ -224,6 +229,59 @@ const QueryRefiner = ({
           )}
         </button>
       </div>
+
+      {/* Custom confirmation dialog */}
+      {showConfirmDialog && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 backdrop-blur-sm">
+          <div className="bg-gray-800 rounded-lg p-6 max-w-md w-full border border-gray-700 shadow-xl">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-semibold text-white">
+                Workflow Options
+              </h3>
+              <button
+                onClick={() => setShowConfirmDialog(false)}
+                className="text-gray-400 hover:text-white transition-colors"
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            <p className="text-gray-300 mb-6">
+              Do you want to create a new workflow or update the existing one?
+            </p>
+
+            <div className="grid grid-cols-2 gap-4">
+              <button
+                onClick={() => {
+                  setShowConfirmDialog(false);
+                  handleGenerateWorkflow(false); // false = create new
+                }}
+                className="bg-blue-600 hover:bg-blue-700 text-white rounded-lg p-4 flex flex-col items-center justify-center transition-colors"
+              >
+                <Plus size={24} className="mb-2" />
+                <span className="font-medium">Create New</span>
+                <span className="text-xs text-blue-300 mt-1">
+                  Generate a new workflow
+                </span>
+              </button>
+
+              <button
+                onClick={() => {
+                  setShowConfirmDialog(false);
+                  handleGenerateWorkflow(true); // true = update existing
+                }}
+                className="bg-green-600 hover:bg-green-700 text-white rounded-lg p-4 flex flex-col items-center justify-center transition-colors"
+              >
+                <RefreshCw size={24} className="mb-2" />
+                <span className="font-medium">Update Existing</span>
+                <span className="text-xs text-green-300 mt-1">
+                  Modify current workflow
+                </span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
